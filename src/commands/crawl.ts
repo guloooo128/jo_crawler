@@ -1,0 +1,251 @@
+import { Command } from 'commander';
+import chalk from 'chalk';
+import ora from 'ora';
+import path from 'path';
+import fs from 'fs-extra';
+import { BrowserService } from '../services/BrowserService.js';
+import { LLMService } from '../services/LLMService.js';
+import { ParserRegistry } from '../parsers/registry.js';
+import { GenericParser } from '../parsers/base/GenericParser.js';
+import { config } from '../utils/config.js';
+import { loadLinksConfig } from '../utils/loadLinksCsv.js';
+import type { CrawlOptions } from '../models/CrawlConfig.js';
+import type { LinkConfig } from '../models/LinksConfig.js';
+import type { JobData } from '../models/JobData.js';
+
+/**
+ * 爬取命令
+ */
+export function crawlCommand(): Command {
+  const cmd = new Command('crawl');
+
+  cmd
+    .description('爬取职位数据（支持 links.txt 和 links.csv）')
+    .option('-m, --max-jobs <number>', '每个站点最大爬取职位数', '10')
+    .option('-p, --max-pages <number>', '最大翻页数', '1')
+    .option('-c, --concurrency <number>', '并发数', '1')
+    .option('-o, --output <path>', '输出文件路径', config.crawler.outputPath)
+    .option('-f, --format <format>', '输出格式 (json|csv)', 'json')
+    .option('-i, --input <path>', '输入文件路径（links.txt）', config.paths.links)
+    .option('--csv', '使用 CSV 配置文件（links.csv）')
+    .option('--no-headless', '显示浏览器窗口')
+    .option('-v, --verbose', '详细输出')
+    .action(async (options: CrawlOptions) => {
+      try {
+        await runCrawl(options);
+      } catch (error: any) {
+        console.error(chalk.red('❌ 爬取失败:'), error.message);
+        if (options.verbose) {
+          console.error(error.stack);
+        }
+        process.exit(1);
+      }
+    });
+
+  return cmd;
+}
+
+/**
+ * 执行爬取命令
+ */
+async function runCrawl(options: CrawlOptions) {
+  console.log(chalk.bold.blue('\n🕷️  JO Crawler - 智能职位爬虫\n'));
+
+  // 解析选项
+  const maxJobs = parseInt(String(options.maxJobs || '10'), 10);
+  const maxPages = parseInt(String(options.maxPages || '1'), 10);
+  const concurrency = parseInt(String(options.concurrency || '1'), 10);
+  const headless = options.headless !== false;
+
+  console.log(chalk.gray('配置:'));
+  console.log(chalk.gray(`  最大职位数: ${maxJobs}`));
+  console.log(chalk.gray(`  最大翻页数: ${maxPages}`));
+  console.log(chalk.gray(`  并发数: ${concurrency}`));
+  console.log(chalk.gray(`  输出格式: ${options.format}`));
+  console.log(chalk.gray(`  无头模式: ${headless}\n`));
+
+  // 读取配置文件
+  let linkConfigs: LinkConfig[] = [];
+
+  if (options.csv) {
+    // 从 CSV 读取配置
+    const csvPath = config.paths.linksCsv;
+    if (!(await fs.pathExists(csvPath))) {
+      console.error(chalk.red(`❌ CSV 文件不存在: ${csvPath}`));
+      process.exit(1);
+    }
+
+    console.log(chalk.gray(`📄 使用 CSV 配置文件\n`));
+    linkConfigs = await loadLinksConfig(csvPath);
+  } else {
+    // 从 TXT 读取 URL（向后兼容）
+    const linksPath = options.input || config.paths.links;
+    if (!(await fs.pathExists(linksPath))) {
+      console.error(chalk.red(`❌ Links 文件不存在: ${linksPath}`));
+      process.exit(1);
+    }
+
+    const content = await fs.readFile(linksPath, 'utf-8');
+    const urls = content
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line && !line.startsWith('#'));
+
+    // 转换为 LinkConfig 格式（默认为 list 类型）
+    linkConfigs = urls.map(url => ({
+      type: 'auto' as const,
+      url,
+      maxJobs: maxJobs,
+    }));
+  }
+
+  if (linkConfigs.length === 0) {
+    console.log(chalk.yellow('⚠️  没有找到可爬取的 URL'));
+    return;
+  }
+
+  console.log(chalk.gray(`找到 ${linkConfigs.length} 个 URL\n`));
+
+  // 初始化服务
+  const llmService = new LLMService({
+    apiKey: config.llm.apiKey,
+    apiUrl: config.llm.apiUrl,
+    model: config.llm.model,
+  });
+
+  const registry = new ParserRegistry(config.paths.parsers);
+  const genericParser = new GenericParser(llmService);
+
+  // 加载所有解析器
+  console.log(chalk.yellow('📦 加载解析器...\n'));
+  await registry.loadAll();
+
+  // 爬取数据
+  const allJobs: JobData[] = [];
+  const browser = new BrowserService();
+
+  try {
+    await browser.launch({ headless });
+
+    for (let i = 0; i < linkConfigs.length; i++) {
+      const linkConfig = linkConfigs[i];
+      const { url, type: configType, maxJobs: configMaxJobs } = linkConfig;
+      const actualMaxJobs = configMaxJobs || maxJobs;
+
+      // 如果类型是 'auto'，则不传递 pageType（让系统自动判断）
+      const pageType = configType === 'auto' ? undefined : configType;
+
+      const spinner = ora(`[${i + 1}/${linkConfigs.length}] 爬取: ${url}`).start();
+
+      try {
+        // 导航到页面
+        await browser.navigate(url);
+        await browser.waitForTimeout(2000);
+
+        // 获取快照
+        const { tree } = await browser.getSnapshot({
+          interactive: true,
+          maxDepth: 5,
+        });
+
+        // 查找匹配的解析器（传入 pageType 用于三段式命名匹配）
+        let parser = registry.findMatchingParser(tree, url, pageType);
+
+        if (!parser) {
+          // 尝试动态加载（传入 pageType）
+          const domain = extractDomain(url);
+          const loadedParser = await registry.loadParser(domain, url, pageType);
+          if (loadedParser) {
+            parser = loadedParser;
+          }
+        }
+
+        if (!parser) {
+          // 使用通用解析器
+          spinner.warn(`未找到专用解析器，使用通用解析器`);
+          parser = genericParser;
+        } else {
+          spinner.succeed(`使用解析器: ${parser.metadata.name}`);
+        }
+
+        // 执行解析
+        const jobs = await parser.parse(browser, {
+          maxItems: actualMaxJobs,
+          followPagination: maxPages > 1,
+          includeDetails: true,
+        });
+
+        allJobs.push(...jobs);
+
+        spinner.succeed(`提取了 ${jobs.length} 个职位`);
+      } catch (error: any) {
+        spinner.fail(`爬取失败: ${error.message}`);
+        if (options.verbose) {
+          console.error(error.stack);
+        }
+      }
+    }
+
+    await browser.close();
+
+    // 保存结果
+    await saveResults(allJobs, options.output || config.crawler.outputPath, options.format || 'json');
+
+    console.log(chalk.bold('\n✅ 爬取完成!\n'));
+    console.log(chalk.green(`总共提取: ${allJobs.length} 个职位`));
+    console.log(chalk.gray(`输出文件: ${options.output || config.crawler.outputPath}\n`));
+  } catch (error: any) {
+    await browser.close();
+    throw error;
+  }
+}
+
+/**
+ * 保存结果
+ */
+async function saveResults(jobs: JobData[], outputPath: string, format: 'json' | 'csv') {
+  await fs.ensureDir(path.dirname(outputPath));
+
+  if (format === 'json') {
+    await fs.writeJson(outputPath, jobs, { spaces: 2 });
+  } else if (format === 'csv') {
+    const csv = convertToCSV(jobs);
+    await fs.writeFile(outputPath.replace('.json', '.csv'), csv, 'utf-8');
+  }
+}
+
+/**
+ * 转换为 CSV
+ */
+function convertToCSV(jobs: JobData[]): string {
+  if (jobs.length === 0) return '';
+
+  const headers = Object.keys(jobs[0]);
+  const csvRows = [
+    headers.join(','),
+    ...jobs.map(job =>
+      headers.map(header => {
+        const value = job[header as keyof JobData];
+        // 转义包含逗号的值
+        if (typeof value === 'string' && value.includes(',')) {
+          return `"${value}"`;
+        }
+        return value ?? '';
+      }).join(',')
+    )
+  ];
+
+  return csvRows.join('\n');
+}
+
+/**
+ * 提取域名
+ */
+function extractDomain(url: string): string {
+  try {
+    const urlObj = new URL(url);
+    return urlObj.hostname;
+  } catch {
+    return 'unknown';
+  }
+}

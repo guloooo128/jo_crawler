@@ -1,0 +1,4 @@
+type,url,max_jobs,prompt
+list,https://jpmc.fa.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001/jobs?keyword=intern,3,
+detail,https://jpmc.fa.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001/job/210690325?keyword=intern,1,1. 需要提取描述前面的，job信息。2. 不要提取详情页面下面的3个引用岗位
+detail,https://apply.careers.microsoft.com/careers?start=0&pid=1970393556749000&sort_by=timestamp,1,1. 要等待Job Description标签加载完毕

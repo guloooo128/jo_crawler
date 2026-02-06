@@ -1,0 +1,219 @@
+{
+  "url": "https://jpmc.fa.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001/job/210690325?keyword=intern",
+  "pageType": "detail",
+  "domain": "jpmc.fa.oraclecloud.com",
+  "timestamp": "2026-02-05T10:00:34.090Z",
+  "tree": "- link \"Skip to main content.\" [ref=e1]\n- link \"Manage profile\" [ref=e2]\n- button \"Open menu\" [ref=e3]\n- button \"Copy Link\" [ref=e4]\n- button \"Add Job to My Job Selections\" [ref=e5]\n- link \"View More Jobs\" [ref=e6]\n- link [ref=e7]\n- button \"Apply Now\" [ref=e8]\n- link \"FAQs\" [ref=e9]\n- button \"Apply Now\" [ref=e10] [nth=1]\n- link \"2027 Markets Summer Analyst Program - Research New York, NY, United States • Posted on 12/29/2025 In ever-changing global markets you’ll spend your time exploring the sophisticated financial solutions we deliver across asset classes\" [ref=e11]\n- button \"Add Job to My Job Selections\" [ref=e12] [nth=1]\n- link \"2027 Commercial Real Estate Summer Analyst Program Atlanta, GA, United States and 9 more • Posted on 01/06/2026 2027 Commercial Real Estate Summer Analyst Program\" [ref=e13]\n- button \"Add Job to My Job Selections\" [ref=e14] [nth=2]\n- link \"2027 Commercial & Specialized Industries Summer Analyst Program Atlanta, GA, United States and 19 more • Posted on 01/05/2026 2027 Commercial & Specialized Industries Summer Analyst Program\" [ref=e15]\n- button \"Add Job to My Job Selections\" [ref=e16] [nth=3]\n- link \"2027 Public Finance Banking Summer Analyst Program New York, NY, United States • Posted on 12/29/2025 2027 Public Finance Banking Analyst Internship\" [ref=e17]\n- button \"Add Job to My Job Selections\" [ref=e18] [nth=4]\n- link \".\" [ref=e19]\n- link \"Privacy & Security\" [ref=e20]\n- link \"Terms of Use\" [ref=e21]\n- link \"Cookie Policy\" [ref=e22]\n- link \".\" [ref=e23] [nth=1]\n- link \"Equal Opportunities\" [ref=e24]\n- link \"Recruitment Scams Warning\" [ref=e25]\n- link \".\" [ref=e26] [nth=2]\n- link \"chase.com\" [ref=e27]\n- link \"jpmorganchase.com\" [ref=e28]\n- link \"jpmorgan.com\" [ref=e29]\n- link \".\" [ref=e30] [nth=3]\n- link \"Careers at Chase\" [ref=e31]\n- link \"Careers in the Philippines\" [ref=e32]\n- link \"GLOBAL\" [ref=e33]\n- link \"日本語\" [ref=e34]\n- link \"中文\" [ref=e35]\n- link \"Privacy Notice\" [ref=e36]\n- button \"Accept\" [ref=e37]\n- button \"Decline\" [ref=e38]\n- button \"Manage Preferences\" [ref=e39]\n- button \"Digital Assistant\" [ref=e40]",
+  "refs": {
+    "e1": {
+      "selector": "getByRole('link', { name: \"Skip to main content.\", exact: true })",
+      "role": "link",
+      "name": "Skip to main content."
+    },
+    "e2": {
+      "selector": "getByRole('link', { name: \"Manage profile\", exact: true })",
+      "role": "link",
+      "name": "Manage profile"
+    },
+    "e3": {
+      "selector": "getByRole('button', { name: \"Open menu\", exact: true })",
+      "role": "button",
+      "name": "Open menu"
+    },
+    "e4": {
+      "selector": "getByRole('button', { name: \"Copy Link\", exact: true })",
+      "role": "button",
+      "name": "Copy Link"
+    },
+    "e5": {
+      "selector": "getByRole('button', { name: \"Add Job to My Job Selections\", exact: true })",
+      "role": "button",
+      "name": "Add Job to My Job Selections",
+      "nth": 0
+    },
+    "e6": {
+      "selector": "getByRole('link', { name: \"View More Jobs\", exact: true })",
+      "role": "link",
+      "name": "View More Jobs"
+    },
+    "e7": {
+      "selector": "getByRole('link')",
+      "role": "link"
+    },
+    "e8": {
+      "selector": "getByRole('button', { name: \"Apply Now\", exact: true })",
+      "role": "button",
+      "name": "Apply Now",
+      "nth": 0
+    },
+    "e9": {
+      "selector": "getByRole('link', { name: \"FAQs\", exact: true })",
+      "role": "link",
+      "name": "FAQs"
+    },
+    "e10": {
+      "selector": "getByRole('button', { name: \"Apply Now\", exact: true })",
+      "role": "button",
+      "name": "Apply Now",
+      "nth": 1
+    },
+    "e11": {
+      "selector": "getByRole('link', { name: \"2027 Markets Summer Analyst Program - Research New York, NY, United States • Posted on 12/29/2025 In ever-changing global markets you’ll spend your time exploring the sophisticated financial solutions we deliver across asset classes\", exact: true })",
+      "role": "link",
+      "name": "2027 Markets Summer Analyst Program - Research New York, NY, United States • Posted on 12/29/2025 In ever-changing global markets you’ll spend your time exploring the sophisticated financial solutions we deliver across asset classes"
+    },
+    "e12": {
+      "selector": "getByRole('button', { name: \"Add Job to My Job Selections\", exact: true })",
+      "role": "button",
+      "name": "Add Job to My Job Selections",
+      "nth": 1
+    },
+    "e13": {
+      "selector": "getByRole('link', { name: \"2027 Commercial Real Estate Summer Analyst Program Atlanta, GA, United States and 9 more • Posted on 01/06/2026 2027 Commercial Real Estate Summer Analyst Program\", exact: true })",
+      "role": "link",
+      "name": "2027 Commercial Real Estate Summer Analyst Program Atlanta, GA, United States and 9 more • Posted on 01/06/2026 2027 Commercial Real Estate Summer Analyst Program"
+    },
+    "e14": {
+      "selector": "getByRole('button', { name: \"Add Job to My Job Selections\", exact: true })",
+      "role": "button",
+      "name": "Add Job to My Job Selections",
+      "nth": 2
+    },
+    "e15": {
+      "selector": "getByRole('link', { name: \"2027 Commercial & Specialized Industries Summer Analyst Program Atlanta, GA, United States and 19 more • Posted on 01/05/2026 2027 Commercial & Specialized Industries Summer Analyst Program\", exact: true })",
+      "role": "link",
+      "name": "2027 Commercial & Specialized Industries Summer Analyst Program Atlanta, GA, United States and 19 more • Posted on 01/05/2026 2027 Commercial & Specialized Industries Summer Analyst Program"
+    },
+    "e16": {
+      "selector": "getByRole('button', { name: \"Add Job to My Job Selections\", exact: true })",
+      "role": "button",
+      "name": "Add Job to My Job Selections",
+      "nth": 3
+    },
+    "e17": {
+      "selector": "getByRole('link', { name: \"2027 Public Finance Banking Summer Analyst Program New York, NY, United States • Posted on 12/29/2025 2027 Public Finance Banking Analyst Internship\", exact: true })",
+      "role": "link",
+      "name": "2027 Public Finance Banking Summer Analyst Program New York, NY, United States • Posted on 12/29/2025 2027 Public Finance Banking Analyst Internship"
+    },
+    "e18": {
+      "selector": "getByRole('button', { name: \"Add Job to My Job Selections\", exact: true })",
+      "role": "button",
+      "name": "Add Job to My Job Selections",
+      "nth": 4
+    },
+    "e19": {
+      "selector": "getByRole('link', { name: \".\", exact: true })",
+      "role": "link",
+      "name": ".",
+      "nth": 0
+    },
+    "e20": {
+      "selector": "getByRole('link', { name: \"Privacy & Security\", exact: true })",
+      "role": "link",
+      "name": "Privacy & Security"
+    },
+    "e21": {
+      "selector": "getByRole('link', { name: \"Terms of Use\", exact: true })",
+      "role": "link",
+      "name": "Terms of Use"
+    },
+    "e22": {
+      "selector": "getByRole('link', { name: \"Cookie Policy\", exact: true })",
+      "role": "link",
+      "name": "Cookie Policy"
+    },
+    "e23": {
+      "selector": "getByRole('link', { name: \".\", exact: true })",
+      "role": "link",
+      "name": ".",
+      "nth": 1
+    },
+    "e24": {
+      "selector": "getByRole('link', { name: \"Equal Opportunities\", exact: true })",
+      "role": "link",
+      "name": "Equal Opportunities"
+    },
+    "e25": {
+      "selector": "getByRole('link', { name: \"Recruitment Scams Warning\", exact: true })",
+      "role": "link",
+      "name": "Recruitment Scams Warning"
+    },
+    "e26": {
+      "selector": "getByRole('link', { name: \".\", exact: true })",
+      "role": "link",
+      "name": ".",
+      "nth": 2
+    },
+    "e27": {
+      "selector": "getByRole('link', { name: \"chase.com\", exact: true })",
+      "role": "link",
+      "name": "chase.com"
+    },
+    "e28": {
+      "selector": "getByRole('link', { name: \"jpmorganchase.com\", exact: true })",
+      "role": "link",
+      "name": "jpmorganchase.com"
+    },
+    "e29": {
+      "selector": "getByRole('link', { name: \"jpmorgan.com\", exact: true })",
+      "role": "link",
+      "name": "jpmorgan.com"
+    },
+    "e30": {
+      "selector": "getByRole('link', { name: \".\", exact: true })",
+      "role": "link",
+      "name": ".",
+      "nth": 3
+    },
+    "e31": {
+      "selector": "getByRole('link', { name: \"Careers at Chase\", exact: true })",
+      "role": "link",
+      "name": "Careers at Chase"
+    },
+    "e32": {
+      "selector": "getByRole('link', { name: \"Careers in the Philippines\", exact: true })",
+      "role": "link",
+      "name": "Careers in the Philippines"
+    },
+    "e33": {
+      "selector": "getByRole('link', { name: \"GLOBAL\", exact: true })",
+      "role": "link",
+      "name": "GLOBAL"
+    },
+    "e34": {
+      "selector": "getByRole('link', { name: \"日本語\", exact: true })",
+      "role": "link",
+      "name": "日本語"
+    },
+    "e35": {
+      "selector": "getByRole('link', { name: \"中文\", exact: true })",
+      "role": "link",
+      "name": "中文"
+    },
+    "e36": {
+      "selector": "getByRole('link', { name: \"Privacy Notice\", exact: true })",
+      "role": "link",
+      "name": "Privacy Notice"
+    },
+    "e37": {
+      "selector": "getByRole('button', { name: \"Accept\", exact: true })",
+      "role": "button",
+      "name": "Accept"
+    },
+    "e38": {
+      "selector": "getByRole('button', { name: \"Decline\", exact: true })",
+      "role": "button",
+      "name": "Decline"
+    },
+    "e39": {
+      "selector": "getByRole('button', { name: \"Manage Preferences\", exact: true })",
+      "role": "button",
+      "name": "Manage Preferences"
+    },
+    "e40": {
+      "selector": "getByRole('button', { name: \"Digital Assistant\", exact: true })",
+      "role": "button",
+      "name": "Digital Assistant"
+    }
+  }
+}

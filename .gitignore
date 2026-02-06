@@ -1,0 +1,9 @@
+node_modules/
+dist/
+output/*.json
+output/*.csv
+.env
+*.log
+.DS_Store
+src/parsers/generated/*.js
+src/parsers/generated/*.js.map
