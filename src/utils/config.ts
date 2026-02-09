@@ -24,12 +24,6 @@ export const config = {
     apiUrl: getEnv('DOUBAO_API_URL', 'https://ark.cn-beijing.volces.com/api/v3/chat/completions'),
     model: getEnv('DOUBAO_MODEL', 'doubao-seed-1-6-251015'),
   },
-  // 保留 glm 配置以向后兼容
-  glm: {
-    apiKey: getEnv('GLM_API_KEY'),
-    apiUrl: getEnv('GLM_API_URL', 'https://open.bigmodel.cn/api/paas/v4/chat/completions'),
-    model: getEnv('GLM_MODEL', 'glm-4.7'),
-  },
   browser: {
     headless: getEnv('BROWSER_HEADLESS', 'true') === 'true',
     timeout: parseInt(getEnv('BROWSER_TIMEOUT', '30000')),
