@@ -1,6 +1,6 @@
 # JO Crawler - 智能职位爬虫
 
-基于 [Agent-Browser](https://github.com/vercel-labs/agent-browser) 和 LLM（豆包/GLM-4.7）的智能职位爬虫。自动分析页面快照，用 LLM 生成站点专用解析器，实现全自动化的招聘网站职位数据采集。
+基于 [Agent-Browser](https://github.com/nicepkg/agent-browser) 和 LLM（豆包 Doubao）的智能职位爬虫。自动分析页面可访问性树快照，用 LLM 生成站点专用解析器，实现全自动化的招聘网站职位数据采集。
 
 ## ✨ 特性
 
@@ -34,10 +34,15 @@ cp .env.example .env
 在 `.env` 文件中配置：
 
 ```bash
-# LLM API 配置（豆包/火山引擎）
-LLM_API_KEY=your_api_key_here
-LLM_API_URL=https://ark.cn-beijing.volces.com/api/v3/chat/completions
-LLM_MODEL=doubao-pro-32k
+# LLM API 配置（豆包/火山引擎 — 主要）
+DOUBAO_API_KEY=your_doubao_api_key_here
+DOUBAO_API_URL=https://ark.cn-beijing.volces.com/api/v3/chat/completions  # 可选，有默认值
+DOUBAO_MODEL=doubao-seed-1-6-251015                                      # 可选，有默认值
+
+# LLM API 配置（智谱 GLM — 向后兼容，可选）
+# GLM_API_KEY=your_glm_api_key_here
+# GLM_API_URL=https://open.bigmodel.cn/api/paas/v4/chat/completions
+# GLM_MODEL=glm-4.7
 
 # 浏览器配置
 BROWSER_HEADLESS=true
@@ -45,7 +50,7 @@ BROWSER_TIMEOUT=30000
 
 # 爬虫配置
 MAX_JOBS_PER_SITE=10
-CONCURRENCY=1
+CONCURRENCY=2
 OUTPUT_FORMAT=json
 OUTPUT_PATH=output/jobs.json
 ```
@@ -77,10 +82,10 @@ https://td.wd3.myworkdayjobs.com/en-US/TD_Bank_Careers/details/...
 ### 2. 生成解析器
 
 ```bash
-# 使用 CSV 配置（默认）
+# 自动检测配置文件（优先 CSV，回退 TXT）
 npm run generate
 
-# 使用 TXT 配置
+# 显式指定使用 TXT 配置
 npm run generate -- --txt
 
 # 强制重新生成已有解析器
@@ -93,8 +98,11 @@ npm run generate -- --force -d cibc
 ### 3. 开始爬取
 
 ```bash
-# 默认爬取（每个站点最多 10 个职位）
+# 默认爬取（从 links.txt 读取 URL，每个站点最多 10 个职位）
 npm run crawl
+
+# 使用 CSV 配置文件爬取
+npm run crawl -- --csv
 
 # 自定义选项
 npm run crawl -- -m 5              # 每个站点最多 5 个职位
@@ -129,17 +137,17 @@ detail,https://example.com/jobs/123,1,
 ```json
 [
   {
-    "job_title": "Senior ASIC Verification Engineer Greece",
-    "company_name": "Capgemini",
-    "location": "Athens, Thessaloniki/Steliou Kazantzidi",
-    "job_link": "https://www.capgemini.com/jobs/368376-en_GB+sap_btp/",
-    "post_date": "25 Nov 2025",
-    "dead_line": "",
-    "job_type": "Permanent",
-    "description": "We are seeking a motivated, detail-oriented engineer with...",
+    "job_title": "Global Markets, Summer 2027 Analyst (Vancouver)",
+    "company_name": "CIBC",
+    "location": "Vancouver, BC",
+    "job_link": "https://cibc.wd3.myworkdayjobs.com/en-US/campus/job/...",
+    "post_date": "Today",
+    "dead_line": "March 9, 2026",
+    "job_type": "Temporary",
+    "description": "We're building a relationship-oriented bank for the modern world...",
     "salary": "",
-    "source": "Capgemini",
-    "extracted_at": "2026-02-09T03:04:49.369Z"
+    "source": "CIBC",
+    "extracted_at": "2026-02-09T15:05:34.399Z"
   }
 ]
 ```
@@ -171,8 +179,9 @@ npm run generate [options]
   -d, --domain <domain>    只为指定域名生成解析器
   -f, --force             强制重新生成，覆盖已存在的解析器
   -v, --verbose           详细输出
-  --csv                   使用 CSV 配置文件（默认）
+  --csv                   使用 CSV 配置文件
   --txt                   使用 TXT 配置文件
+  # 默认行为：links.csv 存在则用 CSV，否则用 links.txt
 ```
 
 ### crawl 命令
@@ -187,9 +196,12 @@ npm run crawl [options]
   -o, --output <path>      输出文件路径 [默认: output/jobs.json]
   -f, --format <format>    输出格式 (json|csv) [默认: json]
   -i, --input <path>       输入文件路径 [默认: links.txt]
+  --csv                    使用 CSV 配置文件（links.csv）
   --no-headless            显示浏览器窗口
   -v, --verbose            详细输出
 ```
+
+> **注意**: `generate` 命令会自动检测 `links.csv`（优先）或 `links.txt`；`crawl` 命令默认读取 `links.txt`，需加 `--csv` 才使用 CSV 配置。
 
 ## 🏗️ 架构
 
@@ -369,13 +381,14 @@ jo_crawler/
 
 ## 📄 许可证
 
-MIT License
+ISC License
 
 ## 🙏 致谢
 
 - [Agent-Browser](https://github.com/nicepkg/agent-browser) — AI 浏览器自动化框架
 - [Playwright](https://playwright.dev/) — 浏览器自动化引擎
-- [豆包大模型](https://www.volcengine.com/product/doubao) — 火山引擎 LLM
+- [豆包大模型](https://www.volcengine.com/product/doubao) — 火山引擎 Doubao LLM
+- [智谱 GLM](https://open.bigmodel.cn/) — GLM 系列 LLM（向后兼容）
 
 ---
 
