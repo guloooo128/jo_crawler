@@ -34,28 +34,31 @@ export class ParserGenerator {
 
       // 1. 导航到页面（使用带重试的导航方法）
       await this.browser.navigateWithRetry(url, 2);
-      await this.browser.waitForTimeout(3000); // 等待页面加载
 
-      // 2. 获取快照
+      // 2. 等待页面内容加载（SPA 可能需要更长时间）
+      console.log('⏳ 等待页面内容渲染...');
+      await this.browser.waitForContent(15000, 3);
+
+      // 3. 获取快照（带重试，处理 SPA 延迟渲染）
       console.log('📸 获取页面快照...');
-      const enhancedSnapshot = await this.browser.getSnapshot({
+      const enhancedSnapshot = await this.browser.getSnapshotWithRetry({
         interactive: true,
         maxDepth: 5,
-      });
+      }, 5, 2000);
 
       const { tree, refs } = enhancedSnapshot;
       console.log(`✅ 快照获取成功 (${tree.length} 字符)`);
 
-      // 3. 分析页面类型
+      // 4. 分析页面类型
       console.log('🔬 分析页面类型...');
       const pageType = await this.llm.analyzePageType(tree, url);
       console.log(`📊 页面类型: ${pageType}`);
 
-      // 4. 提取域名
+      // 5. 提取域名
       const domain = this.extractDomain(url);
       console.log(`🌐 域名: ${domain}`);
 
-      // 5. 生成解析器代码
+      // 6. 生成解析器代码
       console.log('🤖 使用 LLM 生成解析器代码...');
       const generateResult = await this.llm.generateParser(
         domain,
@@ -194,6 +197,83 @@ export class ParserGenerator {
   }
 
   /**
+   * 获取详情页快照：找到列表页第一个职位链接，导航过去获取快照和原始文本，再导航回来
+   */
+  private async captureDetailPageSnapshot(
+    refs: Record<string, any>,
+    listUrl: string,
+    addLog: (msg: string) => void
+  ): Promise<{ tree: string; refs: Record<string, any>; url: string; rawText: string } | undefined> {
+    // 找到第一个像职位链接的 ref（role=link，name 较长，排除导航/页脚）
+    const skipKeywords = ['Skip', 'search', 'Sign In', 'Facebook', 'YouTube', 'Google', 'Glassdoor', 'LinkedIn', 'Read More', 'Cookie'];
+    const jobLinkEntry = Object.entries(refs).find(([_, info]) => {
+      if (info.role !== 'link') return false;
+      const name = info.name || '';
+      if (name.length < 15) return false;
+      if (skipKeywords.some(k => name.includes(k))) return false;
+      return true;
+    });
+
+    if (!jobLinkEntry) {
+      addLog('⚠️  未找到职位链接，跳过详情页快照');
+      return undefined;
+    }
+
+    const [refId, refInfo] = jobLinkEntry;
+    addLog(`📄 获取详情页快照: 点击 "${refInfo.name.substring(0, 60)}..."`);
+
+    // 获取链接 href
+    let detailUrl: string | null = null;
+    try {
+      const href = await this.browser.getAttribute(`@${refId}`, 'href');
+      if (href) {
+        detailUrl = href.startsWith('http') ? href : new URL(href, listUrl).href;
+      }
+    } catch (e) {
+      // fallback: 直接 click
+    }
+
+    if (!detailUrl) {
+      addLog('⚠️  无法获取详情页 URL，跳过详情页快照');
+      return undefined;
+    }
+
+    // 导航到详情页
+    await this.browser.navigate(detailUrl);
+    await this.browser.waitForContent(10000, 2);
+
+    // 获取详情页快照
+    const detailSnap = await this.browser.getSnapshotWithRetry({
+      interactive: true,
+      maxDepth: 5,
+    }, 3, 2000);
+
+    // 获取详情页原始文本（用于展示详情页的真实文本结构）
+    let rawText = '';
+    try {
+      rawText = await this.browser.getMainContentText();
+    } catch (e) {
+      try {
+        rawText = await this.browser.getCleanPageText();
+      } catch (e2) { /* ignore */ }
+    }
+
+    addLog(`✅ 详情页快照获取成功 (${detailSnap.tree.length} 字符, ${Object.keys(detailSnap.refs).length} 个 refs, rawText ${rawText.length} 字符)`);
+
+    // 导航回列表页
+    await this.browser.navigate(listUrl);
+    await this.browser.waitForContent(10000, 2);
+    addLog('↩️  已导航回列表页');
+
+    return {
+      tree: detailSnap.tree,
+      refs: detailSnap.refs,
+      url: detailUrl,
+      rawText,
+    };
+  }
+
+  /**
    * 提取域名
    */
   private extractDomain(url: string): string {
@@ -223,11 +303,13 @@ export class ParserGenerator {
    * 使用 LinkConfig 配置批量生成解析器
    */
   async generateBatchWithConfigs(
-    configs: LinkConfig[]
+    configs: LinkConfig[],
+    options?: { force?: boolean }
   ): Promise<Array<{ config: LinkConfig; success: boolean; error?: string; skipped?: boolean }>> {
     await this.browser.launch({ headless: config.browser.headless });
 
     const results: Array<{ config: LinkConfig; success: boolean; error?: string; skipped?: boolean }> = [];
+    const force = options?.force ?? false;
 
     // 获取已存在的解析器文件列表
     const existingParsers = await this.getExistingParsers();
@@ -247,11 +329,11 @@ export class ParserGenerator {
           pageType = configType;
         }
 
-        // 检查文件是否已存在
+        // 检查文件是否已存在（--force 时跳过此检查）
         const expectedFilename = generateParserFilename(domain, url, pageType) + '.js';
         const alreadyExists = existingParsers.includes(expectedFilename);
 
-        if (alreadyExists) {
+        if (alreadyExists && !force) {
           console.log(`⏭️  跳过已存在的解析器: ${expectedFilename}`);
           results.push({
             config: linkConfig,
@@ -259,6 +341,10 @@ export class ParserGenerator {
             skipped: true,
           });
           continue;
+        }
+
+        if (alreadyExists && force) {
+          console.log(`🔄 强制重新生成: ${expectedFilename}`);
         }
 
         // 不存在，开始生成
@@ -324,19 +410,25 @@ export class ParserGenerator {
     // 1. 导航到页面（使用带重试的导航方法）
     addLog('🌐 导航到页面...');
     await this.browser.navigateWithRetry(url, 2);
-    await this.browser.waitForTimeout(3000);
 
-    // 2. 获取快照
+    // 2. 等待页面内容加载（SPA 可能需要更长时间）
+    addLog('⏳ 等待页面内容渲染...');
+    const contentLoaded = await this.browser.waitForContent(15000, 3);
+    if (!contentLoaded) {
+      addLog('⚠️  页面内容等待超时，尝试继续...');
+    }
+
+    // 3. 获取快照（带重试，处理 SPA 延迟渲染）
     addLog('📸 获取页面快照...');
-    const enhancedSnapshot = await this.browser.getSnapshot({
+    const enhancedSnapshot = await this.browser.getSnapshotWithRetry({
       interactive: true,
       maxDepth: 5,
-    });
+    }, 5, 2000);
 
     const { tree, refs } = enhancedSnapshot;
     addLog(`✅ 快照获取成功 (${tree.length} 字符, ${Object.keys(refs).length} 个 refs)`);
 
-    // 3. 截图
+    // 4. 截图
     addLog('📷 获取页面截图...');
     let screenshotPath: string | undefined;
     try {
@@ -348,7 +440,7 @@ export class ParserGenerator {
       addLog(`⚠️  截图失败: ${error.message}`);
     }
 
-    // 4. 确定页面类型
+    // 5. 确定页面类型
     let pageType: 'list' | 'detail';
 
     if (configType === 'list' || configType === 'detail') {
@@ -361,11 +453,21 @@ export class ParserGenerator {
       addLog(`📊 页面类型: ${pageType} (LLM分析)`);
     }
 
-    // 5. 提取域名
+    // 6. 提取域名
     const domain = this.extractDomain(url);
     addLog(`🌐 域名: ${domain}`);
 
-    // 6. 生成解析器代码
+    // 6.5 如果是列表页，获取第一个职位的详情页快照
+    let detailSnapshot: { tree: string; refs: Record<string, any>; url: string; rawText: string } | undefined;
+    if (pageType === 'list') {
+      try {
+        detailSnapshot = await this.captureDetailPageSnapshot(refs, url, addLog);
+      } catch (error: any) {
+        addLog(`⚠️  获取详情页快照失败: ${error.message}`);
+      }
+    }
+
+    // 7. 生成解析器代码
     addLog('🤖 使用 LLM 生成解析器代码...');
     if (customPrompt) {
       addLog(`📝 自定义提示词: ${customPrompt.substring(0, 50)}...`);
@@ -377,7 +479,8 @@ export class ParserGenerator {
       url,
       refs,
       customPrompt,
-      pageType  // ✅ Pass pageType to LLM generation
+      pageType,
+      detailSnapshot  // ✅ Pass detail page snapshot to LLM
     );
 
     addLog(`✅ 解析器代码生成成功 (${generateResult.code.length} 字符)`);
@@ -397,6 +500,7 @@ export class ParserGenerator {
         pageType,
         {
           snapshot: { tree, refs },
+          detailSnapshot: detailSnapshot ? { tree: detailSnapshot.tree, refs: detailSnapshot.refs, url: detailSnapshot.url } : undefined,
           screenshotPath,
           generationLog,
           logStartTime,

@@ -1,15 +1,18 @@
 # JO Crawler - 智能职位爬虫
 
-基于 Agent-Browser 和 GLM-4.7 LLM 的智能职位爬虫，能够自动生成解析器并爬取招聘网站的职位数据。
+基于 [Agent-Browser](https://github.com/vercel-labs/agent-browser) 和 LLM（豆包/GLM-4.7）的智能职位爬虫。自动分析页面快照，用 LLM 生成站点专用解析器，实现全自动化的招聘网站职位数据采集。
 
 ## ✨ 特性
 
-- 🤖 **智能解析器生成** - 使用 LLM 自动分析页面结构并生成解析器
-- 📄 **完整 JD 提取** - 自动提取完整的职位描述（包括职责、要求、福利等）
-- 🔄 **动态加载** - 无需重启即可加载新解析器
-- 📝 **CSV 配置** - 灵活的 CSV 配置文件支持
-- 🎯 **Ref 系统** - 使用 Agent-Browser 的 refs 系统进行可靠的元素定位
-- 🚀 **高性能** - 支持并发爬取和批量处理
+- 🤖 **LLM 智能生成解析器** — 基于可访问性树快照 + refs，LLM 为每个站点生成专用 JS 解析器
+- � **详情页快照** — 生成阶段自动捕获详情页快照和原始文本，让 LLM 看到真实的详情页结构，生成更精准的清洗逻辑
+- 📄 **高质量 JD 提取** — 生成的解析器始终从 `getMainContentText()` 原始文本自行清洗 description，内置 `cleanDescription`/`cleanLocation`/`cleanSalary`/`extractDatesFromRawText` 等辅助方法
+- 🔗 **稳定的列表页遍历** — `collectJobLinks()` 批量收集 URL + `navigate()` 逐页访问，避免 click+goBack 带来的 ref 失效问题
+- 📝 **CSV 配置** — 支持按 URL 配置页面类型、最大职位数、自定义 LLM 提示词
+- 🎯 **Ref 系统** — 使用 Agent-Browser 的 refs 实现可靠的元素定位和数据提取
+- 🔄 **动态加载** — 生成的解析器自动注册，无需重启即可使用
+- 🧩 **解析器缓存** — 已有解析器自动跳过生成，支持 `--force` 强制重新生成
+- 🍪 **弹窗自动处理** — 自动关闭 Cookie 横幅、隐私弹窗等
 
 ## 📦 安装
 
@@ -23,7 +26,7 @@ npm install
 
 # 配置环境变量
 cp .env.example .env
-# 编辑 .env 文件，添加你的 GLM API Key
+# 编辑 .env 文件，配置 LLM API Key
 ```
 
 ## 🔑 环境变量
@@ -31,10 +34,10 @@ cp .env.example .env
 在 `.env` 文件中配置：
 
 ```bash
-# GLM API 配置
-GLM_API_KEY=your_glm_api_key_here
-GLM_API_URL=https://open.bigmodel.cn/api/paas/v4/chat/completions
-GLM_MODEL=glm-4.7
+# LLM API 配置（豆包/火山引擎）
+LLM_API_KEY=your_api_key_here
+LLM_API_URL=https://ark.cn-beijing.volces.com/api/v3/chat/completions
+LLM_MODEL=doubao-pro-32k
 
 # 浏览器配置
 BROWSER_HEADLESS=true
@@ -42,7 +45,7 @@ BROWSER_TIMEOUT=30000
 
 # 爬虫配置
 MAX_JOBS_PER_SITE=10
-CONCURRENCY=2
+CONCURRENCY=1
 OUTPUT_FORMAT=json
 OUTPUT_PATH=output/jobs.json
 ```
@@ -57,9 +60,9 @@ OUTPUT_PATH=output/jobs.json
 
 ```csv
 type,url,max_jobs,prompt
-list,https://jpmc.fa.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001/jobs?keyword=intern,10,
-detail,https://jpmc.fa.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001/jobs/preview/210690325/?keyword=intern,1,
-list,https://careers.microsoft.com,5,此网站有反爬虫，需要增加延迟
+list,https://www.capgemini.com/careers/join-capgemini/job-search/?size=15,10,分页需要点击 LoadMore
+detail,https://example.com/jobs/preview/12345,1,
+list,https://td.wd3.myworkdayjobs.com/en-US/TD_Bank_Careers/details/...,5,左侧是岗位列表右侧是详情
 ```
 
 **方式 B: 使用 TXT 格式（简单）**
@@ -67,18 +70,24 @@ list,https://careers.microsoft.com,5,此网站有反爬虫，需要增加延迟
 创建 `links.txt` 文件：
 
 ```
-https://jpmc.fa.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001/jobs?keyword=intern
-https://careers.microsoft.com/jobs
+https://www.capgemini.com/careers/join-capgemini/job-search/?size=15
+https://td.wd3.myworkdayjobs.com/en-US/TD_Bank_Careers/details/...
 ```
 
 ### 2. 生成解析器
 
 ```bash
-# 使用 CSV 配置
+# 使用 CSV 配置（默认）
 npm run generate
 
-# 或使用 TXT 配置
+# 使用 TXT 配置
 npm run generate -- --txt
+
+# 强制重新生成已有解析器
+npm run generate -- --force
+
+# 只为指定域名生成/重新生成
+npm run generate -- --force -d cibc
 ```
 
 ### 3. 开始爬取
@@ -104,11 +113,12 @@ list,https://example.com/jobs,10,自定义提示词（可选）
 detail,https://example.com/jobs/123,1,
 ```
 
-**字段说明：**
-- `type`: 页面类型 (`list`=列表页, `detail`=详情页, `auto`=自动判断)
-- `url`: 目标 URL
-- `max_jobs`: 最大爬取职位数（默认 10）
-- `prompt`: 自定义提示词（可选）
+| 字段 | 说明 |
+|------|------|
+| `type` | 页面类型：`list`（列表页）、`detail`（详情页），留空则自动判断 |
+| `url` | 目标 URL |
+| `max_jobs` | 最大爬取职位数（默认 10） |
+| `prompt` | 自定义 LLM 提示词，用于指导解析器生成（可选） |
 
 详细说明请参考：[CSV 配置指南](docs/CSV_CONFIG.md)
 
@@ -119,23 +129,36 @@ detail,https://example.com/jobs/123,1,
 ```json
 [
   {
-    "title": "2027 Markets Summer Analyst Program",
-    "company": "JPMorgan Chase",
-    "location": "New York, NY",
-    "description": "Job Description: If you are ambitious and eager...",
-    "url": "https://jpmc.fa.oraclecloud.com/...",
-    "source": "JpmcFaOraclecloudCom",
-    "extractedAt": "2026-02-05T03:56:18.095Z"
+    "job_title": "Senior ASIC Verification Engineer Greece",
+    "company_name": "Capgemini",
+    "location": "Athens, Thessaloniki/Steliou Kazantzidi",
+    "job_link": "https://www.capgemini.com/jobs/368376-en_GB+sap_btp/",
+    "post_date": "25 Nov 2025",
+    "dead_line": "",
+    "job_type": "Permanent",
+    "description": "We are seeking a motivated, detail-oriented engineer with...",
+    "salary": "",
+    "source": "Capgemini",
+    "extracted_at": "2026-02-09T03:04:49.369Z"
   }
 ]
 ```
 
-### CSV 格式
+### JobData 字段说明
 
-```csv
-title,company,location,description,url,source,extractedAt
-"2027 Markets Summer Analyst Program","JPMorgan Chase","New York, NY","Job Description...","https://...","JpmcFaOraclecloudCom","2026-02-05T03:56:18.095Z"
-```
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `job_title` | string | 职位标题 |
+| `company_name` | string | 公司名称 |
+| `location` | string | 工作地点（城市/地区） |
+| `job_link` | string | 职位详情链接 URL |
+| `post_date` | string | 发布日期 |
+| `dead_line` | string | 申请截止日期（无则空串） |
+| `job_type` | string | Full-time / Part-time / Contract / Permanent / Internship |
+| `description` | string | 完整 JD 正文（已去噪） |
+| `salary` | string | 薪资范围（无则空串） |
+| `source` | string | 来源网站名 |
+| `extracted_at` | string | ISO 时间戳 |
 
 ## 🛠️ 命令行选项
 
@@ -148,7 +171,7 @@ npm run generate [options]
   -d, --domain <domain>    只为指定域名生成解析器
   -f, --force             强制重新生成，覆盖已存在的解析器
   -v, --verbose           详细输出
-  --csv                   使用 CSV 配置文件
+  --csv                   使用 CSV 配置文件（默认）
   --txt                   使用 TXT 配置文件
 ```
 
@@ -168,77 +191,171 @@ npm run crawl [options]
   -v, --verbose            详细输出
 ```
 
+## 🏗️ 架构
+
+```
+┌──────────────────────────────────────────────────────────┐
+│                     CLI Commands                          │
+│              generate.ts  /  crawl.ts                     │
+└──────────┬───────────────────────┬────────────────────────┘
+           │                       │
+     ┌─────▼──────┐        ┌──────▼───────┐
+     │ ParserGen  │        │  Registry    │
+     │  Service   │        │  (动态加载)   │
+     └─────┬──────┘        └──────┬───────┘
+           │                       │
+     ┌─────▼──────┐        ┌──────▼───────┐
+     │ LLMService │        │  BaseParser  │ ◄── 生成的 Parser 继承
+     │ (豆包 API) │        │  (核心方法)   │
+     └─────┬──────┘        └──────┬───────┘
+           │                       │
+           └───────────┬───────────┘
+                 ┌─────▼──────┐
+                 │ Browser    │
+                 │  Service   │
+                 │ (Playwright)│
+                 └────────────┘
+```
+
+### 核心工作流
+
+1. **生成阶段** (`npm run generate`)
+   - 导航到目标 URL → 获取列表页可访问性树快照 + refs
+   - 自动点击第一个职位链接 → 捕获详情页快照 + `getMainContentText()` 原始文本 → 导航回列表页
+   - 将列表页快照 + 详情页快照/原始文本 + Prompt 发送给 LLM → 生成站点专用 JS 解析器
+   - LLM 根据真实的详情页文本结构，生成 `cleanDescription`/`cleanLocation`/`cleanSalary`/`extractDatesFromRawText` 等自定义清洗方法
+   - 解析器保存到 `output/parsers/`（含快照、截图、日志）和 `src/parsers/generated/`
+
+2. **爬取阶段** (`npm run crawl`)
+   - 自动加载匹配的解析器 → 导航到目标页面
+   - **列表页**: `collectJobLinks()` 收集所有职位 URL → `navigate()` 逐个访问
+   - **详情提取**: `extractDetailFields()` 提取基础字段 + `getMainContentText()` 获取原始文本 → 解析器自定义的 `cleanDescription()` 清洗 description
+   - **字段验证**: `cleanLocation()` 去除元数据拼接噪音、`cleanSalary()` 验证薪资格式、`extractDatesFromRawText()` 从原始文本提取日期
+   - **详情页**: 直接 `extractDetailFields()` 提取所有字段
+   - 结果输出到 `output/jobs.json`
+
+### BaseParser 核心方法
+
+| 方法 | 说明 |
+|------|------|
+| `collectJobLinks(browser, refs)` | 在列表页批量收集所有职位链接的 URL，避免 ref 失效 |
+| `extractDetailFields(browser)` | 在详情页提取基础字段（location/date/type/salary 等），description 建议解析器自行从原始文本提取 |
+| `createJobData(data)` | 创建 JobData 对象，自动填充默认值和时间戳 |
+| `cleanText(text)` | 清理文本（去除多余空白） |
+| `getCompanyName()` | 获取公司名称（子类可重写） |
+| `delay(ms)` | 延迟执行 |
+
+### 生成的解析器自带的辅助方法
+
+| 方法 | 说明 |
+|------|------|
+| `cleanDescription(rawText, jobTitle)` | 从 `getMainContentText()` 连续文本中用正则/indexOf 定位正文起止，去除头尾噪音 |
+| `cleanLocation(rawLocation)` | 去除 SPA 站点 location 的残留前缀（如 "sToronto" → "Toronto"）和尾部拼接噪音 |
+| `cleanSalary(rawSalary)` | 验证 salary 是否包含真实薪资格式（$ + 数字），否则返回空 |
+| `extractDatesFromRawText(rawText)` | 从原始文本提取 post_date（"Posted X Days Ago"）和 dead_line（"End Date: ..."）|
+
+### BrowserService 关键方法
+
+| 方法 | 说明 |
+|------|------|
+| `getSnapshot({ interactive, maxDepth })` | 获取可访问性树快照和 refs 映射 |
+| `navigate(url)` | 导航到指定 URL |
+| `getText('@eXX')` | 获取指定 ref 元素的文本内容 |
+| `getAttribute('@eXX', 'href')` | 获取元素属性 |
+| `getMainContentText()` | 获取页面主内容区域文本（优先 main/article） |
+| `getCleanPageText()` | 获取去噪后的页面文本（移除 script/style/nav/footer） |
+| `getPageText()` | 获取页面完整纯文本（包含噪音，不推荐） |
+
 ## 📂 项目结构
 
 ```
 jo_crawler/
 ├── src/
-│   ├── commands/          # CLI 命令
-│   │   ├── generate.ts    # 生成解析器命令
-│   │   └── crawl.ts       # 爬取命令
-│   ├── models/            # 数据模型
-│   │   ├── JobData.ts
-│   │   ├── CrawlConfig.ts
-│   │   └── LinksConfig.ts
-│   ├── parsers/           # 解析器
+│   ├── index.ts               # 入口文件
+│   ├── commands/              # CLI 命令
+│   │   ├── generate.ts        # 解析器生成命令
+│   │   └── crawl.ts           # 爬取命令
+│   ├── models/                # 数据模型
+│   │   ├── JobData.ts         # JobData 接口定义
+│   │   ├── CrawlConfig.ts     # 爬取配置
+│   │   └── LinksConfig.ts     # 链接配置
+│   ├── parsers/               # 解析器
 │   │   ├── base/
-│   │   │   └── BaseParser.ts
-│   │   ├── generated/     # LLM 生成的解析器
-│   │   └── registry.ts
-│   ├── prompts/           # Prompt 模板
-│   │   └── parser-generator.ts
-│   ├── services/          # 服务层
-│   │   ├── BrowserService.ts
-│   │   ├── LLMService.ts
-│   │   └── ParserGenerator.ts
-│   └── utils/             # 工具函数
-│       ├── config.ts
-│       └── loadLinksCsv.ts
-├── output/                # 输出目录
-├── links.csv              # CSV 配置文件
-├── links.txt              # TXT 配置文件（向后兼容）
-├── .env                   # 环境变量
+│   │   │   ├── BaseParser.ts  # 基类（collectJobLinks, extractDetailFields 等）
+│   │   │   ├── GenericParser.ts # 通用回退解析器
+│   │   │   └── Parser.ts      # Parser 接口
+│   │   ├── generated/         # LLM 自动生成的解析器（.js）
+│   │   └── registry.ts        # 解析器动态注册/加载
+│   ├── prompts/               # LLM Prompt 模板
+│   │   └── parser-generator.ts # System + User prompt（含列表页/详情页指导）
+│   ├── services/              # 服务层
+│   │   ├── BrowserService.ts  # Playwright 浏览器封装
+│   │   ├── LLMService.ts      # LLM API 调用（豆包/GLM）
+│   │   ├── JDExtractor.ts     # JD 结构化提取
+│   │   └── ParserGenerator.ts # 解析器生成编排
+│   └── utils/                 # 工具函数
+│       ├── config.ts          # 全局配置
+│       ├── loadLinksCsv.ts    # CSV 文件加载
+│       └── parserFilename.ts  # 解析器文件名生成（防冲突）
+├── output/                    # 输出目录
+│   ├── jobs.json              # 爬取结果
+│   ├── parsers/               # 生成的解析器
+│   │   └── <domain>/
+│   │       ├── parser.js          # 生成的解析器代码
+│   │       ├── snapshot.json      # 列表页快照
+│   │       ├── detail-snapshot.json # 详情页快照 + 原始文本
+│   │       ├── screenshot.png     # 页面截图
+│   │       ├── generation.log     # 生成日志
+│   │       └── README.md          # 生成说明
+│   └── screenshots/           # 页面截图
+├── docs/                      # 项目文档
+├── links.csv                  # CSV 配置文件（推荐）
+├── links.txt                  # TXT 配置文件（向后兼容）
+├── .env                       # 环境变量
+├── tsconfig.json
 └── package.json
 ```
 
 ## 🔧 开发
 
-### 添加新的解析器
+### 添加新的爬取目标
 
-1. 将 URL 添加到 `links.csv`
-2. 运行 `npm run generate`
-3. 检查生成的解析器：`src/parsers/generated/`
-4. 必要时手动优化生成的代码
-
-### 扩展 BaseParser
-
-如果需要通用的提取逻辑：
-
-```typescript
-// src/parsers/base/BaseParser.ts
-
-protected extractSalary(tree: string): string {
-  // 从 tree 中提取薪资信息
-  const match = tree.match(/\$\d+,\d+/);
-  return match ? match[0] : '';
-}
-```
+1. 在 `links.csv` 中添加 URL，指定 `type` 和可选的 `prompt`
+2. 运行 `npm run generate` — LLM 自动分析页面并生成解析器
+3. 检查生成的解析器：`output/parsers/<domain>/parser.js`
+4. 运行 `npm run crawl` 测试爬取效果
+5. 如有需要，手动优化 `src/parsers/generated/` 中的解析器代码
 
 ### 自定义 Prompt
 
-编辑 `src/prompts/parser-generator.ts` 中的：
+编辑 `src/prompts/parser-generator.ts`：
 
-1. `COMMON_SYSTEM_PROMPT` - 通用工具文档
-2. `generateCustomPrompt()` - 自定义页面分析
-3. `analyzeStructure()` - 页面结构分析规则
+| 部分 | 说明 |
+|------|------|
+| `COMMON_SYSTEM_PROMPT` | 系统级指导：代码规范、可用方法、禁止事项 |
+| `generateCustomPrompt()` | 根据 URL/快照/refs/详情页快照 生成特定页面的 User Prompt |
+| `generateListPageInstructions()` | 列表页提取策略（URL 收集 + 逐页导航 + description 自提取模式） |
+| `generateDetailPageInstructions()` | 详情页提取策略（`extractDetailFields` + 自提取 description） |
+| `generateDetailSnapshotSection()` | 详情页快照 + 原始文本展示，含 SPA 站点噪音模式说明 |
 
 详细说明请参考：[Prompt 结构说明](docs/PROMPT_STRUCTURE.md)
 
+### 解析器文件命名
+
+解析器文件名由 `parserFilename.ts` 自动生成，格式为 `<domain>-<pageType>-<url-signature>`，确保同一域名下不同页面的解析器不会冲突。例如：
+- `www-capgemini-com-list-join-capgemini-job-search.js`
+- `td-wd3-myworkdayjobs-com-list-details-retail-market-manager.js`
+
 ## 📚 文档
 
-- [CSV 配置指南](docs/CSV_CONFIG.md) - CSV 配置文件详细说明
-- [Prompt 结构说明](docs/PROMPT_STRUCTURE.md) - Prompt 架构和使用
-- [实现总结](IMPLEMENTATION_SUMMARY.md) - 完整的技术实现总结
+| 文档 | 说明 |
+|------|------|
+| [CSV 配置指南](docs/CSV_CONFIG.md) | CSV 配置文件详细说明 |
+| [Prompt 结构说明](docs/PROMPT_STRUCTURE.md) | Prompt 架构和两阶段生成策略 |
+| [LLM 迁移指南](docs/LLM_MIGRATION.md) | 从智谱 GLM 迁移到豆包（火山引擎）的指南 |
+| [弹窗处理](docs/POPUP_HANDLING.md) | Cookie 横幅、隐私弹窗等自动处理机制 |
+| [解析器命名](docs/PARSER_NAMING.md) | 解析器文件命名策略和冲突解决 |
+| [实现总结](IMPLEMENTATION_SUMMARY.md) | 完整的技术实现总结 |
 
 ## 🤝 贡献
 
@@ -256,10 +373,10 @@ MIT License
 
 ## 🙏 致谢
 
-- [Agent-Browser](https://github.com/vercel-labs/agent-browser) - AI 浏览器自动化
-- [GLM-4](https://open.bigmodel.cn/) - 智谱 AI 的语言模型
-- [Playwright](https://playwright.dev/) - 浏览器自动化引擎
+- [Agent-Browser](https://github.com/nicepkg/agent-browser) — AI 浏览器自动化框架
+- [Playwright](https://playwright.dev/) — 浏览器自动化引擎
+- [豆包大模型](https://www.volcengine.com/product/doubao) — 火山引擎 LLM
 
 ---
 
-**最后更新:** 2026-02-05
+**最后更新:** 2026-02-09

@@ -140,13 +140,15 @@ async function runCrawl(options: CrawlOptions) {
       try {
         // 导航到页面
         await browser.navigate(url);
-        await browser.waitForTimeout(2000);
 
-        // 获取快照
-        const { tree } = await browser.getSnapshot({
+        // 等待页面内容加载（SPA 可能需要更长时间）
+        await browser.waitForContent(15000, 3);
+
+        // 获取快照（带重试，处理 SPA 延迟渲染）
+        const { tree } = await browser.getSnapshotWithRetry({
           interactive: true,
           maxDepth: 5,
-        });
+        }, 5, 2000);
 
         // 查找匹配的解析器（传入 pageType 用于三段式命名匹配）
         let parser = registry.findMatchingParser(tree, url, pageType);
@@ -171,6 +173,7 @@ async function runCrawl(options: CrawlOptions) {
         // 执行解析
         const jobs = await parser.parse(browser, {
           maxItems: actualMaxJobs,
+          maxPages: maxPages,
           followPagination: maxPages > 1,
           includeDetails: true,
         });
@@ -220,17 +223,19 @@ async function saveResults(jobs: JobData[], outputPath: string, format: 'json' |
 function convertToCSV(jobs: JobData[]): string {
   if (jobs.length === 0) return '';
 
-  const headers = Object.keys(jobs[0]);
+  // 使用 JO 标准字段顺序
+  const headers = ['company_name', 'job_title', 'location', 'job_link', 'post_date', 'dead_line', 'job_type', 'description', 'salary'];
   const csvRows = [
     headers.join(','),
     ...jobs.map(job =>
       headers.map(header => {
         const value = job[header as keyof JobData];
-        // 转义包含逗号的值
-        if (typeof value === 'string' && value.includes(',')) {
-          return `"${value}"`;
+        const str = value != null ? String(value) : '';
+        // 转义包含逗号、引号或换行的值
+        if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+          return `"${str.replace(/"/g, '""')}"`;
         }
-        return value ?? '';
+        return str;
       }).join(',')
     )
   ];
