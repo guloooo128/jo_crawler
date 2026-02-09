@@ -1,7 +1,7 @@
 import axios from 'axios';
 import fs from 'fs-extra';
 import path from 'path';
-import { PARSER_GENERATOR_SYSTEM, PARSER_GENERATOR_USER, toClassName } from '../prompts/parser-generator.js';
+import { PARSER_GENERATOR_SYSTEM, PARSER_GENERATOR_USER } from '../prompts/parser-generator.js';
 import { generateParserFilename } from '../utils/parserFilename.js';
 
 /**
@@ -186,9 +186,10 @@ ${snapshot.substring(0, 3000)}
     url: string,
     refMap: Record<string, any>,
     customPrompt?: string,
-    pageType?: 'list' | 'detail'  // 新增：页面类型（优先使用 CSV 配置）
+    pageType?: 'list' | 'detail',
+    detailSnapshot?: { tree: string; refs: Record<string, any>; url: string; rawText: string }
   ): Promise<{ code: string; usage: any; requestTime: number }> {
-    let userContent = PARSER_GENERATOR_USER(toClassName(domain), snapshot, url, refMap, pageType);
+    let userContent = PARSER_GENERATOR_USER(domain, snapshot, url, refMap, pageType, detailSnapshot);
 
     // 添加自定义 prompt
     if (customPrompt) {
@@ -224,6 +225,7 @@ ${snapshot.substring(0, 3000)}
 
   /**
    * 提取职位数据（使用 LLM 直接从快照提取）
+   * 输出 JO 标准字段格式
    */
   async extractJobDataFromSnapshot(
     snapshot: string,
@@ -232,39 +234,36 @@ ${snapshot.substring(0, 3000)}
     const messages: LLMMessage[] = [
       {
         role: 'system',
-        content: `你是一个职位数据提取专家。请从页面快照中提取完整的职位信息（JD），并以 JSON 格式返回。
+        content: `你是一个职位数据提取专家。你的任务是从页面快照中精确提取职位信息，返回 JSON。
 
-**重要要求：**
-1. 完整提取职位描述（JD），不要截断
-2. 提取所有关键信息（职责、要求、福利等）
-3. 保持原文格式和换行`,
+**关键规则：**
+1. 只提取页面中真实的职位信息，不要用导航文本、页脚文本、按钮文本充当字段值
+2. 如果某个字段在页面中找不到，返回空字符串 ""，不要猜测
+3. job_title 必须是具体的职位名称（如 "Senior Solution Engineer"），不能是 "interview tips" 之类的导航文字
+4. location 必须是具体的城市/地区名（如 "Kyiv, Lviv, Odesa"），不能是 "Select Country" 之类的 UI 元素
+5. description 只包含职位描述正文，不要包含页面导航、CSS、JS 代码`,
       },
       {
         role: 'user',
         content: `URL: ${url}
 
-页面快照（这是可访问性树，包含页面结构）：
-${snapshot}
+页面快照（可访问性树）：
+${snapshot.substring(0, 5000)}
 
-**请提取以下字段（如果存在）：**
-- title: 职位标题
-- company: 公司名称
-- location: 工作地点
-- description: **完整的职位描述（JD）**，包括：
-  - 职位概述
-  - 主要职责
-  - 任职要求
-  - 福利待遇
-  - 任何其他相关信息
-- department: 部门
-- salary: 薪资范围
-- employmentType: 雇佣类型（全职/兼职/实习等）
-- requirements: 要求列表（数组格式）
-- responsibilities: 职责列表（数组格式）
+**请精确提取以下字段，返回 JSON：**
 
-**返回格式：**
-返回 JSON 格式，只包含提取到的字段，不要包含 null 值。
-description 字段必须包含完整的 JD 内容，不要截断。`,
+{
+  "job_title": "职位标题（具体岗位名称，不是页面标题）",
+  "company_name": "公司名称",
+  "location": "工作地点（城市/地区）",
+  "post_date": "发布日期（如 2026-01-22 或 22 Jan 2026）",
+  "dead_line": "申请截止日期（如果有的话）",
+  "job_type": "职位类型（Full-time/Part-time/Contract/Permanent/Internship 等）",
+  "salary": "薪资范围（如果有的话）",
+  "description": "完整的职位描述(JD)正文，包括职责、要求、福利等。不要包含导航栏、页脚、CSS/JS 代码"
+}
+
+**只返回 JSON，不要包含其他文字。**`,
       },
     ];
 
@@ -342,6 +341,7 @@ description 字段必须包含完整的 JD 内容，不要截断。`,
     pageType?: 'list' | 'detail' | 'auto',
     assets?: {
       snapshot: { tree: string; refs: Record<string, any> };
+      detailSnapshot?: { tree: string; refs: Record<string, any>; url: string };
       screenshotPath?: string;
       generationLog: string[];
       logStartTime: string;
@@ -423,6 +423,23 @@ description 字段必须包含完整的 JD 内容，不要截断。`,
         'utf-8'
       );
       result.snapshotPath = snapshotPath;
+    }
+
+    // 5.5 保存详情页快照（如果提供）
+    if (assets?.detailSnapshot) {
+      const detailSnapshotPath = path.join(folderPath, 'detail-snapshot.json');
+      await fs.writeFile(
+        detailSnapshotPath,
+        JSON.stringify({
+          url: assets.detailSnapshot.url,
+          pageType: 'detail',
+          domain,
+          timestamp: new Date().toISOString(),
+          tree: assets.detailSnapshot.tree,
+          refs: assets.detailSnapshot.refs,
+        }, null, 2),
+        'utf-8'
+      );
     }
 
     // 6. 复制截图（如果提供）

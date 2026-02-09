@@ -50,14 +50,15 @@ export class GenericParser extends BaseParser {
 
     // 构建 JobData
     const job = this.createJobData({
-      title: extractedData.title || 'Unknown',
-      company: extractedData.company || 'Unknown',
-      location: extractedData.location || 'Unknown',
+      job_title: extractedData.job_title || extractedData.title || '',
+      company_name: extractedData.company_name || extractedData.company || '',
+      location: extractedData.location || '',
       description: extractedData.description || '',
-      department: extractedData.department,
-      salary: extractedData.salary,
-      employmentType: extractedData.employmentType,
-      url: await browser.getCurrentUrl(),
+      post_date: extractedData.post_date || '',
+      dead_line: extractedData.dead_line || '',
+      job_type: extractedData.job_type || '',
+      salary: extractedData.salary || '',
+      job_link: await browser.getCurrentUrl(),
     });
 
     jobs.push(job);

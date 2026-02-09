@@ -94,7 +94,7 @@ async function runGenerate(options: GenerateOptions & { csv?: boolean; txt?: boo
 
   try {
     // 生成解析器
-    const results = await generator.generateBatchWithConfigs(linkConfigs);
+    const results = await generator.generateBatchWithConfigs(linkConfigs, { force: options.force });
 
     spinner.stop();
 

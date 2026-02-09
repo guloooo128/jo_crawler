@@ -92,6 +92,7 @@ export class BrowserService {
     const strategies = [
       { waitUntil: 'domcontentloaded' as const, timeout: 30000, name: 'domcontentloaded' },
       { waitUntil: 'load' as const, timeout: 30000, name: 'load' },
+      { waitUntil: 'networkidle' as const, timeout: 15000, name: 'networkidle' },
     ];
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -289,6 +290,147 @@ export class BrowserService {
   }
 
   /**
+   * 获取页面快照（带重试机制）
+   * 使用「稳定性检测」：持续获取快照，直到连续两次快照的 refs 数量不再增长，
+   * 说明 SPA 已经渲染完成。这比简单的元素数量阈值更可靠。
+   * @param options 快照选项
+   * @param maxRetries 最大重试次数，默认 8 次
+   * @param retryInterval 每次重试间隔（毫秒），默认 2000ms
+   */
+  async getSnapshotWithRetry(
+    options: SnapshotOptions = {},
+    maxRetries = 8,
+    retryInterval = 2000,
+  ): Promise<EnhancedSnapshot> {
+    let lastRefCount = 0;
+    let stableCount = 0;       // 连续稳定次数
+    const stableThreshold = 2; // 连续 N 次不变则认为稳定
+    let bestSnapshot: EnhancedSnapshot | null = null;
+
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      const snapshot = await this.getSnapshot(options);
+      const currentRefCount = Object.keys(snapshot.refs).length;
+      const treeLength = snapshot.tree?.length || 0;
+
+      // 完全空白（连壳子都没有）→ 继续等待
+      if (snapshot.tree === '(no interactive elements)' || currentRefCount === 0) {
+        if (attempt < maxRetries) {
+          console.log(`⏳ 快照为空，等待 SPA 渲染... (${attempt + 1}/${maxRetries})`);
+          await this.waitForTimeout(retryInterval);
+          lastRefCount = 0;
+          stableCount = 0;
+        }
+        continue;
+      }
+
+      // 保存目前最好的快照
+      if (!bestSnapshot || currentRefCount > Object.keys(bestSnapshot.refs).length) {
+        bestSnapshot = snapshot;
+      }
+
+      // 检查元素数量是否稳定（连续 N 次不增长）
+      if (currentRefCount <= lastRefCount) {
+        stableCount++;
+      } else {
+        stableCount = 0;
+      }
+
+      console.log(`📊 快照状态: ${currentRefCount} 个 refs, ${treeLength} 字符 (稳定计数: ${stableCount}/${stableThreshold})`);
+
+      if (stableCount >= stableThreshold) {
+        if (attempt > 0) {
+          console.log(`✅ 页面内容已稳定，共 ${currentRefCount} 个交互元素`);
+        }
+        return bestSnapshot!;
+      }
+
+      lastRefCount = currentRefCount;
+
+      if (attempt < maxRetries) {
+        await this.waitForTimeout(retryInterval);
+      }
+    }
+
+    // 超时但有内容，返回最好的快照
+    if (bestSnapshot) {
+      const refCount = Object.keys(bestSnapshot.refs).length;
+      console.warn(`⚠️  等待超时，使用目前最佳快照 (${refCount} 个 refs)`);
+      return bestSnapshot;
+    }
+
+    console.warn('⚠️  多次重试后快照仍为空，页面可能未正确加载');
+    return await this.getSnapshot(options);
+  }
+
+  /**
+   * 等待页面内容出现并稳定（适用于 SPA）
+   * 使用「稳定性检测」：轮询 DOM 中可交互元素数量，
+   * 直到连续 2 次轮询数量不再增长，说明 SPA 动态内容已渲染完成。
+   * @param timeout 超时时间（毫秒），默认 20000ms
+   * @param minElements 触发稳定性检测的最低元素门槛，默认 5
+   */
+  async waitForContent(timeout = 20000, minElements = 5): Promise<boolean> {
+    const page = this.manager.getPage();
+    const startTime = Date.now();
+    const pollInterval = 1500;
+    let lastCount = 0;
+    let stableCount = 0;
+    const stableThreshold = 2;  // 连续 N 次不增长视为稳定
+
+    while (Date.now() - startTime < timeout) {
+      try {
+        const elementCount = await page.evaluate(`
+          (() => {
+            const interactiveSelectors = [
+              'a[href]', 'button', 'input', 'select', 'textarea',
+              '[role="button"]', '[role="link"]', '[role="tab"]',
+              '[role="menuitem"]', '[onclick]',
+            ];
+            const elements = new Set();
+            for (const sel of interactiveSelectors) {
+              document.querySelectorAll(sel).forEach(el => {
+                if (el.offsetParent !== null || el.offsetWidth > 0) {
+                  elements.add(el);
+                }
+              });
+            }
+            return elements.size;
+          })()
+        `) as number;
+
+        // 只有超过最低门槛才开始检测稳定性
+        if (elementCount >= minElements) {
+          if (elementCount <= lastCount) {
+            stableCount++;
+          } else {
+            stableCount = 0;
+          }
+
+          console.log(`🔍 页面元素: ${elementCount} (稳定计数: ${stableCount}/${stableThreshold})`);
+
+          if (stableCount >= stableThreshold) {
+            console.log(`✅ 页面内容已稳定 (${elementCount} 个交互元素)`);
+            return true;
+          }
+        } else {
+          console.log(`🔍 页面元素: ${elementCount}，等待更多内容加载...`);
+          stableCount = 0;
+        }
+
+        lastCount = elementCount;
+      } catch {
+        // 页面可能在导航中，忽略错误
+        stableCount = 0;
+      }
+
+      await this.waitForTimeout(pollInterval);
+    }
+
+    console.warn(`⚠️  等待页面内容稳定超时 (${timeout}ms)，当前 ${lastCount} 个元素`);
+    return false;
+  }
+
+  /**
    * 获取 Ref 映射表
    */
   getRefMap() {
@@ -378,6 +520,78 @@ export class BrowserService {
   async getPageText(): Promise<string> {
     const page = this.manager.getPage();
     return (await page.textContent('body')) || '';
+  }
+
+  /**
+   * 获取清洁的页面文本内容（去除 script/style/nav/footer/header 等噪音）
+   * 这是提取 JD description 的推荐方式
+   */
+  async getCleanPageText(): Promise<string> {
+    const page = this.manager.getPage();
+    return await page.evaluate(`
+      (() => {
+        const clone = document.body.cloneNode(true);
+        const selectorsToRemove = [
+          'script', 'style', 'noscript', 'iframe',
+          'nav', 'footer', 'header',
+          '[role="navigation"]', '[role="banner"]', '[role="contentinfo"]',
+          '.cookie-banner', '.cookie-consent', '#cookie-banner',
+          '.site-header', '.site-footer', '.site-nav',
+          '.nav-menu', '.main-nav', '.footer-nav',
+          '.social-links', '.social-media',
+          '.breadcrumb', '.breadcrumbs',
+        ];
+        for (const selector of selectorsToRemove) {
+          clone.querySelectorAll(selector).forEach(el => el.remove());
+        }
+        let text = clone.textContent || '';
+        text = text.replace(/[\\t ]+/g, ' ');
+        text = text.replace(/\\n\\s*\\n/g, '\\n');
+        text = text.replace(/\\n{3,}/g, '\\n\\n');
+        return text.trim();
+      })()
+    `) as string;
+  }
+
+  /**
+   * 获取页面主要内容区域的文本（更精准地定位 JD 正文）
+   * 优先选择 main/article/[role=main] 区域
+   */
+  async getMainContentText(): Promise<string> {
+    const page = this.manager.getPage();
+    return await page.evaluate(`
+      (() => {
+        const mainSelectors = [
+          'main', 'article', '[role="main"]',
+          '.job-description', '.jd-content', '.job-detail',
+          '.job-details', '.posting-content', '.job-content',
+          '#job-description', '#job-detail', '#job-content',
+          '.content-area', '.main-content', '#main-content',
+        ];
+        let contentEl = null;
+        for (const selector of mainSelectors) {
+          contentEl = document.querySelector(selector);
+          if (contentEl && contentEl.textContent && contentEl.textContent.trim().length > 200) {
+            break;
+          }
+          contentEl = null;
+        }
+        if (!contentEl) {
+          contentEl = document.body;
+        }
+        const clone = contentEl.cloneNode(true);
+        const remove = ['script', 'style', 'noscript', 'iframe', 'nav', 'footer', 'header',
+          '[role="navigation"]', '[role="banner"]', '[role="contentinfo"]'];
+        for (const sel of remove) {
+          clone.querySelectorAll(sel).forEach(el => el.remove());
+        }
+        let text = clone.textContent || '';
+        text = text.replace(/[\\t ]+/g, ' ');
+        text = text.replace(/\\n\\s*\\n/g, '\\n');
+        text = text.replace(/\\n{3,}/g, '\\n\\n');
+        return text.trim();
+      })()
+    `) as string;
   }
 
   /**

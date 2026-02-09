@@ -1,6 +1,6 @@
 /**
  * Auto-generated parser for td.wd3.myworkdayjobs.com
- * Generated at: 2026-02-05T10:30:00.236Z
+ * Generated at: 2026-02-09T03:24:31.606Z
  * Author: AI (GLM-4.7)
  * URL: https://td.wd3.myworkdayjobs.com/en-US/TD_Bank_Careers/details/Retail-Market-Manager--US----Lehigh-Montgomery-Regions_R_1456219?locationCountry=bc33aa3152ec42d4995f4791a106ed09&locationCountry=29247e57dbaf46fb855b224e03170bc7&locationCountry=80938777cac5440fab50d729f9634969&locationCountry=a30a87ed25634629aa6c3958aa2b91ea&timeType=14c9322ea8e3014f4096d9d2dc025400
  * Type: list
@@ -10,17 +10,22 @@
 
 import { BaseParser } from '../base/BaseParser.js';
 
-export default class Tdwd3myworkdayjobscomParser extends BaseParser {
+export default class TdWd3MyworkdayjobsComParser extends BaseParser {
   metadata = {
-    name: 'Tdwd3myworkdayjobscom',
+    name: 'TdWd3MyworkdayjobsCom',
     version: '1.0.0',
     domain: 'td.wd3.myworkdayjobs.com',
     url: 'https://td.wd3.myworkdayjobs.com/en-US/TD_Bank_Careers/details/Retail-Market-Manager--US----Lehigh-Montgomery-Regions_R_1456219?locationCountry=bc33aa3152ec42d4995f4791a106ed09&locationCountry=29247e57dbaf46fb855b224e03170bc7&locationCountry=80938777cac5440fab50d729f9634969&locationCountry=a30a87ed25634629aa6c3958aa2b91ea&timeType=14c9322ea8e3014f4096d9d2dc025400',
     pageType: 'list',
     author: 'AI',
     createdAt: new Date(),
-    description: 'TdWd3MyworkdayjobsCom 职位解析器 - 支持左右分栏列表页提取',
+    description: 'td.wd3.myworkdayjobs.com list 页面职位解析器',
   };
+
+  // 重写公司名称
+  getCompanyName() {
+    return 'TD Bank';
+  }
 
   canParse(_snapshot, url) {
     return url.includes('td.wd3.myworkdayjobs.com');
@@ -30,76 +35,161 @@ export default class Tdwd3myworkdayjobscomParser extends BaseParser {
     const jobs = [];
     const { maxItems = 10 } = options;
 
-    console.log('🔍 使用 Tdwd3myworkdayjobscom 解析器...');
+    console.log('🔍 使用 TdWd3MyworkdayjobsCom 解析器...');
 
     try {
-      const { tree, refs } = await browser.getSnapshot({
-        interactive: true,
-        maxDepth: 4,
+      // 获取当前页面快照
+      const { tree, refs } = await browser.getSnapshot({ interactive: true, maxDepth: 5 });
+
+      // --- 第一步：识别并过滤职位链接 Refs ---
+      // 根据快照分析，职位链接是 link 类型，且 name 较长（包含多个单词）
+      // 排除页脚、导航、分页等短链接
+      const jobRefEntries = Object.entries(refs).filter(([key, ref]) => {
+        // 必须是 link 类型
+        if (ref.role !== 'link') return false;
+        
+        // 排除已知的非职位链接（根据快照中的 ref=e1, e5, e51, e52, e53 等）
+        const name = ref.name || '';
+        const skipKeywords = [
+          'Skip to', 'careers home', 'LinkedIn', 'Facebook', 'Privacy Policy', 
+          'page', 'next', 'previous', 'Sign In', 'Why Choose Us'
+        ];
+        
+        // 如果包含跳过关键词，则忽略
+        if (skipKeywords.some(keyword => name.toLowerCase().includes(keyword.toLowerCase()))) {
+          return false;
+        }
+
+        // 职位标题通常较长（> 15个字符）且包含空格或特定标点
+        // 示例: "Bilingual Contact Center Representative, Canadian Banking, Easyline"
+        if (name.length < 15) return false;
+
+        return true;
       });
 
-      // 判断页面类型
-      // 根据自定义要求，这是左侧列表、右侧详情的分栏页面，属于列表页逻辑
-      const isDetailPage = false;
+      console.log(`🔎 找到 ${jobRefEntries.length} 个职位链接候选`);
 
-      if (isDetailPage) {
-        // 详情页：使用基类方法提取
-        const job = await this.extractJobFromPage(browser);
-        if (job) {
-          jobs.push(job);
-        }
-      } else {
-        // 列表页：查找职位卡片
-        const jobRefs = this.findJobCardRefs(tree, refs);
-        console.log(`找到 ${jobRefs.length} 个职位卡片`);
+      // --- 第二步：收集所有职位 URL ---
+      // 使用 collectJobLinks 一次性获取所有链接的详细信息
+      const jobLinks = await this.collectJobLinks(browser, jobRefEntries);
+      console.log(`✅ 成功收集 ${jobLinks.length} 个职位 URL`);
 
-        const limit = Math.min(jobRefs.length, maxItems);
+      // 保存当前列表页 URL，以便后续分页或重置
+      const listUrl = await browser.getCurrentUrl();
 
-        // 保存当前的 refMap，因为页面跳转后 refs 会失效
-        await browser.saveRefMap();
+      // --- 第三步：遍历链接并提取详情 ---
+      // 限制处理数量，防止运行时间过长
+      const linksToProcess = jobLinks.slice(0, maxItems);
 
-        for (let i = 0; i < limit; i++) {
-          const ref = jobRefs[i];
+      for (let i = 0; i < linksToProcess.length; i++) {
+        const link = linksToProcess[i];
+        console.log(`📄 处理第 ${i + 1}/${linksToProcess.length} 个职位: ${link.name}`);
 
-          try {
-            console.log(`  [${i + 1}/${limit}] 提取职位 ${ref}...`);
+        try {
+          // 从列表页的 link name 中解析部分元数据
+          // 结构分析: "Title - Location - Department (Type)" 或 "Title, Department, Location"
+          // 策略：尝试提取 Title（第一部分）和 Location（通常在 - 或 , 之后）
+          const parsedInfo = this.parseJobTitleFromName(link.name);
 
-            // 点击左侧列表中的职位，右侧详情会更新
-            await browser.click(`@${ref}`);
-            // ⚠️ 注意：delay 方法属于 this（解析器实例），不属于 browser
-            // 等待右侧详情加载
-            await this.delay(1500);
+          // 直接导航到详情页 URL（避免 click 导致的 ref 失效问题）
+          await browser.navigate(link.url);
+          await this.delay(1500); // 等待页面加载
 
-            // 从当前页面（右侧详情）提取职位数据
-            const job = await this.extractJobFromPage(browser);
-            if (job) {
-              jobs.push(job);
-            }
+          // 使用内置方法提取详情页所有字段（自动去噪）
+          const detail = await this.extractDetailFields(browser);
 
-            // 由于是左右分栏页面，点击后通常不需要 goBack()
-            // 但如果页面发生了跳转，则需要返回
-            const currentUrl = await browser.getCurrentUrl();
-            const originalUrl = this.metadata.url;
-            
-            // 简单的 URL 检查，如果 URL 变了（跳转到详情页），则返回
-            if (currentUrl !== originalUrl && !currentUrl.includes('?')) {
-               await browser的后退();
-               await this.delay(1000);
-            } else {
-               // 如果是分栏刷新，给一个小延迟确保状态稳定
-               await this.delay(500);
-            }
+          // 合并数据
+          const jobData = this.createJobData({
+            job_title: parsedInfo.title || detail.job_title,
+            company_name: this.getCompanyName(),
+            location: parsedInfo.location || detail.location,
+            job_link: link.url,
+            post_date: detail.post_date,
+            dead_line: detail.dead_line,
+            job_type: parsedInfo.type || detail.job_type,
+            description: detail.description,
+            salary: detail.salary,
+            source: this.getCompanyName(),
+          });
 
-          } catch (error) {
-            console.error(`  ❌ 提取失败 (${ref}):`, error.message);
+          jobs.push(jobData);
+
+          // 如果不是最后一个，导航回列表页准备下一次跳转（虽然 navigate 直接跳转不需要 goBack，但保持状态清晰）
+          // 注意：由于我们使用的是 navigate(url)，浏览器状态是独立的，不需要显式 goBack
+          // 但为了保险起见，如果页面有状态残留，可以刷新或返回列表
+          if (i < linksToProcess.length - 1) {
+             await browser.navigate(listUrl);
+             await this.delay(1000);
           }
+
+        } catch (err) {
+          console.error(`❌ 提取职位失败 (${link.name}):`, err.message);
+          // 发生错误时，确保回到列表页
+          await browser.navigate(listUrl);
+          await this.delay(1000);
         }
       }
+
+      // --- 第四步：分页处理（可选）---
+      // 如果需要处理分页，可以在这里点击 "next" 按钮 (ref=e48)
+      // 注意：这通常需要重新获取快照，因为 DOM 可能已变化
+      // if (options.followPagination && jobs.length < maxItems) { ... }
+
     } catch (error) {
-      console.error('❌ 解析失败:', error.message);
+      console.error('❌ 解析过程严重错误:', error.message);
     }
 
     return jobs;
+  }
+
+  /**
+   * 辅助方法：从列表页的 Link Name 中解析职位信息
+   * 示例:
+   * 1. "Bilingual Contact Center Representative, Canadian Banking, Easyline"
+   * 2. "Market President - South Carolina - Commercial (US)"
+   * 3. "Financial Advisor - Long Island - Multiple Opportunities Available"
+   */
+  parseJobTitleFromName(name) {
+    let title = name;
+    let location = '';
+    let type = '';
+
+    // 尝试按 " - " 分割（常见于 Location 分隔）
+    const parts = name.split(' - ');
+    
+    if (parts.length > 1) {
+      title = parts[0].trim();
+      // 最后一部分可能包含类型信息，如 "(US)" 或 "Full Time"
+      const lastPart = parts[parts.length - 1].trim();
+      
+      // 简单的启发式判断：如果最后一部分包含括号，可能是类型或国家
+      if (lastPart.includes('(') && lastPart.includes(')')) {
+        type = lastPart;
+        // 倒数第二部分可能是地点
+        if (parts.length > 2) {
+          location = parts[parts.length - 2].trim();
+        }
+      } else {
+        // 否则假设最后一部分是地点
+        location = lastPart;
+      }
+    } else {
+      // 尝试按 ", " 分割（常见于 Department 分隔）
+      const commaParts = name.split(', ');
+      if (commaParts.length > 1) {
+        title = commaParts[0].trim();
+        // 最后一部分通常是地点或部门
+        location = commaParts[commaParts.length - 1].trim();
+      }
+    }
+
+    // 清理 title 中可能残留的部门信息（如果太长）
+    // 这里仅做简单截断，实际提取以详情页为准
+    if (title.length > 100) {
+      title = title.substring(0, 100);
+    }
+
+    return { title, location, type };
   }
 
   getDefaults() {

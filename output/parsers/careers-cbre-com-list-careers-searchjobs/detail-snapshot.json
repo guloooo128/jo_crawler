@@ -1,0 +1,214 @@
+{
+  "url": "https://careers.cbre.com/en_US/careers/Home",
+  "pageType": "detail",
+  "domain": "careers.cbre.com",
+  "timestamp": "2026-02-09T04:36:34.689Z",
+  "tree": "- link \"Skip to content\" [ref=e1]\n- link \"Grow Your Career and Your Potential at CBRE\" [ref=e2]\n- menuitem \"About Us\" [ref=e3]\n- link \"About Us\" [ref=e4]\n- menuitem \"Our Business\" [ref=e5]\n- link \"Our Business\" [ref=e6]\n- menuitem \"Our Values-Driven Culture\" [ref=e7]\n- link \"Our Values-Driven Culture\" [ref=e8]\n- menuitem \"Join Our Community\" [ref=e9]\n- link \"Join Our Community\" [ref=e10]\n- link \"Job Search\" [ref=e11]\n- link \"Login\" [ref=e12]\n- link [ref=e13]\n- textbox \"Keywords\" [ref=e14]\n- combobox \"Areas of Interest\" [ref=e15]\n- searchbox \"Areas of Interest\" [ref=e16]\n- combobox \"Country / Territory\" [ref=e17]\n- searchbox \"Country / Territory\" [ref=e18]\n- combobox \"Locations\" [ref=e19]\n- searchbox \"Locations\" [ref=e20]\n- button \"Search\" [ref=e21]\n- button \"Clear\" [ref=e22]\n- link [ref=e23] [nth=1]\n- link \"About CBRE\" [ref=e24]\n- link \"Corporate Responsibility\" [ref=e25]\n- link \"Careers\" [ref=e26]\n- link \"Newsroom\" [ref=e27]\n- link \"Investor relations\" [ref=e28]\n- link \"Contact us\" [ref=e29]\n- link \"Privacy Policy\" [ref=e30]\n- link \"Terms of use\" [ref=e31]\n- link \"Sitemap\" [ref=e32]\n- link \"Cookies settings\" [ref=e33]\n- button \"Cookies Settings\" [ref=e34]\n- link \"Facebook\" [ref=e35]\n- link \"Linkedin\" [ref=e36]\n- link \"Twitter\" [ref=e37]\n- link \"More information about your privacy, opens in a new tab\" [ref=e38]\n- button \"Cookies Settings, Opens the preference center dialog\" [ref=e39]\n- button \"Reject All\" [ref=e40]\n- button \"Accept All Cookies\" [ref=e41]",
+  "refs": {
+    "e1": {
+      "selector": "getByRole('link', { name: \"Skip to content\", exact: true })",
+      "role": "link",
+      "name": "Skip to content"
+    },
+    "e2": {
+      "selector": "getByRole('link', { name: \"Grow Your Career and Your Potential at CBRE\", exact: true })",
+      "role": "link",
+      "name": "Grow Your Career and Your Potential at CBRE"
+    },
+    "e3": {
+      "selector": "getByRole('menuitem', { name: \"About Us\", exact: true })",
+      "role": "menuitem",
+      "name": "About Us"
+    },
+    "e4": {
+      "selector": "getByRole('link', { name: \"About Us\", exact: true })",
+      "role": "link",
+      "name": "About Us"
+    },
+    "e5": {
+      "selector": "getByRole('menuitem', { name: \"Our Business\", exact: true })",
+      "role": "menuitem",
+      "name": "Our Business"
+    },
+    "e6": {
+      "selector": "getByRole('link', { name: \"Our Business\", exact: true })",
+      "role": "link",
+      "name": "Our Business"
+    },
+    "e7": {
+      "selector": "getByRole('menuitem', { name: \"Our Values-Driven Culture\", exact: true })",
+      "role": "menuitem",
+      "name": "Our Values-Driven Culture"
+    },
+    "e8": {
+      "selector": "getByRole('link', { name: \"Our Values-Driven Culture\", exact: true })",
+      "role": "link",
+      "name": "Our Values-Driven Culture"
+    },
+    "e9": {
+      "selector": "getByRole('menuitem', { name: \"Join Our Community\", exact: true })",
+      "role": "menuitem",
+      "name": "Join Our Community"
+    },
+    "e10": {
+      "selector": "getByRole('link', { name: \"Join Our Community\", exact: true })",
+      "role": "link",
+      "name": "Join Our Community"
+    },
+    "e11": {
+      "selector": "getByRole('link', { name: \"Job Search\", exact: true })",
+      "role": "link",
+      "name": "Job Search"
+    },
+    "e12": {
+      "selector": "getByRole('link', { name: \"Login\", exact: true })",
+      "role": "link",
+      "name": "Login"
+    },
+    "e13": {
+      "selector": "getByRole('link')",
+      "role": "link",
+      "nth": 0
+    },
+    "e14": {
+      "selector": "getByRole('textbox', { name: \"Keywords\", exact: true })",
+      "role": "textbox",
+      "name": "Keywords"
+    },
+    "e15": {
+      "selector": "getByRole('combobox', { name: \"Areas of Interest\", exact: true })",
+      "role": "combobox",
+      "name": "Areas of Interest"
+    },
+    "e16": {
+      "selector": "getByRole('searchbox', { name: \"Areas of Interest\", exact: true })",
+      "role": "searchbox",
+      "name": "Areas of Interest"
+    },
+    "e17": {
+      "selector": "getByRole('combobox', { name: \"Country / Territory\", exact: true })",
+      "role": "combobox",
+      "name": "Country / Territory"
+    },
+    "e18": {
+      "selector": "getByRole('searchbox', { name: \"Country / Territory\", exact: true })",
+      "role": "searchbox",
+      "name": "Country / Territory"
+    },
+    "e19": {
+      "selector": "getByRole('combobox', { name: \"Locations\", exact: true })",
+      "role": "combobox",
+      "name": "Locations"
+    },
+    "e20": {
+      "selector": "getByRole('searchbox', { name: \"Locations\", exact: true })",
+      "role": "searchbox",
+      "name": "Locations"
+    },
+    "e21": {
+      "selector": "getByRole('button', { name: \"Search\", exact: true })",
+      "role": "button",
+      "name": "Search"
+    },
+    "e22": {
+      "selector": "getByRole('button', { name: \"Clear\", exact: true })",
+      "role": "button",
+      "name": "Clear"
+    },
+    "e23": {
+      "selector": "getByRole('link')",
+      "role": "link",
+      "nth": 1
+    },
+    "e24": {
+      "selector": "getByRole('link', { name: \"About CBRE\", exact: true })",
+      "role": "link",
+      "name": "About CBRE"
+    },
+    "e25": {
+      "selector": "getByRole('link', { name: \"Corporate Responsibility\", exact: true })",
+      "role": "link",
+      "name": "Corporate Responsibility"
+    },
+    "e26": {
+      "selector": "getByRole('link', { name: \"Careers\", exact: true })",
+      "role": "link",
+      "name": "Careers"
+    },
+    "e27": {
+      "selector": "getByRole('link', { name: \"Newsroom\", exact: true })",
+      "role": "link",
+      "name": "Newsroom"
+    },
+    "e28": {
+      "selector": "getByRole('link', { name: \"Investor relations\", exact: true })",
+      "role": "link",
+      "name": "Investor relations"
+    },
+    "e29": {
+      "selector": "getByRole('link', { name: \"Contact us\", exact: true })",
+      "role": "link",
+      "name": "Contact us"
+    },
+    "e30": {
+      "selector": "getByRole('link', { name: \"Privacy Policy\", exact: true })",
+      "role": "link",
+      "name": "Privacy Policy"
+    },
+    "e31": {
+      "selector": "getByRole('link', { name: \"Terms of use\", exact: true })",
+      "role": "link",
+      "name": "Terms of use"
+    },
+    "e32": {
+      "selector": "getByRole('link', { name: \"Sitemap\", exact: true })",
+      "role": "link",
+      "name": "Sitemap"
+    },
+    "e33": {
+      "selector": "getByRole('link', { name: \"Cookies settings\", exact: true })",
+      "role": "link",
+      "name": "Cookies settings"
+    },
+    "e34": {
+      "selector": "getByRole('button', { name: \"Cookies Settings\", exact: true })",
+      "role": "button",
+      "name": "Cookies Settings"
+    },
+    "e35": {
+      "selector": "getByRole('link', { name: \"Facebook\", exact: true })",
+      "role": "link",
+      "name": "Facebook"
+    },
+    "e36": {
+      "selector": "getByRole('link', { name: \"Linkedin\", exact: true })",
+      "role": "link",
+      "name": "Linkedin"
+    },
+    "e37": {
+      "selector": "getByRole('link', { name: \"Twitter\", exact: true })",
+      "role": "link",
+      "name": "Twitter"
+    },
+    "e38": {
+      "selector": "getByRole('link', { name: \"More information about your privacy, opens in a new tab\", exact: true })",
+      "role": "link",
+      "name": "More information about your privacy, opens in a new tab"
+    },
+    "e39": {
+      "selector": "getByRole('button', { name: \"Cookies Settings, Opens the preference center dialog\", exact: true })",
+      "role": "button",
+      "name": "Cookies Settings, Opens the preference center dialog"
+    },
+    "e40": {
+      "selector": "getByRole('button', { name: \"Reject All\", exact: true })",
+      "role": "button",
+      "name": "Reject All"
+    },
+    "e41": {
+      "selector": "getByRole('button', { name: \"Accept All Cookies\", exact: true })",
+      "role": "button",
+      "name": "Accept All Cookies"
+    }
+  }
+}

@@ -1,19 +1,18 @@
 /**
- * 职位数据模型
+ * 职位数据模型（JO 标准字段）
  */
 export interface JobData {
-  title: string;              // 职位标题
-  company: string;            // 公司名称
+  company_name: string;       // 公司名称
+  job_title: string;          // 职位标题
   location: string;           // 工作地点
-  description: string;        // 职位描述
-  requirements?: string[];    // 职位要求列表
-  salary?: string;            // 薪资范围
-  postedDate?: Date;          // 发布日期
-  url: string;               // 职位详情链接
-  department?: string;        // 部门
-  employmentType?: string;    // 雇佣类型（全职、实习等）
-  source?: string;           // 来源网站
-  extractedAt: Date;         // 提取时间戳
+  job_link: string;           // 职位详情链接
+  post_date: string;          // 发布日期（如 "2026-01-22"）
+  dead_line: string;          // 截止日期（如 "2026-03-01"，无则为空）
+  job_type: string;           // 职位类型（Full-time/Part-time/Intern/Contract 等）
+  description: string;        // 职位描述（完整 JD）
+  salary: string;             // 薪资范围（无则为空）
+  source?: string;            // 来源网站
+  extracted_at?: string;      // 提取时间戳 ISO 字符串
 }
 
 /**
@@ -21,6 +20,7 @@ export interface JobData {
  */
 export interface ParseOptions {
   maxItems?: number;          // 最大提取职位数量
+  maxPages?: number;          // 最大翻页数
   followPagination?: boolean; // 是否翻页
   includeDetails?: boolean;   // 是否进入详情页
   timeout?: number;          // 超时时间（毫秒）

@@ -2,8 +2,8 @@
   "url": "https://www.capgemini.com/careers/join-capgemini/job-search/?size=15",
   "pageType": "list",
   "domain": "www.capgemini.com",
-  "timestamp": "2026-02-06T01:00:57.859Z",
-  "tree": "- link \"Skip to content\" [ref=e1]\n- link \"Contact us\" [ref=e2]\n- link \"Investors\" [ref=e3]\n- button \"Select Country Website\" [ref=e4]\n- button \"Close site selection menu\" [ref=e5]\n- textbox \"location\" [ref=e6]\n- link \" Global | EN\" [ref=e7]\n- link \"Argentina | ES\" [ref=e8]\n- link \"Brazil | PT\" [ref=e9]\n- link \"Canada | EN\" [ref=e10]\n- link \"Canada | FR\" [ref=e11]\n- link \"Colombia | ES\" [ref=e12]\n- link \"Guatemala | EN\" [ref=e13]\n- link \"Mexico | ES\" [ref=e14]\n- link \"United States | EN\" [ref=e15]\n- link \"Australia | EN\" [ref=e16]\n- link \"China | ZH\" [ref=e17]\n- link \"India | EN\" [ref=e18]\n- link \"Japan | JP\" [ref=e19]\n- link \"New Zealand | EN\" [ref=e20]\n- link \"Singapore | EN\" [ref=e21]\n- link \"Austria | EN\" [ref=e22]\n- link \"Belgium | EN\" [ref=e23]\n- link \"Czech Republic | EN\" [ref=e24]\n- link \"Denmark | EN\" [ref=e25]\n- link \"Egypt | EN\" [ref=e26]\n- link \"Finland | EN\" [ref=e27]\n- link \"France | FR\" [ref=e28]\n- link \"Germany | DE\" [ref=e29]\n- link \"Hungary | EN\" [ref=e30]\n- link \"Italy | IT\" [ref=e31]\n- link \"Morocco | EN\" [ref=e32]\n- link \"Netherlands | NL\" [ref=e33]\n- link \"Norway | NO\" [ref=e34]\n- link \"Poland | PL\" [ref=e35]\n- link \"Portugal | EN\" [ref=e36]\n- link \"Romania | EN\" [ref=e37]\n- link \"KSA | EN\" [ref=e38]\n- link \"Spain | ES\" [ref=e39]\n- link \"Sweden | EN\" [ref=e40]\n- link \"Switzerland | EN\" [ref=e41]\n- link \"UAE | EN\" [ref=e42]\n- link \"UK | EN\" [ref=e43]\n- link \"Capgemini\" [ref=e44]\n- link \"Insights menu\" [ref=e45]\n- button \"submenu\" [ref=e46]\n- link \"Industries menu\" [ref=e47]\n- button \"submenu\" [ref=e48] [nth=1]\n- link \"Services menu\" [ref=e49]\n- button \"submenu\" [ref=e50] [nth=2]\n- link \"Careers menu\" [ref=e51]\n- button \"submenu\" [ref=e52] [nth=3]\n- link \"News menu\" [ref=e53]\n- button \"submenu\" [ref=e54] [nth=4]\n- link \"About us menu\" [ref=e55]\n- button \"submenu\" [ref=e56] [nth=5]\n- button \" Search\" [ref=e57]\n- switch \"Dark and light mode toggle, currently light mode\" [ref=e58]\n- link \"Home\" [ref=e59]\n- link \"Careers \" [ref=e60]\n- link \"Why join Capgemini\" [ref=e61]\n- link \"Life at Capgemini\" [ref=e62]\n- link \"Meet our people\" [ref=e63]\n- link \"Career paths\" [ref=e64]\n- link \"Join us\" [ref=e65]\n- link \"Join Capgemini \" [ref=e66]\n- link \"Recruitment process\" [ref=e67]\n- link \"Interview tips\" [ref=e68]\n- link \"Job search\" [ref=e69]\n- link \"Join us \" [ref=e70]\n- textbox \"Job Search\" [ref=e71]\n- button \"Submit job search button\" [ref=e72]\n- button \"Filter Results\" [ref=e73] [expanded] [pressed]: Filters\n- combobox \"Country\" [ref=e74]\n- button \"sort top jobName\" [ref=e75]\n- button \"sort bottom jobName\" [ref=e76]\n- button \"sort top country of the jobs\" [ref=e77]\n- button \"sort bottom country of the jobs\" [ref=e78]\n- button \"sort top location of the jobs\" [ref=e79]\n- button \"sort bottom location of the jobs\" [ref=e80]\n- button \"sort top experienceLevel of the jobs\" [ref=e81]\n- button \"sort bottom experience Level of the jobs\" [ref=e82]\n- button \"sort top contractType of the jobs\" [ref=e83]\n- button \"sort bottom contractType of the jobs\" [ref=e84]\n- link \"System Test & Validation Engineer (TCU) Mexico Guadalajara Experienced Professionals Permanent\" [ref=e85]\n- link \"Databricks Engineer - Remote Mexico Guadalajara Experienced Professionals Permanent\" [ref=e86]\n- link \"Solution Engineer (Cloud Data Base/One NDS) Ukraine HITECHPARKODESA, Kyiv, Lviv, Odesa, Rivne Experienced Professionals Permanent\" [ref=e87]\n- link \"Solution Engineer (Policy/NPC/Core) Ukraine HITECHPARKODESA, Kyiv, Lviv, Odesa, Rivne Experienced Professionals Permanent\" [ref=e88]\n- link \"Technical Project Manager (Core) Ukraine HITECHPARKODESA, Kyiv, Lviv, Odesa, Rivne Experienced Professionals Permanent\" [ref=e89]\n- link \"Solution Engineer (One-MNP) Ukraine HITECHPARKODESA, Kyiv, Lviv, Odesa, Rivne Experienced Professionals Permanent\" [ref=e90]\n- link \"Solution Engineer (5G slicing, 5G SA/NSA network, IP MLPS, Optical transport, IMS, VoLTE, NFV/SDN) Ukraine HITECHPARKODESA, Kyiv, Lviv, Odesa, Rivne Experienced Professionals Permanent\" [ref=e91]\n- link \"Senior Power BI Engineer Ukraine HITECHPARKODESA, Kyiv, Lviv, Odesa, Rivne Experienced Professionals Permanent\" [ref=e92]\n- link \"Automation tester (Linux, Python, Shell) Engineer Ukraine HITECHPARKODESA, Kyiv, Lviv, Odesa, Rivne Experienced Professionals Permanent\" [ref=e93]\n- link \"Solution Engineer (AUSF_UDM) Ukraine HITECHPARKODESA, Kyiv, Lviv, Odesa, Rivne Experienced Professionals Permanent\" [ref=e94]\n- link \"Solution Engineer (Signaling/SEPP/CSD/DDE/DSC) Ukraine HITECHPARKODESA, Kyiv, Lviv, Odesa, Rivne Experienced Professionals Permanent\" [ref=e95]\n- link \"Technical Project Manager Ukraine HITECHPARKODESA, Kyiv, Lviv, Odesa, Rivne Experienced Professionals Permanent\" [ref=e96]\n- link \"Solution Engineer (Policy/NPC/Core/Turkish Language) Ukraine HITECHPARKODESA, Kyiv, Lviv, Odesa, Rivne Experienced Professionals Permanent\" [ref=e97]\n- link \"Solution Engineer (HSS/HLR) Ukraine HITECHPARKODESA, Kyiv, Lviv, Odesa, Rivne Experienced Professionals Permanent\" [ref=e98]\n- button \"Load More about jobs\" [ref=e99]\n- link \"Facebook\" [ref=e100]\n- link \"Linkedin\" [ref=e101]\n- link \"Youtube\" [ref=e102]\n- link \"Instagram\" [ref=e103]\n- link \"Capgemini\" [ref=e104] [nth=1]\n- link \"Capgemini Engineering\" [ref=e105]\n- link \"Capgemini Invent\" [ref=e106]\n- link \"Sogeti\" [ref=e107]\n- link \"Frog\" [ref=e108]\n- link \"Insights\" [ref=e109]\n- link \"Industries\" [ref=e110]\n- link \"Services\" [ref=e111]\n- link \"Careers\" [ref=e112]\n- link \"News\" [ref=e113]\n- link \"About us\" [ref=e114]\n- link \"Contact us\" [ref=e115] [nth=1]\n- link \"Investors\" [ref=e116] [nth=1]\n- link \"Accessibility\" [ref=e117]\n- link \"Cookie policy\" [ref=e118]\n- link \"Cookie settings\" [ref=e119]\n- link \"Privacy notice\" [ref=e120]\n- link \"Security vulnerability notification\" [ref=e121]\n- link \"SpeakUp\" [ref=e122]\n- link \"Terms of use\" [ref=e123]\n- link \"Fraud alert\" [ref=e124]\n- link \"LinkedIn — opens in a new window\" [ref=e125]\n- link \"Instagram — opens in a new window\" [ref=e126]\n- link \"Facebook — opens in a new window\" [ref=e127]\n- link \"Youtube — opens in a new window\" [ref=e128]\n- link \"Glassdoor — opens in a new window\" [ref=e129]\n- link \"Cookie Policy\" [ref=e130]\n- button \"Accept\" [ref=e131]\n- button \"Manage Settings\" [ref=e132]\n- button \"Decline All\" [ref=e133]",
+  "timestamp": "2026-02-09T03:04:18.504Z",
+  "tree": "- link \"Skip to content\" [ref=e1]\n- link \"Contact us\" [ref=e2]\n- link \"Investors\" [ref=e3]\n- button \"Select Country Website\" [ref=e4]\n- button \"Close site selection menu\" [ref=e5]\n- textbox \"location\" [ref=e6]\n- link \" Global | EN\" [ref=e7]\n- link \"Argentina | ES\" [ref=e8]\n- link \"Brazil | PT\" [ref=e9]\n- link \"Canada | EN\" [ref=e10]\n- link \"Canada | FR\" [ref=e11]\n- link \"Colombia | ES\" [ref=e12]\n- link \"Guatemala | EN\" [ref=e13]\n- link \"Mexico | ES\" [ref=e14]\n- link \"United States | EN\" [ref=e15]\n- link \"Australia | EN\" [ref=e16]\n- link \"China | ZH\" [ref=e17]\n- link \"India | EN\" [ref=e18]\n- link \"Japan | JP\" [ref=e19]\n- link \"New Zealand | EN\" [ref=e20]\n- link \"Singapore | EN\" [ref=e21]\n- link \"Austria | EN\" [ref=e22]\n- link \"Belgium | EN\" [ref=e23]\n- link \"Czech Republic | EN\" [ref=e24]\n- link \"Denmark | EN\" [ref=e25]\n- link \"Egypt | EN\" [ref=e26]\n- link \"Finland | EN\" [ref=e27]\n- link \"France | FR\" [ref=e28]\n- link \"Germany | DE\" [ref=e29]\n- link \"Hungary | EN\" [ref=e30]\n- link \"Italy | IT\" [ref=e31]\n- link \"Morocco | EN\" [ref=e32]\n- link \"Netherlands | NL\" [ref=e33]\n- link \"Norway | NO\" [ref=e34]\n- link \"Poland | PL\" [ref=e35]\n- link \"Portugal | EN\" [ref=e36]\n- link \"Romania | EN\" [ref=e37]\n- link \"KSA | EN\" [ref=e38]\n- link \"Spain | ES\" [ref=e39]\n- link \"Sweden | EN\" [ref=e40]\n- link \"Switzerland | EN\" [ref=e41]\n- link \"UAE | EN\" [ref=e42]\n- link \"UK | EN\" [ref=e43]\n- link \"Capgemini\" [ref=e44]\n- link \"Insights menu\" [ref=e45]\n- button \"submenu\" [ref=e46]\n- link \"Industries menu\" [ref=e47]\n- button \"submenu\" [ref=e48] [nth=1]\n- link \"Services menu\" [ref=e49]\n- button \"submenu\" [ref=e50] [nth=2]\n- link \"Careers menu\" [ref=e51]\n- button \"submenu\" [ref=e52] [nth=3]\n- link \"News menu\" [ref=e53]\n- button \"submenu\" [ref=e54] [nth=4]\n- link \"About us menu\" [ref=e55]\n- button \"submenu\" [ref=e56] [nth=5]\n- button \" Search\" [ref=e57]\n- switch \"Dark and light mode toggle, currently light mode\" [ref=e58]\n- link \"Home\" [ref=e59]\n- link \"Careers \" [ref=e60]\n- link \"Why join Capgemini\" [ref=e61]\n- link \"Life at Capgemini\" [ref=e62]\n- link \"Meet our people\" [ref=e63]\n- link \"Career paths\" [ref=e64]\n- link \"Join us\" [ref=e65]\n- link \"Join Capgemini \" [ref=e66]\n- link \"Recruitment process\" [ref=e67]\n- link \"Interview tips\" [ref=e68]\n- link \"Job search\" [ref=e69]\n- link \"Join us \" [ref=e70]\n- textbox \"Job Search\" [ref=e71]\n- button \"Submit job search button\" [ref=e72]\n- button \"Filter Results\" [ref=e73] [expanded] [pressed]: Filters\n- combobox \"Country\" [ref=e74]\n- button \"sort top jobName\" [ref=e75]\n- button \"sort bottom jobName\" [ref=e76]\n- button \"sort top country of the jobs\" [ref=e77]\n- button \"sort bottom country of the jobs\" [ref=e78]\n- button \"sort top location of the jobs\" [ref=e79]\n- button \"sort bottom location of the jobs\" [ref=e80]\n- button \"sort top experienceLevel of the jobs\" [ref=e81]\n- button \"sort bottom experience Level of the jobs\" [ref=e82]\n- button \"sort top contractType of the jobs\" [ref=e83]\n- button \"sort bottom contractType of the jobs\" [ref=e84]\n- link \"Senior ASIC Verification Engineer Greece Ampelokipoi, Athens, Thessaloniki/Steliou Kazantzidi Experienced Professionals Permanent\" [ref=e85]\n- link \"Lead Analog Circuit Designer Greece Ampelokipoi, Athens, Thessaloniki/Steliou Kazantzidi Experienced Professionals Permanent\" [ref=e86]\n- link \"Senior Digital Design Engineer Greece Ampelokipoi, Athens, Thessaloniki/Steliou Kazantzidi Experienced Professionals Permanent\" [ref=e87]\n- link \"Analog Layout Engineer - FinFET Technology Greece Ampelokipoi, Athens, Thessaloniki/Steliou Kazantzidi Experienced Professionals Permanent\" [ref=e88]\n- link \"Senior Firmware Engineer Greece Ampelokipoi, Athens, Thessaloniki/Steliou Kazantzidi Experienced Professionals Permanent\" [ref=e89]\n- link \"RF Analog Layout Engineer - FinFET Technology Greece Ampelokipoi, Athens, Thessaloniki/Steliou Kazantzidi Experienced Professionals Permanent\" [ref=e90]\n- link \"Desenvolvedor / Desenvolvedora Full Stack Pleno Brazil Barueri, Recife Profissionais com experiência Permanente\" [ref=e91]\n- link \"PLM Architect Netherlands Utrecht, Eindhoven Experienced Professionals Permanent\" [ref=e92]\n- link \"Solution Engineer (Cloud Data Base/One NDS) Ukraine Kyiv, Lviv, Odesa, Rivne, HITECHPARKODESA Experienced Professionals Permanent\" [ref=e93]\n- link \"Solution Engineer (AUSF_UDM) Ukraine Kyiv, Lviv, Odesa, Rivne, HITECHPARKODESA Experienced Professionals Permanent\" [ref=e94]\n- link \"Senior Full-Stack Engineer (Python and React or Vue.js) Ukraine HITECHPARKODESA, Lviv, Odesa, Rivne, Kyiv Experienced Professionals Permanent\" [ref=e95]\n- link \"Senior Kotlin Engineer (Ukraine) Ukraine HITECHPARKODESA, Lviv, Odesa, Rivne, Kyiv Experienced Professionals Permanent\" [ref=e96]\n- link \"CTPM Ukraine Kyiv, Lviv, Odesa, Rivne, HITECHPARKODESA Experienced Professionals Permanent\" [ref=e97]\n- link \"Solution Engineer/Integrator Ukraine HITECHPARKODESA, Lviv, Rivne, Kyiv Experienced Professionals Permanent\" [ref=e98]\n- link \"Solution (CNF) Engineer Ukraine HITECHPARKODESA, Lviv, Rivne, Kyiv Experienced Professionals Permanent\" [ref=e99]\n- button \"Load More about jobs\" [ref=e100]\n- link \"Facebook\" [ref=e101]\n- link \"Linkedin\" [ref=e102]\n- link \"Youtube\" [ref=e103]\n- link \"Instagram\" [ref=e104]\n- link \"Capgemini\" [ref=e105] [nth=1]\n- link \"Capgemini Engineering\" [ref=e106]\n- link \"Capgemini Invent\" [ref=e107]\n- link \"Sogeti\" [ref=e108]\n- link \"Frog\" [ref=e109]\n- link \"Insights\" [ref=e110]\n- link \"Industries\" [ref=e111]\n- link \"Services\" [ref=e112]\n- link \"Careers\" [ref=e113]\n- link \"News\" [ref=e114]\n- link \"About us\" [ref=e115]\n- link \"Contact us\" [ref=e116] [nth=1]\n- link \"Investors\" [ref=e117] [nth=1]\n- link \"Accessibility\" [ref=e118]\n- link \"Cookie policy\" [ref=e119]\n- link \"Cookie settings\" [ref=e120]\n- link \"Privacy notice\" [ref=e121]\n- link \"Security vulnerability notification\" [ref=e122]\n- link \"SpeakUp\" [ref=e123]\n- link \"Terms of use\" [ref=e124]\n- link \"Fraud alert\" [ref=e125]\n- link \"LinkedIn — opens in a new window\" [ref=e126]\n- link \"Instagram — opens in a new window\" [ref=e127]\n- link \"Facebook — opens in a new window\" [ref=e128]\n- link \"Youtube — opens in a new window\" [ref=e129]\n- link \"Glassdoor — opens in a new window\" [ref=e130]\n- link \"Cookie Policy\" [ref=e131]\n- button \"Accept\" [ref=e132]\n- button \"Manage Settings\" [ref=e133]\n- button \"Decline All\" [ref=e134]",
   "refs": {
     "e1": {
       "selector": "getByRole('link', { name: \"Skip to content\", exact: true })",
@@ -435,249 +435,254 @@
       "name": "sort bottom contractType of the jobs"
     },
     "e85": {
-      "selector": "getByRole('link', { name: \"System Test & Validation Engineer (TCU) Mexico Guadalajara Experienced Professionals Permanent\", exact: true })",
+      "selector": "getByRole('link', { name: \"Senior ASIC Verification Engineer Greece Ampelokipoi, Athens, Thessaloniki/Steliou Kazantzidi Experienced Professionals Permanent\", exact: true })",
       "role": "link",
-      "name": "System Test & Validation Engineer (TCU) Mexico Guadalajara Experienced Professionals Permanent"
+      "name": "Senior ASIC Verification Engineer Greece Ampelokipoi, Athens, Thessaloniki/Steliou Kazantzidi Experienced Professionals Permanent"
     },
     "e86": {
-      "selector": "getByRole('link', { name: \"Databricks Engineer - Remote Mexico Guadalajara Experienced Professionals Permanent\", exact: true })",
+      "selector": "getByRole('link', { name: \"Lead Analog Circuit Designer Greece Ampelokipoi, Athens, Thessaloniki/Steliou Kazantzidi Experienced Professionals Permanent\", exact: true })",
       "role": "link",
-      "name": "Databricks Engineer - Remote Mexico Guadalajara Experienced Professionals Permanent"
+      "name": "Lead Analog Circuit Designer Greece Ampelokipoi, Athens, Thessaloniki/Steliou Kazantzidi Experienced Professionals Permanent"
     },
     "e87": {
-      "selector": "getByRole('link', { name: \"Solution Engineer (Cloud Data Base/One NDS) Ukraine HITECHPARKODESA, Kyiv, Lviv, Odesa, Rivne Experienced Professionals Permanent\", exact: true })",
+      "selector": "getByRole('link', { name: \"Senior Digital Design Engineer Greece Ampelokipoi, Athens, Thessaloniki/Steliou Kazantzidi Experienced Professionals Permanent\", exact: true })",
       "role": "link",
-      "name": "Solution Engineer (Cloud Data Base/One NDS) Ukraine HITECHPARKODESA, Kyiv, Lviv, Odesa, Rivne Experienced Professionals Permanent"
+      "name": "Senior Digital Design Engineer Greece Ampelokipoi, Athens, Thessaloniki/Steliou Kazantzidi Experienced Professionals Permanent"
     },
     "e88": {
-      "selector": "getByRole('link', { name: \"Solution Engineer (Policy/NPC/Core) Ukraine HITECHPARKODESA, Kyiv, Lviv, Odesa, Rivne Experienced Professionals Permanent\", exact: true })",
+      "selector": "getByRole('link', { name: \"Analog Layout Engineer - FinFET Technology Greece Ampelokipoi, Athens, Thessaloniki/Steliou Kazantzidi Experienced Professionals Permanent\", exact: true })",
       "role": "link",
-      "name": "Solution Engineer (Policy/NPC/Core) Ukraine HITECHPARKODESA, Kyiv, Lviv, Odesa, Rivne Experienced Professionals Permanent"
+      "name": "Analog Layout Engineer - FinFET Technology Greece Ampelokipoi, Athens, Thessaloniki/Steliou Kazantzidi Experienced Professionals Permanent"
     },
     "e89": {
-      "selector": "getByRole('link', { name: \"Technical Project Manager (Core) Ukraine HITECHPARKODESA, Kyiv, Lviv, Odesa, Rivne Experienced Professionals Permanent\", exact: true })",
+      "selector": "getByRole('link', { name: \"Senior Firmware Engineer Greece Ampelokipoi, Athens, Thessaloniki/Steliou Kazantzidi Experienced Professionals Permanent\", exact: true })",
       "role": "link",
-      "name": "Technical Project Manager (Core) Ukraine HITECHPARKODESA, Kyiv, Lviv, Odesa, Rivne Experienced Professionals Permanent"
+      "name": "Senior Firmware Engineer Greece Ampelokipoi, Athens, Thessaloniki/Steliou Kazantzidi Experienced Professionals Permanent"
     },
     "e90": {
-      "selector": "getByRole('link', { name: \"Solution Engineer (One-MNP) Ukraine HITECHPARKODESA, Kyiv, Lviv, Odesa, Rivne Experienced Professionals Permanent\", exact: true })",
+      "selector": "getByRole('link', { name: \"RF Analog Layout Engineer - FinFET Technology Greece Ampelokipoi, Athens, Thessaloniki/Steliou Kazantzidi Experienced Professionals Permanent\", exact: true })",
       "role": "link",
-      "name": "Solution Engineer (One-MNP) Ukraine HITECHPARKODESA, Kyiv, Lviv, Odesa, Rivne Experienced Professionals Permanent"
+      "name": "RF Analog Layout Engineer - FinFET Technology Greece Ampelokipoi, Athens, Thessaloniki/Steliou Kazantzidi Experienced Professionals Permanent"
     },
     "e91": {
-      "selector": "getByRole('link', { name: \"Solution Engineer (5G slicing, 5G SA/NSA network, IP MLPS, Optical transport, IMS, VoLTE, NFV/SDN) Ukraine HITECHPARKODESA, Kyiv, Lviv, Odesa, Rivne Experienced Professionals Permanent\", exact: true })",
+      "selector": "getByRole('link', { name: \"Desenvolvedor / Desenvolvedora Full Stack Pleno Brazil Barueri, Recife Profissionais com experiência Permanente\", exact: true })",
       "role": "link",
-      "name": "Solution Engineer (5G slicing, 5G SA/NSA network, IP MLPS, Optical transport, IMS, VoLTE, NFV/SDN) Ukraine HITECHPARKODESA, Kyiv, Lviv, Odesa, Rivne Experienced Professionals Permanent"
+      "name": "Desenvolvedor / Desenvolvedora Full Stack Pleno Brazil Barueri, Recife Profissionais com experiência Permanente"
     },
     "e92": {
-      "selector": "getByRole('link', { name: \"Senior Power BI Engineer Ukraine HITECHPARKODESA, Kyiv, Lviv, Odesa, Rivne Experienced Professionals Permanent\", exact: true })",
+      "selector": "getByRole('link', { name: \"PLM Architect Netherlands Utrecht, Eindhoven Experienced Professionals Permanent\", exact: true })",
       "role": "link",
-      "name": "Senior Power BI Engineer Ukraine HITECHPARKODESA, Kyiv, Lviv, Odesa, Rivne Experienced Professionals Permanent"
+      "name": "PLM Architect Netherlands Utrecht, Eindhoven Experienced Professionals Permanent"
     },
     "e93": {
-      "selector": "getByRole('link', { name: \"Automation tester (Linux, Python, Shell) Engineer Ukraine HITECHPARKODESA, Kyiv, Lviv, Odesa, Rivne Experienced Professionals Permanent\", exact: true })",
+      "selector": "getByRole('link', { name: \"Solution Engineer (Cloud Data Base/One NDS) Ukraine Kyiv, Lviv, Odesa, Rivne, HITECHPARKODESA Experienced Professionals Permanent\", exact: true })",
       "role": "link",
-      "name": "Automation tester (Linux, Python, Shell) Engineer Ukraine HITECHPARKODESA, Kyiv, Lviv, Odesa, Rivne Experienced Professionals Permanent"
+      "name": "Solution Engineer (Cloud Data Base/One NDS) Ukraine Kyiv, Lviv, Odesa, Rivne, HITECHPARKODESA Experienced Professionals Permanent"
     },
     "e94": {
-      "selector": "getByRole('link', { name: \"Solution Engineer (AUSF_UDM) Ukraine HITECHPARKODESA, Kyiv, Lviv, Odesa, Rivne Experienced Professionals Permanent\", exact: true })",
+      "selector": "getByRole('link', { name: \"Solution Engineer (AUSF_UDM) Ukraine Kyiv, Lviv, Odesa, Rivne, HITECHPARKODESA Experienced Professionals Permanent\", exact: true })",
       "role": "link",
-      "name": "Solution Engineer (AUSF_UDM) Ukraine HITECHPARKODESA, Kyiv, Lviv, Odesa, Rivne Experienced Professionals Permanent"
+      "name": "Solution Engineer (AUSF_UDM) Ukraine Kyiv, Lviv, Odesa, Rivne, HITECHPARKODESA Experienced Professionals Permanent"
     },
     "e95": {
-      "selector": "getByRole('link', { name: \"Solution Engineer (Signaling/SEPP/CSD/DDE/DSC) Ukraine HITECHPARKODESA, Kyiv, Lviv, Odesa, Rivne Experienced Professionals Permanent\", exact: true })",
+      "selector": "getByRole('link', { name: \"Senior Full-Stack Engineer (Python and React or Vue.js) Ukraine HITECHPARKODESA, Lviv, Odesa, Rivne, Kyiv Experienced Professionals Permanent\", exact: true })",
       "role": "link",
-      "name": "Solution Engineer (Signaling/SEPP/CSD/DDE/DSC) Ukraine HITECHPARKODESA, Kyiv, Lviv, Odesa, Rivne Experienced Professionals Permanent"
+      "name": "Senior Full-Stack Engineer (Python and React or Vue.js) Ukraine HITECHPARKODESA, Lviv, Odesa, Rivne, Kyiv Experienced Professionals Permanent"
     },
     "e96": {
-      "selector": "getByRole('link', { name: \"Technical Project Manager Ukraine HITECHPARKODESA, Kyiv, Lviv, Odesa, Rivne Experienced Professionals Permanent\", exact: true })",
+      "selector": "getByRole('link', { name: \"Senior Kotlin Engineer (Ukraine) Ukraine HITECHPARKODESA, Lviv, Odesa, Rivne, Kyiv Experienced Professionals Permanent\", exact: true })",
       "role": "link",
-      "name": "Technical Project Manager Ukraine HITECHPARKODESA, Kyiv, Lviv, Odesa, Rivne Experienced Professionals Permanent"
+      "name": "Senior Kotlin Engineer (Ukraine) Ukraine HITECHPARKODESA, Lviv, Odesa, Rivne, Kyiv Experienced Professionals Permanent"
     },
     "e97": {
-      "selector": "getByRole('link', { name: \"Solution Engineer (Policy/NPC/Core/Turkish Language) Ukraine HITECHPARKODESA, Kyiv, Lviv, Odesa, Rivne Experienced Professionals Permanent\", exact: true })",
+      "selector": "getByRole('link', { name: \"CTPM Ukraine Kyiv, Lviv, Odesa, Rivne, HITECHPARKODESA Experienced Professionals Permanent\", exact: true })",
       "role": "link",
-      "name": "Solution Engineer (Policy/NPC/Core/Turkish Language) Ukraine HITECHPARKODESA, Kyiv, Lviv, Odesa, Rivne Experienced Professionals Permanent"
+      "name": "CTPM Ukraine Kyiv, Lviv, Odesa, Rivne, HITECHPARKODESA Experienced Professionals Permanent"
     },
     "e98": {
-      "selector": "getByRole('link', { name: \"Solution Engineer (HSS/HLR) Ukraine HITECHPARKODESA, Kyiv, Lviv, Odesa, Rivne Experienced Professionals Permanent\", exact: true })",
+      "selector": "getByRole('link', { name: \"Solution Engineer/Integrator Ukraine HITECHPARKODESA, Lviv, Rivne, Kyiv Experienced Professionals Permanent\", exact: true })",
       "role": "link",
-      "name": "Solution Engineer (HSS/HLR) Ukraine HITECHPARKODESA, Kyiv, Lviv, Odesa, Rivne Experienced Professionals Permanent"
+      "name": "Solution Engineer/Integrator Ukraine HITECHPARKODESA, Lviv, Rivne, Kyiv Experienced Professionals Permanent"
     },
     "e99": {
+      "selector": "getByRole('link', { name: \"Solution (CNF) Engineer Ukraine HITECHPARKODESA, Lviv, Rivne, Kyiv Experienced Professionals Permanent\", exact: true })",
+      "role": "link",
+      "name": "Solution (CNF) Engineer Ukraine HITECHPARKODESA, Lviv, Rivne, Kyiv Experienced Professionals Permanent"
+    },
+    "e100": {
       "selector": "getByRole('button', { name: \"Load More about jobs\", exact: true })",
       "role": "button",
       "name": "Load More about jobs"
     },
-    "e100": {
+    "e101": {
       "selector": "getByRole('link', { name: \"Facebook\", exact: true })",
       "role": "link",
       "name": "Facebook"
     },
-    "e101": {
+    "e102": {
       "selector": "getByRole('link', { name: \"Linkedin\", exact: true })",
       "role": "link",
       "name": "Linkedin"
     },
-    "e102": {
+    "e103": {
       "selector": "getByRole('link', { name: \"Youtube\", exact: true })",
       "role": "link",
       "name": "Youtube"
     },
-    "e103": {
+    "e104": {
       "selector": "getByRole('link', { name: \"Instagram\", exact: true })",
       "role": "link",
       "name": "Instagram"
     },
-    "e104": {
+    "e105": {
       "selector": "getByRole('link', { name: \"Capgemini\", exact: true })",
       "role": "link",
       "name": "Capgemini",
       "nth": 1
     },
-    "e105": {
+    "e106": {
       "selector": "getByRole('link', { name: \"Capgemini Engineering\", exact: true })",
       "role": "link",
       "name": "Capgemini Engineering"
     },
-    "e106": {
+    "e107": {
       "selector": "getByRole('link', { name: \"Capgemini Invent\", exact: true })",
       "role": "link",
       "name": "Capgemini Invent"
     },
-    "e107": {
+    "e108": {
       "selector": "getByRole('link', { name: \"Sogeti\", exact: true })",
       "role": "link",
       "name": "Sogeti"
     },
-    "e108": {
+    "e109": {
       "selector": "getByRole('link', { name: \"Frog\", exact: true })",
       "role": "link",
       "name": "Frog"
     },
-    "e109": {
+    "e110": {
       "selector": "getByRole('link', { name: \"Insights\", exact: true })",
       "role": "link",
       "name": "Insights"
     },
-    "e110": {
+    "e111": {
       "selector": "getByRole('link', { name: \"Industries\", exact: true })",
       "role": "link",
       "name": "Industries"
     },
-    "e111": {
+    "e112": {
       "selector": "getByRole('link', { name: \"Services\", exact: true })",
       "role": "link",
       "name": "Services"
     },
-    "e112": {
+    "e113": {
       "selector": "getByRole('link', { name: \"Careers\", exact: true })",
       "role": "link",
       "name": "Careers"
     },
-    "e113": {
+    "e114": {
       "selector": "getByRole('link', { name: \"News\", exact: true })",
       "role": "link",
       "name": "News"
     },
-    "e114": {
+    "e115": {
       "selector": "getByRole('link', { name: \"About us\", exact: true })",
       "role": "link",
       "name": "About us"
     },
-    "e115": {
+    "e116": {
       "selector": "getByRole('link', { name: \"Contact us\", exact: true })",
       "role": "link",
       "name": "Contact us",
       "nth": 1
     },
-    "e116": {
+    "e117": {
       "selector": "getByRole('link', { name: \"Investors\", exact: true })",
       "role": "link",
       "name": "Investors",
       "nth": 1
     },
-    "e117": {
+    "e118": {
       "selector": "getByRole('link', { name: \"Accessibility\", exact: true })",
       "role": "link",
       "name": "Accessibility"
     },
-    "e118": {
+    "e119": {
       "selector": "getByRole('link', { name: \"Cookie policy\", exact: true })",
       "role": "link",
       "name": "Cookie policy"
     },
-    "e119": {
+    "e120": {
       "selector": "getByRole('link', { name: \"Cookie settings\", exact: true })",
       "role": "link",
       "name": "Cookie settings"
     },
-    "e120": {
+    "e121": {
       "selector": "getByRole('link', { name: \"Privacy notice\", exact: true })",
       "role": "link",
       "name": "Privacy notice"
     },
-    "e121": {
+    "e122": {
       "selector": "getByRole('link', { name: \"Security vulnerability notification\", exact: true })",
       "role": "link",
       "name": "Security vulnerability notification"
     },
-    "e122": {
+    "e123": {
       "selector": "getByRole('link', { name: \"SpeakUp\", exact: true })",
       "role": "link",
       "name": "SpeakUp"
     },
-    "e123": {
+    "e124": {
       "selector": "getByRole('link', { name: \"Terms of use\", exact: true })",
       "role": "link",
       "name": "Terms of use"
     },
-    "e124": {
+    "e125": {
       "selector": "getByRole('link', { name: \"Fraud alert\", exact: true })",
       "role": "link",
       "name": "Fraud alert"
     },
-    "e125": {
+    "e126": {
       "selector": "getByRole('link', { name: \"LinkedIn — opens in a new window\", exact: true })",
       "role": "link",
       "name": "LinkedIn — opens in a new window"
     },
-    "e126": {
+    "e127": {
       "selector": "getByRole('link', { name: \"Instagram — opens in a new window\", exact: true })",
       "role": "link",
       "name": "Instagram — opens in a new window"
     },
-    "e127": {
+    "e128": {
       "selector": "getByRole('link', { name: \"Facebook — opens in a new window\", exact: true })",
       "role": "link",
       "name": "Facebook — opens in a new window"
     },
-    "e128": {
+    "e129": {
       "selector": "getByRole('link', { name: \"Youtube — opens in a new window\", exact: true })",
       "role": "link",
       "name": "Youtube — opens in a new window"
     },
-    "e129": {
+    "e130": {
       "selector": "getByRole('link', { name: \"Glassdoor — opens in a new window\", exact: true })",
       "role": "link",
       "name": "Glassdoor — opens in a new window"
     },
-    "e130": {
+    "e131": {
       "selector": "getByRole('link', { name: \"Cookie Policy\", exact: true })",
       "role": "link",
       "name": "Cookie Policy"
     },
-    "e131": {
+    "e132": {
       "selector": "getByRole('button', { name: \"Accept\", exact: true })",
       "role": "button",
       "name": "Accept"
     },
-    "e132": {
+    "e133": {
       "selector": "getByRole('button', { name: \"Manage Settings\", exact: true })",
       "role": "button",
       "name": "Manage Settings"
     },
-    "e133": {
+    "e134": {
       "selector": "getByRole('button', { name: \"Decline All\", exact: true })",
       "role": "button",
       "name": "Decline All"

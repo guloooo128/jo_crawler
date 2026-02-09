@@ -2,16 +2,17 @@ import { BrowserService } from './BrowserService.js';
 import { LLMService } from './LLMService.js';
 
 /**
- * JD 提取结果
+ * JD 提取结果（JO 标准字段）
  */
 export interface JDExtractionResult {
-  title?: string;
-  company?: string;
+  job_title?: string;
+  company_name?: string;
   location?: string;
+  post_date?: string;
+  dead_line?: string;
+  job_type?: string;
   description?: string;
-  requirements?: string[];
-  responsibilities?: string[];
-  benefits?: string[];
+  salary?: string;
 }
 
 /**
@@ -49,12 +50,14 @@ export class JDExtractor {
       );
 
       return {
-        title: extracted.title,
-        company: extracted.company,
+        job_title: extracted.job_title || extracted.title,
+        company_name: extracted.company_name || extracted.company,
         location: extracted.location,
+        post_date: extracted.post_date,
+        dead_line: extracted.dead_line,
+        job_type: extracted.job_type,
         description: extracted.description,
-        requirements: extracted.requirements ? JSON.parse(extracted.requirements as any) : [],
-        responsibilities: extracted.responsibilities ? JSON.parse(extracted.responsibilities as any) : [],
+        salary: extracted.salary,
       };
     } catch (error) {
       console.error('❌ LLM 提取失败，使用基础方法:', error);
