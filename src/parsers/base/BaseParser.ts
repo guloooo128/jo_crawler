@@ -1,6 +1,7 @@
 import type { Parser } from './Parser.js';
 import type { BrowserService } from '../../services/BrowserService.js';
 import type { JobData, ParseOptions, ParserMetadata } from '../../models/JobData.js';
+import { generateJobId } from '../../utils/jobId.js';
 
 /**
  * 基础解析器抽象类
@@ -96,7 +97,8 @@ export abstract class BaseParser implements Parser {
    * 创建 JobData 对象（带默认值）
    */
   protected createJobData(defaults: Partial<JobData> = {}): JobData {
-    return {
+    const job: JobData = {
+      job_id: '',
       job_title: defaults.job_title || '',
       company_name: defaults.company_name || '',
       location: defaults.location || '',
@@ -110,6 +112,11 @@ export abstract class BaseParser implements Parser {
       extracted_at: new Date().toISOString(),
       ...defaults,
     };
+    // 生成唯一 job_id（优先从 URL 提取原生 ID，回退 MD5）
+    if (!job.job_id) {
+      job.job_id = generateJobId(job);
+    }
+    return job;
   }
 
   /**

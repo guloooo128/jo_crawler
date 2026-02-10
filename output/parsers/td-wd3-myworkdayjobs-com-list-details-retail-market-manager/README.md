@@ -5,7 +5,7 @@
 - **域名**: td.wd3.myworkdayjobs.com
 - **URL**: https://td.wd3.myworkdayjobs.com/en-US/TD_Bank_Careers/details/Retail-Market-Manager--US----Lehigh-Montgomery-Regions_R_1456219?locationCountry=bc33aa3152ec42d4995f4791a106ed09&locationCountry=29247e57dbaf46fb855b224e03170bc7&locationCountry=80938777cac5440fab50d729f9634969&locationCountry=a30a87ed25634629aa6c3958aa2b91ea&timeType=14c9322ea8e3014f4096d9d2dc025400
 - **页面类型**: list
-- **生成时间**: 2026-02-09T03:24:31.609Z
+- **生成时间**: 2026-02-10T03:41:42.735Z
 
 ## 文件说明
 
@@ -33,7 +33,7 @@ const jobs = await parser.parse(browser, { maxItems: 10 });
   "domain": "td.wd3.myworkdayjobs.com",
   "url": "https://td.wd3.myworkdayjobs.com/en-US/TD_Bank_Careers/details/Retail-Market-Manager--US----Lehigh-Montgomery-Regions_R_1456219?locationCountry=bc33aa3152ec42d4995f4791a106ed09&locationCountry=29247e57dbaf46fb855b224e03170bc7&locationCountry=80938777cac5440fab50d729f9634969&locationCountry=a30a87ed25634629aa6c3958aa2b91ea&timeType=14c9322ea8e3014f4096d9d2dc025400",
   "pageType": "list",
-  "generatedAt": "2026-02-09T03:24:31.609Z"
+  "generatedAt": "2026-02-10T03:41:42.735Z"
 }
 ```
 

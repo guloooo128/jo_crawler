@@ -107,8 +107,39 @@ npm run crawl -- --csv
 # 自定义选项
 npm run crawl -- -m 5              # 每个站点最多 5 个职位
 npm run crawl -- -p 2              # 最大翻页 2 页
-npm run crawl -- -f csv            # 输出 CSV 格式
+npm run crawl -- --db custom.db    # 使用自定义数据库路径
 npm run crawl -- --no-headless     # 显示浏览器窗口（调试用）
+```
+
+### 4. 导出数据
+
+```bash
+# 导出全部数据为 JSON（默认）
+npm run export
+
+# 导出为 CSV 格式
+npm run export -- -f csv
+
+# 按来源过滤导出（模糊匹配）
+npm run export -- -s "TD Bank"
+
+# 按关键字搜索（匹配标题和描述）
+npm run export -- -k "Markets"
+
+# 只导出指定字段（逗号分隔）
+npm run export -- --fields "job_id,company_name,job_title,job_link"
+
+# 排除 description 字段（减小文件体积）
+npm run export -- --no-desc
+
+# 自定义输出路径
+npm run export -- -o exports/my-jobs.json
+
+# 限制导出条数
+npm run export -- -l 100
+
+# 组合使用多个选项
+npm run export -- -f csv -s CIBC -k "Analyst" --no-desc -o cibc-analysts.csv
 ```
 
 ## 📖 配置文件
@@ -130,32 +161,15 @@ detail,https://example.com/jobs/123,1,
 
 详细说明请参考：[CSV 配置指南](docs/CSV_CONFIG.md)
 
-## 📊 输出格式
+## 📊 数据存储
 
-### JSON 格式（默认）
-
-```json
-[
-  {
-    "job_title": "Global Markets, Summer 2027 Analyst (Vancouver)",
-    "company_name": "CIBC",
-    "location": "Vancouver, BC",
-    "job_link": "https://cibc.wd3.myworkdayjobs.com/en-US/campus/job/...",
-    "post_date": "Today",
-    "dead_line": "March 9, 2026",
-    "job_type": "Temporary",
-    "description": "We're building a relationship-oriented bank for the modern world...",
-    "salary": "",
-    "source": "CIBC",
-    "extracted_at": "2026-02-09T15:05:34.399Z"
-  }
-]
-```
+爬取结果自动保存到 SQLite 数据库（默认 `output/jobs.db`），支持自动去重。
 
 ### JobData 字段说明
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
+| `job_id` | string | 唯一标识（优先从 URL 提取原生 ID，回退 MD5 哈希） |
 | `job_title` | string | 职位标题 |
 | `company_name` | string | 公司名称 |
 | `location` | string | 工作地点（城市/地区） |
@@ -167,6 +181,16 @@ detail,https://example.com/jobs/123,1,
 | `salary` | string | 薪资范围（无则空串） |
 | `source` | string | 来源网站名 |
 | `extracted_at` | string | ISO 时间戳 |
+
+### job_id 生成策略
+
+| 优先级 | 策略 | 示例 |
+|--------|------|------|
+| 1 | 从 job_link URL 提取原生 ID | Workday: `2603725`，Capgemini: `368376` |
+| 2 | job_link 的 MD5 哈希前 16 位 | `a1b2c3d4e5f67890` |
+| 3 | company + title + location 的 MD5 | 兑底，仅当 job_link 为空时 |
+
+支持的 URL ID 提取模式：Workday (`_NNNN`)、Capgemini (`/jobs/NNNN-`)、Oracle Cloud (`/job/NNNN`)、Microsoft (`pid=NNNN`)、CBRE (`/job/NNNN`)，以及通用的 URL 末尾数字 ID。
 
 ## 🛠️ 命令行选项
 
@@ -193,10 +217,9 @@ npm run crawl [options]
   -m, --max-jobs <number>  每个站点最大爬取职位数 [默认: 10]
   -p, --max-pages <number> 最大翻页数 [默认: 1]
   -c, --concurrency <number> 并发数 [默认: 1]
-  -o, --output <path>      输出文件路径 [默认: output/jobs.json]
-  -f, --format <format>    输出格式 (json|csv) [默认: json]
   -i, --input <path>       输入文件路径 [默认: links.txt]
   --csv                    使用 CSV 配置文件（links.csv）
+  --db <path>              数据库文件路径 [默认: output/jobs.db]
   --no-headless            显示浏览器窗口
   -v, --verbose            详细输出
 ```
@@ -226,6 +249,12 @@ npm run crawl [options]
                  │ Browser    │
                  │  Service   │
                  │ (Playwright)│
+                 └─────┬──────┘
+                       │
+                 ┌─────▼──────┐
+                 │ Database   │
+                 │  Service   │
+                 │  (SQLite)  │
                  └────────────┘
 ```
 
@@ -244,7 +273,7 @@ npm run crawl [options]
    - **详情提取**: `extractDetailFields()` 提取基础字段 + `getMainContentText()` 获取原始文本 → 解析器自定义的 `cleanDescription()` 清洗 description
    - **字段验证**: `cleanLocation()` 去除元数据拼接噪音、`cleanSalary()` 验证薪资格式、`extractDatesFromRawText()` 从原始文本提取日期
    - **详情页**: 直接 `extractDetailFields()` 提取所有字段
-   - 结果输出到 `output/jobs.json`
+   - **去重与入库**: 每批次提取后，用 `job_id` 去重，新职位写入 SQLite 数据库（`output/jobs.db`）
 
 ### BaseParser 核心方法
 
@@ -252,7 +281,7 @@ npm run crawl [options]
 |------|------|
 | `collectJobLinks(browser, refs)` | 在列表页批量收集所有职位链接的 URL，避免 ref 失效 |
 | `extractDetailFields(browser)` | 在详情页提取基础字段（location/date/type/salary 等），description 建议解析器自行从原始文本提取 |
-| `createJobData(data)` | 创建 JobData 对象，自动填充默认值和时间戳 |
+| `createJobData(data)` | 创建 JobData 对象，自动填充 job_id、默认值和时间戳 |
 | `cleanText(text)` | 清理文本（去除多余空白） |
 | `getCompanyName()` | 获取公司名称（子类可重写） |
 | `delay(ms)` | 延迟执行 |
@@ -286,7 +315,8 @@ jo_crawler/
 │   ├── index.ts               # 入口文件
 │   ├── commands/              # CLI 命令
 │   │   ├── generate.ts        # 解析器生成命令
-│   │   └── crawl.ts           # 爬取命令
+│   │   ├── crawl.ts           # 爬取命令
+│   │   └── export.ts          # 数据导出命令
 │   ├── models/                # 数据模型
 │   │   ├── JobData.ts         # JobData 接口定义
 │   │   ├── CrawlConfig.ts     # 爬取配置
@@ -302,15 +332,17 @@ jo_crawler/
 │   │   └── parser-generator.ts # System + User prompt（含列表页/详情页指导）
 │   ├── services/              # 服务层
 │   │   ├── BrowserService.ts  # Playwright 浏览器封装
-│   │   ├── LLMService.ts      # LLM API 调用（豆包/GLM）
-│   │   ├── JDExtractor.ts     # JD 结构化提取
-│   │   └── ParserGenerator.ts # 解析器生成编排
+│       ├── DatabaseService.ts # SQLite 数据库服务（持久化 + 去重）
+│       ├── LLMService.ts      # LLM API 调用（豆包）
+│       ├── JDExtractor.ts     # JD 结构化提取
+│       └── ParserGenerator.ts # 解析器生成编排
 │   └── utils/                 # 工具函数
 │       ├── config.ts          # 全局配置
+│       ├── jobId.ts           # job_id 生成工具（URL 提取 + MD5 回退）
 │       ├── loadLinksCsv.ts    # CSV 文件加载
 │       └── parserFilename.ts  # 解析器文件名生成（防冲突）
 ├── output/                    # 输出目录
-│   ├── jobs.json              # 爬取结果
+│   ├── jobs.db                # SQLite 数据库（爬取结果）
 │   ├── parsers/               # 生成的解析器
 │   │   └── <domain>/
 │   │       ├── parser.js          # 生成的解析器代码

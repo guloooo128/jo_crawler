@@ -1,9 +1,9 @@
 {
-  "url": "https://cibc.wd3.myworkdayjobs.com/en-US/campus/job/Vancouver-BC/Global-Markets--Summer-2027-Analyst--Vancouver-_2603725",
+  "url": "https://cibc.wd3.myworkdayjobs.com/en-US/campus/job/Miami-FL/XMLNAME-2026-Summer-Intern---Commercial-Banking--Miami-_2523659-1",
   "pageType": "detail",
   "domain": "cibc.wd3.myworkdayjobs.com",
-  "timestamp": "2026-02-09T15:01:31.864Z",
-  "tree": "- link \"Skip to main content\" [ref=e1]\n- link \"search for jobs\" [ref=e2]\n- button \"English\" [ref=e3]\n- button \"Sign In\" [ref=e4]\n- button \"Search for Jobs\" [ref=e5]\n- button \"Apply\" [ref=e6]\n- link \"CIBC.com\" [ref=e7]\n- link \"Mailbox.careers-carrieres@cibc.com\" [ref=e8]\n- link \"Global Investment Banking, Summer 2027 Analyst (Vancouver)\" [ref=e9]\n- button \"Read More\" [ref=e10]\n- link \"Facebook\" [ref=e11]\n- link \"YouTube\" [ref=e12]\n- link \"X\" [ref=e13]\n- link \"Google Plus\" [ref=e14]\n- link \"Glassdoor\" [ref=e15]\n- link \"LinkedIn\" [ref=e16]",
+  "timestamp": "2026-02-10T03:42:54.490Z",
+  "tree": "- link \"Skip to main content\" [ref=e1]\n- link \"search for jobs\" [ref=e2]\n- button \"English\" [ref=e3]\n- button \"Sign In\" [ref=e4]\n- button \"Search for Jobs\" [ref=e5]\n- button \"Apply\" [ref=e6]\n- link \"CIBC.com\" [ref=e7]\n- link \"California residents — your privacy rights regarding your actual or prospective employment\" [ref=e8]\n- link \"Mailbox.careers-carrieres@cibc.com\" [ref=e9]\n- button \"Read More\" [ref=e10]\n- link \"Facebook\" [ref=e11]\n- link \"YouTube\" [ref=e12]\n- link \"X\" [ref=e13]\n- link \"Google Plus\" [ref=e14]\n- link \"Glassdoor\" [ref=e15]\n- link \"LinkedIn\" [ref=e16]",
   "refs": {
     "e1": {
       "selector": "getByRole('link', { name: \"Skip to main content\", exact: true })",
@@ -41,14 +41,14 @@
       "name": "CIBC.com"
     },
     "e8": {
+      "selector": "getByRole('link', { name: \"California residents — your privacy rights regarding your actual or prospective employment\", exact: true })",
+      "role": "link",
+      "name": "California residents — your privacy rights regarding your actual or prospective employment"
+    },
+    "e9": {
       "selector": "getByRole('link', { name: \"Mailbox.careers-carrieres@cibc.com\", exact: true })",
       "role": "link",
       "name": "Mailbox.careers-carrieres@cibc.com"
-    },
-    "e9": {
-      "selector": "getByRole('link', { name: \"Global Investment Banking, Summer 2027 Analyst (Vancouver)\", exact: true })",
-      "role": "link",
-      "name": "Global Investment Banking, Summer 2027 Analyst (Vancouver)"
     },
     "e10": {
       "selector": "getByRole('button', { name: \"Read More\", exact: true })",

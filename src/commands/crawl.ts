@@ -1,10 +1,10 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
-import path from 'path';
 import fs from 'fs-extra';
 import { BrowserService } from '../services/BrowserService.js';
 import { LLMService } from '../services/LLMService.js';
+import { DatabaseService } from '../services/DatabaseService.js';
 import { ParserRegistry } from '../parsers/registry.js';
 import { GenericParser } from '../parsers/base/GenericParser.js';
 import { config } from '../utils/config.js';
@@ -24,10 +24,9 @@ export function crawlCommand(): Command {
     .option('-m, --max-jobs <number>', '每个站点最大爬取职位数', '10')
     .option('-p, --max-pages <number>', '最大翻页数', '1')
     .option('-c, --concurrency <number>', '并发数', '1')
-    .option('-o, --output <path>', '输出文件路径', config.crawler.outputPath)
-    .option('-f, --format <format>', '输出格式 (json|csv)', 'json')
     .option('-i, --input <path>', '输入文件路径（links.txt）', config.paths.links)
     .option('--csv', '使用 CSV 配置文件（links.csv）')
+    .option('--db <path>', '数据库文件路径', config.paths.database)
     .option('--no-headless', '显示浏览器窗口')
     .option('-v, --verbose', '详细输出')
     .action(async (options: CrawlOptions) => {
@@ -56,13 +55,23 @@ async function runCrawl(options: CrawlOptions) {
   const maxPages = parseInt(String(options.maxPages || '1'), 10);
   const concurrency = parseInt(String(options.concurrency || '1'), 10);
   const headless = options.headless !== false;
+  const dbPath = (options as any).db || config.paths.database;
 
   console.log(chalk.gray('配置:'));
   console.log(chalk.gray(`  最大职位数: ${maxJobs}`));
   console.log(chalk.gray(`  最大翻页数: ${maxPages}`));
   console.log(chalk.gray(`  并发数: ${concurrency}`));
-  console.log(chalk.gray(`  输出格式: ${options.format}`));
+  console.log(chalk.gray(`  数据库: ${dbPath}`));
   console.log(chalk.gray(`  无头模式: ${headless}\n`));
+
+  // 初始化数据库
+  const db = new DatabaseService(dbPath);
+  await db.init();
+
+  const existingCount = db.getJobCount();
+  if (existingCount > 0) {
+    console.log(chalk.gray(`📊 数据库中已有 ${existingCount} 条记录\n`));
+  }
 
   // 读取配置文件
   let linkConfigs: LinkConfig[] = [];
@@ -101,6 +110,7 @@ async function runCrawl(options: CrawlOptions) {
 
   if (linkConfigs.length === 0) {
     console.log(chalk.yellow('⚠️  没有找到可爬取的 URL'));
+    db.close();
     return;
   }
 
@@ -120,8 +130,11 @@ async function runCrawl(options: CrawlOptions) {
   console.log(chalk.yellow('📦 加载解析器...\n'));
   await registry.loadAll();
 
-  // 爬取数据
-  const allJobs: JobData[] = [];
+  // 爬取统计
+  let totalExtracted = 0;
+  let totalInserted = 0;
+  let totalSkipped = 0;
+
   const browser = new BrowserService();
 
   try {
@@ -178,9 +191,21 @@ async function runCrawl(options: CrawlOptions) {
           includeDetails: true,
         });
 
-        allJobs.push(...jobs);
+        totalExtracted += jobs.length;
 
-        spinner.succeed(`提取了 ${jobs.length} 个职位`);
+        // 去重：过滤已存在的职位
+        const { newJobs, skippedCount } = db.filterNewJobs(jobs);
+        totalSkipped += skippedCount;
+
+        // 保存新职位到数据库
+        const inserted = db.saveJobs(newJobs);
+        totalInserted += inserted;
+
+        if (skippedCount > 0) {
+          spinner.succeed(`提取 ${jobs.length} 个职位 → 新增 ${inserted}, 跳过 ${skippedCount} (已存在)`);
+        } else {
+          spinner.succeed(`提取 ${jobs.length} 个职位 → 全部新增`);
+        }
       } catch (error: any) {
         spinner.fail(`爬取失败: ${error.message}`);
         if (options.verbose) {
@@ -191,56 +216,33 @@ async function runCrawl(options: CrawlOptions) {
 
     await browser.close();
 
-    // 保存结果
-    await saveResults(allJobs, options.output || config.crawler.outputPath, options.format || 'json');
-
+    // 输出统计
+    const finalCount = db.getJobCount();
     console.log(chalk.bold('\n✅ 爬取完成!\n'));
-    console.log(chalk.green(`总共提取: ${allJobs.length} 个职位`));
-    console.log(chalk.gray(`输出文件: ${options.output || config.crawler.outputPath}\n`));
+    console.log(chalk.green(`  本次提取: ${totalExtracted} 个职位`));
+    console.log(chalk.green(`  新增入库: ${totalInserted}`));
+    if (totalSkipped > 0) {
+      console.log(chalk.yellow(`  跳过重复: ${totalSkipped}`));
+    }
+    console.log(chalk.cyan(`  数据库总量: ${finalCount}`));
+    console.log(chalk.gray(`  数据库路径: ${dbPath}\n`));
+
+    // 按来源统计
+    const sourceCounts = db.getCountBySource();
+    if (sourceCounts.length > 0) {
+      console.log(chalk.gray('📊 按来源统计:'));
+      for (const { source, count } of sourceCounts) {
+        console.log(chalk.gray(`  ${source || '未知'}: ${count}`));
+      }
+      console.log('');
+    }
+
+    db.close();
   } catch (error: any) {
     await browser.close();
+    db.close();
     throw error;
   }
-}
-
-/**
- * 保存结果
- */
-async function saveResults(jobs: JobData[], outputPath: string, format: 'json' | 'csv') {
-  await fs.ensureDir(path.dirname(outputPath));
-
-  if (format === 'json') {
-    await fs.writeJson(outputPath, jobs, { spaces: 2 });
-  } else if (format === 'csv') {
-    const csv = convertToCSV(jobs);
-    await fs.writeFile(outputPath.replace('.json', '.csv'), csv, 'utf-8');
-  }
-}
-
-/**
- * 转换为 CSV
- */
-function convertToCSV(jobs: JobData[]): string {
-  if (jobs.length === 0) return '';
-
-  // 使用 JO 标准字段顺序
-  const headers = ['company_name', 'job_title', 'location', 'job_link', 'post_date', 'dead_line', 'job_type', 'description', 'salary'];
-  const csvRows = [
-    headers.join(','),
-    ...jobs.map(job =>
-      headers.map(header => {
-        const value = job[header as keyof JobData];
-        const str = value != null ? String(value) : '';
-        // 转义包含逗号、引号或换行的值
-        if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-          return `"${str.replace(/"/g, '""')}"`;
-        }
-        return str;
-      }).join(',')
-    )
-  ];
-
-  return csvRows.join('\n');
 }
 
 /**

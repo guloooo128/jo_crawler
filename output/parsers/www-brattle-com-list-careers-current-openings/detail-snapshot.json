@@ -1,0 +1,352 @@
+{
+  "url": "https://job-boards.greenhouse.io/thebrattlegroup/jobs/4624282005",
+  "pageType": "detail",
+  "domain": "www.brattle.com",
+  "timestamp": "2026-02-10T03:47:52.531Z",
+  "tree": "- link \"Back to jobs\" [ref=e1]\n- button \"Apply\" [ref=e2]\n- link \"here\" [ref=e3]\n- link \"Create alert\" [ref=e4]\n- button \"Autofill with MyGreenhouse\" [ref=e5]\n- textbox \"First Name\" [ref=e6]\n- textbox \"Last Name\" [ref=e7]\n- textbox \"Preferred First Name\" [ref=e8]\n- textbox \"Email\" [ref=e9]\n- combobox \"Country\" [ref=e10]\n- button \"Toggle flyout\" [ref=e11]\n- textbox \"Phone\" [ref=e12]\n- button \"Attach\" [ref=e13]\n- button \"Attach\" [ref=e14] [nth=1]\n- button \"Dropbox\" [ref=e15]\n- button \"Google Drive\" [ref=e16]\n- button \"Enter manually\" [ref=e17]\n- button \"Attach\" [ref=e18] [nth=2]\n- button \"Attach\" [ref=e19] [nth=3]\n- button \"Dropbox\" [ref=e20] [nth=1]\n- button \"Google Drive\" [ref=e21] [nth=1]\n- button \"Enter manually\" [ref=e22] [nth=1]\n- combobox \"School\" [ref=e23]\n- button \"Toggle flyout\" [ref=e24] [nth=1]\n- combobox \"Degree\" [ref=e25]\n- button \"Toggle flyout\" [ref=e26] [nth=2]\n- combobox \"Discipline\" [ref=e27]\n- button \"Toggle flyout\" [ref=e28] [nth=3]\n- combobox \"End date month\" [ref=e29]\n- button \"Toggle flyout\" [ref=e30] [nth=4]\n- spinbutton \"End date year\" [ref=e31]\n- button \"Add another\" [ref=e32]\n- button \"Attach\" [ref=e33] [nth=4]\n- button \"Attach\" [ref=e34] [nth=5]\n- button \"Dropbox\" [ref=e35] [nth=2]\n- button \"Google Drive\" [ref=e36] [nth=2]\n- combobox \"Please provide your GPA (cumulative, not major specific)\" [ref=e37]\n- button \"Toggle flyout\" [ref=e38] [nth=5]\n- combobox \"Are you independently authorized to work in the United States without restrictions or time limitations?\" [ref=e39]\n- button \"Toggle flyout\" [ref=e40] [nth=6]\n- combobox \"Will you now or ever require sponsorship to work in the United States?\" [ref=e41]\n- button \"Toggle flyout\" [ref=e42] [nth=7]\n- combobox \"What country are you applying from?\" [ref=e43]\n- button \"Toggle flyout\" [ref=e44] [nth=8]\n- combobox \"Please indicate your preferred office location\" [ref=e45]\n- button \"Toggle flyout\" [ref=e46] [nth=9]\n- checkbox \"Boston, MA\" [ref=e47]\n- checkbox \"San Francisco, CA\" [ref=e48]\n- checkbox \"Washington, D.C.\" [ref=e49]\n- checkbox \"I agree\" [ref=e50]\n- link \"Recruitment Privacy Notice\" [ref=e51]\n- combobox \"Gender\" [ref=e52]\n- button \"Toggle flyout\" [ref=e53] [nth=10]\n- combobox \"Are you Hispanic/Latino?\" [ref=e54]\n- button \"Toggle flyout\" [ref=e55] [nth=11]\n- link \"Race & Ethnicity Definitions\" [ref=e56]\n- combobox \"Veteran Status\" [ref=e57]\n- button \"Toggle flyout\" [ref=e58] [nth=12]\n- link \"www.dol.gov/ofccp\" [ref=e59]\n- combobox \"Disability Status\" [ref=e60]\n- button \"Toggle flyout\" [ref=e61] [nth=13]\n- button \"Submit application\" [ref=e62]\n- link \"Greenhouse logo\" [ref=e63]",
+  "refs": {
+    "e1": {
+      "selector": "getByRole('link', { name: \"Back to jobs\", exact: true })",
+      "role": "link",
+      "name": "Back to jobs"
+    },
+    "e2": {
+      "selector": "getByRole('button', { name: \"Apply\", exact: true })",
+      "role": "button",
+      "name": "Apply"
+    },
+    "e3": {
+      "selector": "getByRole('link', { name: \"here\", exact: true })",
+      "role": "link",
+      "name": "here"
+    },
+    "e4": {
+      "selector": "getByRole('link', { name: \"Create alert\", exact: true })",
+      "role": "link",
+      "name": "Create alert"
+    },
+    "e5": {
+      "selector": "getByRole('button', { name: \"Autofill with MyGreenhouse\", exact: true })",
+      "role": "button",
+      "name": "Autofill with MyGreenhouse"
+    },
+    "e6": {
+      "selector": "getByRole('textbox', { name: \"First Name\", exact: true })",
+      "role": "textbox",
+      "name": "First Name"
+    },
+    "e7": {
+      "selector": "getByRole('textbox', { name: \"Last Name\", exact: true })",
+      "role": "textbox",
+      "name": "Last Name"
+    },
+    "e8": {
+      "selector": "getByRole('textbox', { name: \"Preferred First Name\", exact: true })",
+      "role": "textbox",
+      "name": "Preferred First Name"
+    },
+    "e9": {
+      "selector": "getByRole('textbox', { name: \"Email\", exact: true })",
+      "role": "textbox",
+      "name": "Email"
+    },
+    "e10": {
+      "selector": "getByRole('combobox', { name: \"Country\", exact: true })",
+      "role": "combobox",
+      "name": "Country"
+    },
+    "e11": {
+      "selector": "getByRole('button', { name: \"Toggle flyout\", exact: true })",
+      "role": "button",
+      "name": "Toggle flyout",
+      "nth": 0
+    },
+    "e12": {
+      "selector": "getByRole('textbox', { name: \"Phone\", exact: true })",
+      "role": "textbox",
+      "name": "Phone"
+    },
+    "e13": {
+      "selector": "getByRole('button', { name: \"Attach\", exact: true })",
+      "role": "button",
+      "name": "Attach",
+      "nth": 0
+    },
+    "e14": {
+      "selector": "getByRole('button', { name: \"Attach\", exact: true })",
+      "role": "button",
+      "name": "Attach",
+      "nth": 1
+    },
+    "e15": {
+      "selector": "getByRole('button', { name: \"Dropbox\", exact: true })",
+      "role": "button",
+      "name": "Dropbox",
+      "nth": 0
+    },
+    "e16": {
+      "selector": "getByRole('button', { name: \"Google Drive\", exact: true })",
+      "role": "button",
+      "name": "Google Drive",
+      "nth": 0
+    },
+    "e17": {
+      "selector": "getByRole('button', { name: \"Enter manually\", exact: true })",
+      "role": "button",
+      "name": "Enter manually",
+      "nth": 0
+    },
+    "e18": {
+      "selector": "getByRole('button', { name: \"Attach\", exact: true })",
+      "role": "button",
+      "name": "Attach",
+      "nth": 2
+    },
+    "e19": {
+      "selector": "getByRole('button', { name: \"Attach\", exact: true })",
+      "role": "button",
+      "name": "Attach",
+      "nth": 3
+    },
+    "e20": {
+      "selector": "getByRole('button', { name: \"Dropbox\", exact: true })",
+      "role": "button",
+      "name": "Dropbox",
+      "nth": 1
+    },
+    "e21": {
+      "selector": "getByRole('button', { name: \"Google Drive\", exact: true })",
+      "role": "button",
+      "name": "Google Drive",
+      "nth": 1
+    },
+    "e22": {
+      "selector": "getByRole('button', { name: \"Enter manually\", exact: true })",
+      "role": "button",
+      "name": "Enter manually",
+      "nth": 1
+    },
+    "e23": {
+      "selector": "getByRole('combobox', { name: \"School\", exact: true })",
+      "role": "combobox",
+      "name": "School"
+    },
+    "e24": {
+      "selector": "getByRole('button', { name: \"Toggle flyout\", exact: true })",
+      "role": "button",
+      "name": "Toggle flyout",
+      "nth": 1
+    },
+    "e25": {
+      "selector": "getByRole('combobox', { name: \"Degree\", exact: true })",
+      "role": "combobox",
+      "name": "Degree"
+    },
+    "e26": {
+      "selector": "getByRole('button', { name: \"Toggle flyout\", exact: true })",
+      "role": "button",
+      "name": "Toggle flyout",
+      "nth": 2
+    },
+    "e27": {
+      "selector": "getByRole('combobox', { name: \"Discipline\", exact: true })",
+      "role": "combobox",
+      "name": "Discipline"
+    },
+    "e28": {
+      "selector": "getByRole('button', { name: \"Toggle flyout\", exact: true })",
+      "role": "button",
+      "name": "Toggle flyout",
+      "nth": 3
+    },
+    "e29": {
+      "selector": "getByRole('combobox', { name: \"End date month\", exact: true })",
+      "role": "combobox",
+      "name": "End date month"
+    },
+    "e30": {
+      "selector": "getByRole('button', { name: \"Toggle flyout\", exact: true })",
+      "role": "button",
+      "name": "Toggle flyout",
+      "nth": 4
+    },
+    "e31": {
+      "selector": "getByRole('spinbutton', { name: \"End date year\", exact: true })",
+      "role": "spinbutton",
+      "name": "End date year"
+    },
+    "e32": {
+      "selector": "getByRole('button', { name: \"Add another\", exact: true })",
+      "role": "button",
+      "name": "Add another"
+    },
+    "e33": {
+      "selector": "getByRole('button', { name: \"Attach\", exact: true })",
+      "role": "button",
+      "name": "Attach",
+      "nth": 4
+    },
+    "e34": {
+      "selector": "getByRole('button', { name: \"Attach\", exact: true })",
+      "role": "button",
+      "name": "Attach",
+      "nth": 5
+    },
+    "e35": {
+      "selector": "getByRole('button', { name: \"Dropbox\", exact: true })",
+      "role": "button",
+      "name": "Dropbox",
+      "nth": 2
+    },
+    "e36": {
+      "selector": "getByRole('button', { name: \"Google Drive\", exact: true })",
+      "role": "button",
+      "name": "Google Drive",
+      "nth": 2
+    },
+    "e37": {
+      "selector": "getByRole('combobox', { name: \"Please provide your GPA (cumulative, not major specific)\", exact: true })",
+      "role": "combobox",
+      "name": "Please provide your GPA (cumulative, not major specific)"
+    },
+    "e38": {
+      "selector": "getByRole('button', { name: \"Toggle flyout\", exact: true })",
+      "role": "button",
+      "name": "Toggle flyout",
+      "nth": 5
+    },
+    "e39": {
+      "selector": "getByRole('combobox', { name: \"Are you independently authorized to work in the United States without restrictions or time limitations?\", exact: true })",
+      "role": "combobox",
+      "name": "Are you independently authorized to work in the United States without restrictions or time limitations?"
+    },
+    "e40": {
+      "selector": "getByRole('button', { name: \"Toggle flyout\", exact: true })",
+      "role": "button",
+      "name": "Toggle flyout",
+      "nth": 6
+    },
+    "e41": {
+      "selector": "getByRole('combobox', { name: \"Will you now or ever require sponsorship to work in the United States?\", exact: true })",
+      "role": "combobox",
+      "name": "Will you now or ever require sponsorship to work in the United States?"
+    },
+    "e42": {
+      "selector": "getByRole('button', { name: \"Toggle flyout\", exact: true })",
+      "role": "button",
+      "name": "Toggle flyout",
+      "nth": 7
+    },
+    "e43": {
+      "selector": "getByRole('combobox', { name: \"What country are you applying from?\", exact: true })",
+      "role": "combobox",
+      "name": "What country are you applying from?"
+    },
+    "e44": {
+      "selector": "getByRole('button', { name: \"Toggle flyout\", exact: true })",
+      "role": "button",
+      "name": "Toggle flyout",
+      "nth": 8
+    },
+    "e45": {
+      "selector": "getByRole('combobox', { name: \"Please indicate your preferred office location\", exact: true })",
+      "role": "combobox",
+      "name": "Please indicate your preferred office location"
+    },
+    "e46": {
+      "selector": "getByRole('button', { name: \"Toggle flyout\", exact: true })",
+      "role": "button",
+      "name": "Toggle flyout",
+      "nth": 9
+    },
+    "e47": {
+      "selector": "getByRole('checkbox', { name: \"Boston, MA\", exact: true })",
+      "role": "checkbox",
+      "name": "Boston, MA"
+    },
+    "e48": {
+      "selector": "getByRole('checkbox', { name: \"San Francisco, CA\", exact: true })",
+      "role": "checkbox",
+      "name": "San Francisco, CA"
+    },
+    "e49": {
+      "selector": "getByRole('checkbox', { name: \"Washington, D.C.\", exact: true })",
+      "role": "checkbox",
+      "name": "Washington, D.C."
+    },
+    "e50": {
+      "selector": "getByRole('checkbox', { name: \"I agree\", exact: true })",
+      "role": "checkbox",
+      "name": "I agree"
+    },
+    "e51": {
+      "selector": "getByRole('link', { name: \"Recruitment Privacy Notice\", exact: true })",
+      "role": "link",
+      "name": "Recruitment Privacy Notice"
+    },
+    "e52": {
+      "selector": "getByRole('combobox', { name: \"Gender\", exact: true })",
+      "role": "combobox",
+      "name": "Gender"
+    },
+    "e53": {
+      "selector": "getByRole('button', { name: \"Toggle flyout\", exact: true })",
+      "role": "button",
+      "name": "Toggle flyout",
+      "nth": 10
+    },
+    "e54": {
+      "selector": "getByRole('combobox', { name: \"Are you Hispanic/Latino?\", exact: true })",
+      "role": "combobox",
+      "name": "Are you Hispanic/Latino?"
+    },
+    "e55": {
+      "selector": "getByRole('button', { name: \"Toggle flyout\", exact: true })",
+      "role": "button",
+      "name": "Toggle flyout",
+      "nth": 11
+    },
+    "e56": {
+      "selector": "getByRole('link', { name: \"Race & Ethnicity Definitions\", exact: true })",
+      "role": "link",
+      "name": "Race & Ethnicity Definitions"
+    },
+    "e57": {
+      "selector": "getByRole('combobox', { name: \"Veteran Status\", exact: true })",
+      "role": "combobox",
+      "name": "Veteran Status"
+    },
+    "e58": {
+      "selector": "getByRole('button', { name: \"Toggle flyout\", exact: true })",
+      "role": "button",
+      "name": "Toggle flyout",
+      "nth": 12
+    },
+    "e59": {
+      "selector": "getByRole('link', { name: \"www.dol.gov/ofccp\", exact: true })",
+      "role": "link",
+      "name": "www.dol.gov/ofccp"
+    },
+    "e60": {
+      "selector": "getByRole('combobox', { name: \"Disability Status\", exact: true })",
+      "role": "combobox",
+      "name": "Disability Status"
+    },
+    "e61": {
+      "selector": "getByRole('button', { name: \"Toggle flyout\", exact: true })",
+      "role": "button",
+      "name": "Toggle flyout",
+      "nth": 13
+    },
+    "e62": {
+      "selector": "getByRole('button', { name: \"Submit application\", exact: true })",
+      "role": "button",
+      "name": "Submit application"
+    },
+    "e63": {
+      "selector": "getByRole('link', { name: \"Greenhouse logo\", exact: true })",
+      "role": "link",
+      "name": "Greenhouse logo"
+    }
+  }
+}

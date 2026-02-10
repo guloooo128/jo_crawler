@@ -197,56 +197,133 @@ export class ParserGenerator {
   }
 
   /**
-   * 获取详情页快照：找到列表页第一个职位链接，导航过去获取快照和原始文本，再导航回来
+   * 获取详情页快照：使用 LLM 识别职位链接，导航过去获取快照和原始文本，再导航回来
    */
   private async captureDetailPageSnapshot(
+    tree: string,
     refs: Record<string, any>,
     listUrl: string,
-    addLog: (msg: string) => void
+    customPrompt?: string,
+    addLog?: (msg: string) => void
   ): Promise<{ tree: string; refs: Record<string, any>; url: string; rawText: string } | undefined> {
-    // 找到第一个像职位链接的 ref（role=link，name 较长，排除导航/页脚）
-    const skipKeywords = ['Skip', 'search', 'Sign In', 'Facebook', 'YouTube', 'Google', 'Glassdoor', 'LinkedIn', 'Read More', 'Cookie'];
-    const jobLinkEntry = Object.entries(refs).find(([_, info]) => {
-      if (info.role !== 'link') return false;
-      const name = info.name || '';
-      if (name.length < 15) return false;
-      if (skipKeywords.some(k => name.includes(k))) return false;
-      return true;
-    });
+    const log = addLog || console.log;
 
-    if (!jobLinkEntry) {
-      addLog('⚠️  未找到职位链接，跳过详情页快照');
+    // 使用 LLM 识别职位链接
+    log('🤖 使用 LLM 识别职位链接...');
+
+    // 从自定义 prompt 中提取排除关键词（如果有）
+    let excludeKeywords: string[] | undefined;
+    if (customPrompt) {
+      // 匹配 "排除 XXX" 或 "XXX 不是职位" 等模式
+      const excludeMatches = customPrompt.match(/(?:排除|不是职位)[：:]\s*([^\n]+)/gi);
+      if (excludeMatches) {
+        excludeKeywords = excludeMatches.map(m => m.replace(/(?:排除|不是职位)[：:]\s*/i, '').trim());
+      }
+    }
+
+    const identifiedLinks = await this.llm.identifyJobLinks(tree, refs, excludeKeywords);
+
+    // 如果 LLM 识别不到，尝试使用 HTML 解析方法（支持 JavaScript 渲染的内容）
+    if (identifiedLinks.length === 0) {
+      log('⚠️  LLM 未识别到职位链接，尝试使用 HTML 解析方法...');
+      try {
+        const htmlLinks = await this.browser.getJobLinksFromHTML();
+        log(`🔍 HTML 解析结果: 找到 ${htmlLinks.length} 个链接`);
+        if (htmlLinks.length > 0) {
+          log(`📋 前 3 个链接:`);
+          htmlLinks.slice(0, 3).forEach((link, i) => {
+            log(`   ${i + 1}. ${link.name} - ${link.url}`);
+          });
+        }
+
+        if (htmlLinks.length > 0) {
+          log(`✅ HTML 解析找到 ${htmlLinks.length} 个职位链接`);
+          // 转换为 LLM 返回的格式
+          const firstLink = htmlLinks[0];
+          const detailUrl = firstLink.url;
+
+          log(`📄 获取详情页快照: "${firstLink.name}"`);
+          log(`🔗 详情页 URL: ${detailUrl}`);
+
+          // 导航到详情页
+          await this.browser.navigate(detailUrl);
+          await this.browser.waitForContent(5000, 2);  // 从 10 秒减少到 5 秒
+
+          // 关闭 cookie banner
+          await this.browser.dismissCookieBanner();
+
+          // 获取详情页快照 - 减少重试
+          const detailSnapshot = await this.browser.getSnapshotWithRetry(
+            { interactive: true, maxDepth: 5 },
+            2,  // 从 3 减少到 2
+            1000  // 从 1500ms 减少到 1000ms
+          );
+          log(`✅ 详情页快照获取成功 (${detailSnapshot.tree.length} 字符, ${Object.keys(detailSnapshot.refs).length} 个 refs)`);
+
+          // 获取原始文本
+          let rawText = '';
+          try {
+            rawText = await this.browser.getMainContentText();
+          } catch (e) {
+            rawText = await this.browser.getCleanPageText();
+          }
+          log(`✅ 详情页原始文本获取成功 (${rawText.length} 字符)`);
+
+          // 导航回列表页
+          await this.browser.navigateWithRetry(listUrl, 1);
+          log('↩️  已导航回列表页');
+
+          return {
+            tree: detailSnapshot.tree,
+            refs: detailSnapshot.refs,
+            url: detailUrl,
+            rawText,
+          };
+        }
+      } catch (e: any) {
+        log(`⚠️  HTML 解析方法失败: ${e.message}`);
+        log(`⚠️  错误堆栈: ${e.stack}`);
+      }
+
+      log('⚠️  无法获取职位链接，跳过详情页快照');
       return undefined;
     }
 
-    const [refId, refInfo] = jobLinkEntry;
-    addLog(`📄 获取详情页快照: 点击 "${refInfo.name.substring(0, 60)}..."`);
+    // 选择第一个识别出的职位链接
+    const firstJobLink = identifiedLinks[0];
+    log(`📄 获取详情页快照: "${firstJobLink.name.substring(0, 60)}..."`);
+    log(`   理由: ${firstJobLink.reason}`);
+
+    // 从 ref ID 中提取数字部分
+    const refId = firstJobLink.ref.replace('@', '');
 
     // 获取链接 href
     let detailUrl: string | null = null;
     try {
-      const href = await this.browser.getAttribute(`@${refId}`, 'href');
+      const href = await this.browser.getAttribute(firstJobLink.ref, 'href');
       if (href) {
         detailUrl = href.startsWith('http') ? href : new URL(href, listUrl).href;
       }
-    } catch (e) {
-      // fallback: 直接 click
+    } catch (e: any) {
+      log(`⚠️  获取 href 失败: ${e.message}`);
     }
 
     if (!detailUrl) {
-      addLog('⚠️  无法获取详情页 URL，跳过详情页快照');
+      log('⚠️  无法获取详情页 URL，跳过详情页快照');
       return undefined;
     }
 
+    log(`🔗 详情页 URL: ${detailUrl}`);
+
     // 导航到详情页
     await this.browser.navigate(detailUrl);
-    await this.browser.waitForContent(10000, 2);
+    await this.browser.waitForContent(5000, 2);  // 从 10 秒减少到 5 秒
 
-    // 获取详情页快照
+    // 获取详情页快照 - 减少重试
     const detailSnap = await this.browser.getSnapshotWithRetry({
       interactive: true,
       maxDepth: 5,
-    }, 3, 2000);
+    }, 2, 1000);  // 从 3 次 2 秒 改为 2 次 1 秒
 
     // 获取详情页原始文本（用于展示详情页的真实文本结构）
     let rawText = '';
@@ -258,12 +335,12 @@ export class ParserGenerator {
       } catch (e2) { /* ignore */ }
     }
 
-    addLog(`✅ 详情页快照获取成功 (${detailSnap.tree.length} 字符, ${Object.keys(detailSnap.refs).length} 个 refs, rawText ${rawText.length} 字符)`);
+    log(`✅ 详情页快照获取成功 (${detailSnap.tree.length} 字符, ${Object.keys(detailSnap.refs).length} 个 refs, rawText ${rawText.length} 字符)`);
 
     // 导航回列表页
     await this.browser.navigate(listUrl);
-    await this.browser.waitForContent(10000, 2);
-    addLog('↩️  已导航回列表页');
+    await this.browser.waitForContent(5000, 2);  // 从 10 秒减少到 5 秒
+    log('↩️  已导航回列表页');
 
     return {
       tree: detailSnap.tree,
@@ -411,19 +488,27 @@ export class ParserGenerator {
     addLog('🌐 导航到页面...');
     await this.browser.navigateWithRetry(url, 2);
 
-    // 2. 等待页面内容加载（SPA 可能需要更长时间）
+    // 2. 等待页面内容加载（SPA 可能需要更长时间）- 减少超时时间
     addLog('⏳ 等待页面内容渲染...');
-    const contentLoaded = await this.browser.waitForContent(15000, 3);
+    const contentLoaded = await this.browser.waitForContent(10000, 3);
     if (!contentLoaded) {
       addLog('⚠️  页面内容等待超时，尝试继续...');
     }
 
-    // 3. 获取快照（带重试，处理 SPA 延迟渲染）
+    // 2.5 滚动页面以触发懒加载内容 - 减少滚动次数和延迟
+    addLog('📜 滚动页面触发懒加载...');
+    await this.browser.scrollPage(2, 500);  // 从 3 次 1 秒 改为 2 次 500ms
+
+    // 2.6 额外等待时间，让嵌入式 Job Board（如 Greenhouse）完全渲染 - 减少等待
+    addLog('⏳ 等待嵌入式内容完全渲染...');
+    await this.browser.waitForTimeout(2000);  // 从 3 秒减少到 2 秒
+
+    // 3. 获取快照（带重试，处理 SPA 延迟渲染）- 减少重试次数
     addLog('📸 获取页面快照...');
     const enhancedSnapshot = await this.browser.getSnapshotWithRetry({
       interactive: true,
       maxDepth: 5,
-    }, 5, 2000);
+    }, 3, 1500);  // 从 5 次 2 秒 改为 3 次 1.5 秒
 
     const { tree, refs } = enhancedSnapshot;
     addLog(`✅ 快照获取成功 (${tree.length} 字符, ${Object.keys(refs).length} 个 refs)`);
@@ -461,7 +546,7 @@ export class ParserGenerator {
     let detailSnapshot: { tree: string; refs: Record<string, any>; url: string; rawText: string } | undefined;
     if (pageType === 'list') {
       try {
-        detailSnapshot = await this.captureDetailPageSnapshot(refs, url, addLog);
+        detailSnapshot = await this.captureDetailPageSnapshot(tree, refs, url, customPrompt, addLog);
       } catch (error: any) {
         addLog(`⚠️  获取详情页快照失败: ${error.message}`);
       }

@@ -652,6 +652,187 @@ export class BrowserService {
   }
 
   /**
+   * 滚动页面以触发懒加载内容
+   * @param scrollCount 滚动次数，默认 3 次
+   * @param scrollDelay 每次滚动后的延迟（毫秒），默认 1000ms
+   */
+  async scrollPage(scrollCount = 3, scrollDelay = 1000): Promise<void> {
+    const page = this.manager.getPage();
+
+    for (let i = 0; i < scrollCount; i++) {
+      await page.evaluate(() => {
+        window.scrollBy(0, window.innerHeight);
+      });
+      await this.waitForTimeout(scrollDelay);
+    }
+
+    // 滚动回顶部
+    await page.evaluate(() => {
+      window.scrollTo(0, 0);
+    });
+    await this.waitForTimeout(500);
+  }
+
+  /**
+   * 获取页面中所有职位链接（通过解析完整 HTML，支持 JavaScript 渲染的内容）
+   * 专门用于处理嵌入式 Job Board（如 Greenhouse、Lever 等）
+   * 也支持从 iframe 中提取职位链接
+   */
+  async getJobLinksFromHTML(): Promise<Array<{ url: string; name: string; location?: string }>> {
+    const page = this.manager.getPage();
+    let allLinks: Array<{ url: string; name: string; location?: string }> = [];
+
+    // 首先检查主页面
+    // @ts-ignore - browser environment code
+    const mainPageLinks = await page.evaluate(() => {
+      const links = [];
+      const allLinks = document.querySelectorAll('a');
+
+      for (const link of allLinks) {
+        const href = link.getAttribute('href');
+        if (!href) continue;
+
+        const text = link.textContent ? link.textContent.trim() : '';
+        const linkLower = href.toLowerCase();
+
+        // 检查是否是职位链接
+        const isJobLink =
+          linkLower.includes('/jobs/') ||
+          linkLower.includes('greenhouse.io') ||
+          linkLower.includes('lever.co') ||
+          linkLower.includes('myworkdayjobs.com') ||
+          linkLower.includes('workday.com');
+
+        if (!isJobLink) continue;
+
+        // 排除导航和过滤链接
+        const excludeKeywords = ['login', 'signup', 'signin', 'search', 'filter', 'page=', 'prev', 'next'];
+        if (excludeKeywords.some(function(kw) { return linkLower.indexOf(kw) !== -1; })) continue;
+
+        // 提取职位名称和地点
+        let jobTitle = text;
+        let location = '';
+
+        // 尝试从链接内部的结构提取信息
+        const titleEl = link.querySelector('[class*="title"], [class*="position"], [class*="role"]');
+        const locationEl = link.querySelector('[class*="location"], [class*="metadata"]');
+
+        if (titleEl) jobTitle = titleEl.textContent ? titleEl.textContent.trim() : text;
+        if (locationEl) location = locationEl.textContent ? locationEl.textContent.trim() : '';
+
+        // 清理标题
+        jobTitle = jobTitle.replace(/\s+/g, ' ').trim();
+        if (jobTitle.length < 5 || jobTitle.length > 200) continue;
+
+        // 构建完整 URL
+        let fullUrl = href;
+        if (href.startsWith('/')) {
+          fullUrl = window.location.origin + href;
+        } else if (!href.startsWith('http')) {
+          fullUrl = window.location.origin + '/' + href;
+        }
+
+        links.push({
+          url: fullUrl,
+          name: jobTitle,
+          location: location || undefined,
+        });
+      }
+
+      // 去重
+      const seen = new Set();
+      return links.filter(function(link) {
+        if (seen.has(link.url)) return false;
+        seen.add(link.url);
+        return true;
+      });
+    });
+
+    allLinks = allLinks.concat(mainPageLinks);
+
+    // 检查是否有 iframe（特别是 Greenhouse 嵌入式 job board）
+    try {
+      const frames = page.frames();
+      for (const frame of frames) {
+        const frameUrl = frame.url();
+        // 跳过主页面和非职位相关的 iframe
+        if (frameUrl === 'about:blank' || !frameUrl.includes('greenhouse') && !frameUrl.includes('job')) {
+          continue;
+        }
+
+        console.log(`🔍 检测到职位相关 iframe: ${frameUrl.substring(0, 100)}...`);
+
+        // 从 iframe 中提取职位链接
+        // @ts-ignore - browser environment code
+        const iframeLinks = await frame.evaluate(() => {
+          const links = [];
+          const allLinks = document.querySelectorAll('a');
+
+          for (const link of allLinks) {
+            const href = link.getAttribute('href');
+            if (!href) continue;
+
+            const text = link.textContent ? link.textContent.trim() : '';
+            const linkLower = href.toLowerCase();
+
+            // 排除非职位链接（登录、注册等）
+            if (linkLower.includes('sign_in') ||
+                linkLower.includes('login') ||
+                linkLower.includes('signup') ||
+                linkLower.includes('create') && text.toLowerCase().includes('alert')) {
+              continue;
+            }
+
+            // 清理标题
+            const jobTitle = text.replace(/\s+/g, ' ').trim();
+            if (jobTitle.length < 5 || jobTitle.length > 200) continue;
+
+            // 提取地点信息
+            let location = '';
+            const locationEl = link.querySelector('[class*="location"], [class*="metadata"]');
+            if (locationEl) location = locationEl.textContent ? locationEl.textContent.trim() : '';
+
+            // 构建完整 URL
+            let fullUrl = href;
+            if (href.startsWith('/')) {
+              fullUrl = window.location.origin + href;
+            } else if (!href.startsWith('http')) {
+              fullUrl = window.location.origin + '/' + href;
+            }
+
+            links.push({
+              url: fullUrl,
+              name: jobTitle,
+              location: location || undefined,
+            });
+          }
+
+          // 去重
+          const seen = new Set();
+          return links.filter(function(link) {
+            if (seen.has(link.url)) return false;
+            seen.add(link.url);
+            return true;
+          });
+        });
+
+        console.log(`✅ 从 iframe 中找到 ${iframeLinks.length} 个职位链接`);
+        allLinks = allLinks.concat(iframeLinks);
+      }
+    } catch (e: any) {
+      console.log(`⚠️  检查 iframe 时出错: ${e.message}`);
+    }
+
+    // 全局去重
+    const seen = new Set<string>();
+    return allLinks.filter(link => {
+      if (seen.has(link.url)) return false;
+      seen.add(link.url);
+      return true;
+    });
+  }
+
+  /**
    * 截图
    */
   async screenshot(path: string, fullPage = false): Promise<void> {

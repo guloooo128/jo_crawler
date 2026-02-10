@@ -2,6 +2,7 @@ import axios from 'axios';
 import fs from 'fs-extra';
 import path from 'path';
 import { PARSER_GENERATOR_SYSTEM, PARSER_GENERATOR_USER } from '../prompts/parser-generator.js';
+import { JOB_LINK_IDENTIFIER_SYSTEM, JOB_LINK_IDENTIFIER_USER } from '../prompts/job-link-identifier.js';
 import { generateParserFilename } from '../utils/parserFilename.js';
 
 /**
@@ -76,6 +77,43 @@ export class LLMService {
       'console.log(`找到 ${jobRefs.length} 个职位'
     );
 
+    // 修复双等号错误: let endIdx = = text.length -> let endIdx = text.length
+    fixedCode = fixedCode.replace(/=\s*=/g, '=');
+
+    // 修复条件判断中的赋值错误 - 更精确的模式
+    // 只修复明确的 "赋值在条件中" 的情况，避免破坏正确的比较运算符
+
+    // 1. if (x = 0) -> if (x === 0)，但不影响 if (x != 0)
+    fixedCode = fixedCode.replace(
+      /\b(if|while)\s*\(\s*(\w+)\s*=\s*(\d+|\w+)\s*\)/g,
+      '$1 ($2 === $3)'
+    );
+
+    // 2. if (x.length = 0) -> if (x.length === 0)
+    fixedCode = fixedCode.replace(
+      /\b(if|while)\s*\(\s*(\w+\.\w+)\s*=\s*(\d+|\w+)\s*\)/g,
+      '$1 ($2 === $3)'
+    );
+
+    // 3. 修复 obj.prop = 'value' 在 filter/find 回调中的情况
+    // 但只修复明确的单等号赋值，不修复 != 或 ==
+    fixedCode = fixedCode.replace(
+      /(\w+\.\w+)\s*=\s*['"]([^'"]*)['"]/g,
+      function(match, prop, value) {
+        // 检查前面是否有 != 或 == 或 === 或 !==
+        const beforeMatch = fixedCode.substring(0, fixedCode.indexOf(match));
+        if (/\s[!=]=\s*$/.test(beforeMatch) || /[^!]=[=!]*\s*$/.test(beforeMatch)) {
+          return match; // 不要修改
+        }
+        // 检查是否在条件中（简单的启发式）
+        if (beforeMatch.slice(-50).includes('if (') || beforeMatch.slice(-50).includes('while (') ||
+            beforeMatch.slice(-50).includes('&&') || beforeMatch.slice(-50).includes('||')) {
+          return prop + ' === \'' + value + '\'';
+        }
+        return match;
+      }
+    );
+
     return fixedCode;
   }
 
@@ -141,6 +179,45 @@ export class LLMService {
     } catch (error: any) {
       console.error('❌ LLM API 调用失败:', error.response?.data || error.message);
       throw error;
+    }
+  }
+
+  /**
+   * 识别快照中的职位链接
+   * 返回识别出的职位链接 ref 列表
+   */
+  async identifyJobLinks(
+    snapshot: string,
+    refs: Record<string, any>,
+    customExcludeKeywords?: string[]
+  ): Promise<Array<{ ref: string; name: string; reason: string }>> {
+    const messages: LLMMessage[] = [
+      {
+        role: 'system',
+        content: JOB_LINK_IDENTIFIER_SYSTEM,
+      },
+      {
+        role: 'user',
+        content: JOB_LINK_IDENTIFIER_USER(snapshot, refs, customExcludeKeywords),
+      },
+    ];
+
+    try {
+      const { content: response } = await this.callGLM(messages);
+
+      // 解析 JSON 响应
+      const jsonMatch = response.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        const result = JSON.parse(jsonMatch[0]);
+        console.log(`✅ LLM 识别到 ${result.length} 个职位链接`);
+        return result;
+      }
+
+      console.warn('⚠️  LLM 返回格式不正确，未找到 JSON 数组');
+      return [];
+    } catch (error) {
+      console.error('❌ LLM 识别职位链接失败:', error);
+      return [];
     }
   }
 
