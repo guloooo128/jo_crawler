@@ -1,6 +1,6 @@
 /**
  * Auto-generated parser for www.brattle.com
- * Generated at: 2026-02-10T03:47:52.530Z
+ * Generated at: 2026-02-10T04:26:15.135Z
  * Author: AI (GLM-4.7)
  * URL: https://www.brattle.com/careers/current-openings/
  * Type: list
@@ -19,7 +19,7 @@ export default class BrattleComParser extends BaseParser {
     pageType: 'list',
     author: 'AI',
     createdAt: new Date(),
-    description: 'Brattle 列表页解析器 - 使用 Greenhouse iframe',
+    description: 'Brattle.com 列表页解析器 (Greenhouse iframe)',
   };
 
   canParse(_snapshot, url) {
@@ -28,26 +28,58 @@ export default class BrattleComParser extends BaseParser {
 
   async parse(browser, options) {
     const jobs = [];
-    const { maxItems = 50 } = options;
+    const { maxItems = 50, maxPages = 5 } = options;
 
-    console.log('📄 从 iframe 中提取职位链接...');
+    let allJobLinks = [];
+    let currentPage = 1;
 
-    // Brattle 使用 Greenhouse iframe 嵌入职位列表，需要使用 getJobLinksFromHTML 方法
-    const allJobLinks = await browser.getJobLinksFromHTML();
-    console.log('🔗 找到 ' + allJobLinks.length + ' 个职位链接');
+    // === 阶段一：翻页收集所有职位URL ===
+    // Brattle 使用 Greenhouse iframe，直接从 HTML 提取链接
+    while (currentPage <= maxPages && allJobLinks.length < maxItems) {
+      console.log('📄 第 ' + currentPage + ' 页...');
 
-    // 限制数量
-    const linksToProcess = allJobLinks.slice(0, maxItems);
-    console.log('✅ 共收集 ' + linksToProcess.length + ' 个职位链接');
+      // 特殊处理：使用 getJobLinksFromHTML 提取 iframe 中的职位
+      const pageLinks = await browser.getJobLinksFromHTML();
+      console.log('🔗 找到 ' + pageLinks.length + ' 个职位链接');
 
-    // === 逐个导航提取 ===
-    for (const link of linksToProcess) {
+      // 去重合并
+      const existingUrls = new Set(allJobLinks.map(l => l.url.url || l.url)); // 处理返回格式可能不同的情况
+      const newLinks = pageLinks.filter(l => {
+        const url = l.url.url || l.url;
+        return !existingUrls.has(url);
+      });
+      allJobLinks.push(...newLinks);
+
+      if (newLinks.length == 0) break;
+      if (allJobLinks.length >= maxItems) break;
+
+      // === 翻页逻辑 ===
+      // 尝试 URL 参数翻页
+      const currentUrl = await browser.getCurrentUrl();
+      const nextPageUrl = currentUrl.includes('?')
+        ? currentUrl + '&page=' + (currentPage + 1)
+        : currentUrl + '?page=' + (currentPage + 1);
+      
+      console.log('➡️ 尝试翻页至: ' + nextPageUrl);
+      await browser.navigate(nextPageUrl);
+      await this.delay(2000);
+      
+      // 简单检测是否翻页成功（通过 URL 变化或内容变化），这里简化处理直接增加页码
+      currentPage++;
+    }
+
+    console.log('✅ 共收集 ' + allJobLinks.length + ' 个职位链接');
+
+    // === 阶段二：逐个导航提取 ===
+    for (const link of allJobLinks.slice(0, maxItems)) {
       try {
-        console.log('🚀 提取: ' + link.name);
+        // 兼容不同的返回格式
+        const jobUrl = link.url.url || link.url;
+        const jobName = link.url.name || link.name || 'Unknown Title';
 
-        const titleFromList = link.name;
+        console.log('🚀 提取: ' + jobName);
 
-        await browser.navigate(link.url);
+        await browser.navigate(jobUrl);
         await this.delay(2000);
 
         // 自己提取 description（最可靠）
@@ -57,7 +89,7 @@ export default class BrattleComParser extends BaseParser {
         } catch (e) {
           rawText = await browser.getCleanPageText();
         }
-        const description = this.cleanDescription(rawText, titleFromList);
+        const description = this.cleanDescription(rawText, jobName);
 
         // 提取其他字段
         const location = this.extractLocation(rawText);
@@ -65,10 +97,10 @@ export default class BrattleComParser extends BaseParser {
         const jobType = this.extractJobType(rawText);
 
         const jobData = this.createJobData({
-          job_title: titleFromList,
+          job_title: jobName,
           company_name: this.getCompanyName(),
           location: location,
-          job_link: link.url,
+          job_link: jobUrl,
           post_date: postDate,
           job_type: jobType,
           description: description,
@@ -85,130 +117,119 @@ export default class BrattleComParser extends BaseParser {
     return jobs;
   }
 
-  // ====== 辅助方法 ======
+  // ===== 辅助方法 =====
 
-  /**
-   * 清理职位描述文本
-   */
   cleanDescription(rawText, title) {
     if (!rawText) return '';
 
     let text = rawText;
 
-    // 移除标题（如果 rawText 包含它）
-    const titleVariants = [
-      title,
-      title.replace(/\s+/g, ' '),
-      title.replace(/\s+/g, '').toLowerCase(),
-    ];
-    for (const variant of titleVariants) {
-      if (variant && text.toLowerCase().startsWith(variant.toLowerCase())) {
-        text = text.substring(variant.length).trim();
+    // 移除标题部分（通常在开头）
+    if (title) {
+      const titleIdx = text.indexOf(title);
+      if (titleIdx != -1) {
+        text = text.substring(titleIdx + title.length);
       }
     }
 
-    // 移除常见的页眉/页脚噪音
-    const noiseMarkers = [
-      'Apply now',
-      'Apply Now',
+    // 找正文起点
+    const startMarkers = [
+      'ABOUT THE BRATTLE GROUP',
+      'ABOUT THIS ROLE',
+      'Job Description',
+      'Overview',
+      'Responsibilities',
+      'What You\'ll Do',
+      'Your Role',
+      'Qualifications'
+    ];
+
+    let startIdx = -1;
+    for (const marker of startMarkers) {
+      const idx = text.indexOf(marker);
+      if (idx != -1 && (startIdx == -1 || idx < startIdx)) {
+        startIdx = idx;
+      }
+    }
+
+    if (startIdx > 0) {
+      text = text.substring(startIdx);
+    }
+
+    // 找终点
+    const endMarkers = [
+      'Similar Jobs',
+      'Related Jobs',
       'Share this job',
-      'Similar jobs',
-      'Related jobs',
-      'Back to careers',
-      'Application form',
-      'Required fields',
+      'Privacy Policy',
+      'Cookie Settings',
+      'Follow us',
+      'Apply now',
+      'Back to jobs'
     ];
 
-    for (const marker of noiseMarkers) {
+    let endIdx = text.length;
+    for (const marker of endMarkers) {
       const idx = text.toLowerCase().indexOf(marker.toLowerCase());
-      if (idx !== -1) {
-        text = text.substring(0, idx);
+      if (idx != -1 && idx < endIdx) {
+        endIdx = idx;
       }
     }
 
-    // 清理空白字符
-    text = text.replace(/\s+/g, ' ').trim();
+    text = text.substring(0, endIdx);
 
-    // 限制最大长度
-    if (text.length > 10000) {
-      text = text.substring(0, 10000);
-    }
-
-    return text;
+    return this.cleanText(text);
   }
 
-  /**
-   * 从文本中提取地点信息
-   */
   extractLocation(text) {
-    if (!text) return '';
-
-    // 常见地点模式
-    const locationPatterns = [
-      /(?:Location|Office|City)\s*[:：]\s*([^\n\r]{10,100}?)(?:\n|$)/i,
-      /(?:地点|位置)\s*[:：]\s*([^\n\r]{10,100}?)(?:\n|$)/,
-      /(?:Remote|远程|Hybrid|混合)\b/i,
-      /(?:United States|USA?|U\.S\.A\.?)\b[^,\n\r]{0,50}/i,
-      /(?:Canada|UK|United Kingdom|Germany|France|India|Singapore|China|Japan)\b[^,\n\r]{0,50}/,
+    // Greenhouse 格式通常在标题附近，例如 "Boston, Massachusetts, United States"
+    // 尝试匹配 "City, State, Country" 或 "City, State"
+    const patterns = [
+      /([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?,\s*[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/, // City, State Country
+      /Location:\s*([A-Za-z][A-Za-z0-9 ,]+)/i,
     ];
 
-    for (const pattern of locationPatterns) {
-      const match = text.match(pattern);
-      if (match && match[1]) {
-        return match[1].trim();
-      } else if (match && match[0]) {
-        return match[0].trim();
+    for (const p of patterns) {
+      const m = text.match(p);
+      if (m && m[1].length > 3 && m[1].length < 60) {
+        return m[1].trim();
       }
     }
 
     return '';
   }
 
-  /**
-   * 从文本中提取发布日期
-   */
   extractPostDate(text) {
-    if (!text) return '';
-
-    // 常见日期模式
-    const datePatterns = [
-      /(?:Posted|Published|Date)\s*[:：]\s*(\d{1,2}[-/]\s*\d{1,2}[-/]\s*\d{2,4})/i,
-      /(?:发布日期|发布时间|日期)\s*[:：]\s*(\d{1,2}[-/]\s*\d{1,2}[-/]\s*\d{2,4})/,
-      /(\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{4})/i,
+    const patterns = [
+      /Posted:\s*(\d{1,2}\s+\w+\s+\d{4})/i,
+      /Date Posted:\s*(\d{4}-\d{2}-\d{2})/,
+      /Posted\s+(\d+\s+days?\s+ago)/i,
     ];
 
-    for (const pattern of datePatterns) {
-      const match = text.match(pattern);
-      if (match && match[1]) {
-        return match[1].trim();
-      }
+    for (const p of patterns) {
+      const m = text.match(p);
+      if (m) return m[1].trim();
     }
 
     return '';
   }
 
-  /**
-   * 从文本中提取职位类型
-   */
   extractJobType(text) {
-    if (!text) return '';
-
-    const typePatterns = [
-      /\b(?:Full[- ]?time|Fulltime|全职)\b/i,
-      /\b(?:Part[- ]?time|Parttime|兼职)\b/i,
-      /\b(?:Contract|Contractor|合同工)\b/i,
-      /\b(?:Intern|Internship|实习)\b/i,
-      /\b(?:Remote|远程)\b/i,
-      /\b(?:Hybrid|混合)\b/i,
+    const patterns = [
+      /Job Type:\s*(Full-time|Part-time|Contract|Permanent|Internship)/i,
+      /Employment:\s*(Full-time|Part-time|Contract)/i,
+      /(Full-time|Part-time)\s*Position/i,
     ];
 
-    for (const pattern of typePatterns) {
-      const match = text.match(pattern);
-      if (match) {
-        return match[0];
-      }
+    for (const p of patterns) {
+      const m = text.match(p);
+      if (m) return m[1].trim();
     }
 
     return '';
+  }
+
+  getDefaults() {
+    return { maxItems: 50, maxPages: 5 };
   }
 }

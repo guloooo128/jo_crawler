@@ -79,6 +79,26 @@ export default class DomainParser extends BaseParser {
 | \`await browser.getTitle()\` | 获取页面标题 | string |
 | \`await browser.waitForTimeout(ms)\` | 等待 | void |
 | \`await browser.getJobLinksFromHTML()\` | **从iframe获取职位链接** | Array<{url,name,location}> |
+| \`await browser.llmIdentifyJobLinks(snapshot,refs)\` | **用LLM智能识别职位链接** | Array<{ref,name,reason}> |
+
+### ⭐ LLM 智能识别职位链接（推荐）
+
+**为什么使用 LLM 识别？**
+- 传统 \`skipKeywords\` 过滤规则无法处理所有情况
+- 职业网站的导航链接（如 "Job Search"、"Grow Your Career"）经常被误判为职位链接
+- LLM 能理解语义，准确识别真正的职位卡片
+
+**使用方法：**
+\`\`\`javascript
+// ✅ 推荐：使用 LLM 智能识别
+const { tree, refs } = await browser.getSnapshot({ interactive: true, maxDepth: 5 });
+const jobLinks = await browser.llmIdentifyJobLinks(tree, refs);
+// jobLinks 格式: [{ ref: "@e12", name: "Senior Engineer", reason: "包含职位名称和地点" }]
+\`\`\`
+
+**注意事项：**
+- LLM 识别会增加约 2-3 秒延迟，但准确性大幅提升
+- 如果 LLM 识别失败（返回空数组），会自动降级到 HTML 解析方法
 
 ### ⭐ 特殊场景：iframe / Greenhouse / Lever 嵌入式职位列表
 
@@ -193,17 +213,26 @@ export default class ExampleComParser extends BaseParser {
 
       const { tree, refs } = await browser.getSnapshot({ interactive: true, maxDepth: 5 });
 
-      // 根据快照分析编写过滤逻辑
-      const skipKeywords = ['about', 'contact', 'home', 'privacy', 'login', 'register'];
-      const jobRefs = Object.entries(refs).filter(([key, ref]) => {
-        if (ref.role !== 'link' || !ref.name) return false;
-        if (ref.name.length < 30 || ref.name.length > 150) return false;
-        const nameLower = ref.name.toLowerCase();
-        return !skipKeywords.some(kw => nameLower.includes(kw));
-      });
+      // ✅ 推荐：使用 LLM 智能识别职位链接（避免误识别导航链接）
+      const jobLinks = await browser.llmIdentifyJobLinks(tree, refs);
+      console.log('🤖 LLM 识别到 ' + jobLinks.length + ' 个职位链接');
 
+      if (jobLinks.length === 0) {
+        console.log('⚠️  LLM 未识别到职位链接，尝试 HTML 解析...');
+        const htmlLinks = await browser.getJobLinksFromHTML();
+        if (htmlLinks.length > 0) {
+          // HTML 方法直接返回 URL，需要转换格式
+          for (const link of htmlLinks) {
+            allJobLinks.push({ url: link.url, name: link.name });
+          }
+        }
+        break;
+      }
+
+      // 转换 LLM 返回格式为 collectJobLinks 需要的格式
+      const jobRefs = jobLinks.map(jl => [jl.ref.replace('@', ''), { role: 'link', name: jl.name }]);
       const pageLinks = await this.collectJobLinks(browser, jobRefs);
-      console.log('🔗 找到 ' + pageLinks.length + ' 个职位链接');
+      console.log('🔗 收集到 ' + pageLinks.length + ' 个职位链接');
 
       // 去重合并
       const existingUrls = new Set(allJobLinks.map(l => l.url));

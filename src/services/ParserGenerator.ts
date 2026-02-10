@@ -488,22 +488,22 @@ export class ParserGenerator {
     addLog('🌐 导航到页面...');
     await this.browser.navigateWithRetry(url, 2);
 
-    // 2. 等待页面内容加载（SPA 可能需要更长时间）- 减少超时时间
+    // 2. 等待页面内容加载（SPA 可能需要更长时间）
     addLog('⏳ 等待页面内容渲染...');
-    const contentLoaded = await this.browser.waitForContent(10000, 3);
+    const contentLoaded = await this.browser.waitForContent(20000, 5);  // 增加到 20 秒，最小 5 个元素
     if (!contentLoaded) {
       addLog('⚠️  页面内容等待超时，尝试继续...');
     }
 
-    // 2.5 滚动页面以触发懒加载内容 - 减少滚动次数和延迟
+    // 2.5 滚动页面以触发懒加载内容
     addLog('📜 滚动页面触发懒加载...');
-    await this.browser.scrollPage(2, 500);  // 从 3 次 1 秒 改为 2 次 500ms
+    await this.browser.scrollPage(3, 800);  // 3 次 800ms
 
-    // 2.6 额外等待时间，让嵌入式 Job Board（如 Greenhouse）完全渲染 - 减少等待
+    // 2.6 额外等待时间，让嵌入式内容完全渲染
     addLog('⏳ 等待嵌入式内容完全渲染...');
-    await this.browser.waitForTimeout(2000);  // 从 3 秒减少到 2 秒
+    await this.browser.waitForTimeout(3000);  // 3 秒
 
-    // 3. 获取快照（带重试，处理 SPA 延迟渲染）- 减少重试次数
+    // 3. 获取快照（带重试，处理 SPA 延迟渲染）
     addLog('📸 获取页面快照...');
     const enhancedSnapshot = await this.browser.getSnapshotWithRetry({
       interactive: true,

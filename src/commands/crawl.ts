@@ -135,7 +135,7 @@ async function runCrawl(options: CrawlOptions) {
   let totalInserted = 0;
   let totalSkipped = 0;
 
-  const browser = new BrowserService();
+  const browser = new BrowserService(llmService);
 
   try {
     await browser.launch({ headless });

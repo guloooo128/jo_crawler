@@ -1,6 +1,6 @@
 /**
  * Auto-generated parser for cibc.wd3.myworkdayjobs.com
- * Generated at: 2026-02-10T03:42:54.487Z
+ * Generated at: 2026-02-10T06:33:41.762Z
  * Author: AI (GLM-4.7)
  * URL: https://cibc.wd3.myworkdayjobs.com/en-US/campus
  * Type: list
@@ -10,16 +10,16 @@
 
 import { BaseParser } from '../base/BaseParser.js';
 
-export default class CibcWd3MyworkdayjobsComParser extends BaseParser {
+export default class CibcMyworkdayjobsParser extends BaseParser {
   metadata = {
-    name: 'CibcWd3MyworkdayjobsComParser',
+    name: 'CibcMyworkdayjobsParser',
     version: '1.0.0',
     domain: 'cibc.wd3.myworkdayjobs.com',
     url: 'https://cibc.wd3.myworkdayjobs.com/en-US/campus',
     pageType: 'list',
     author: 'AI',
     createdAt: new Date(),
-    description: 'CIBC Campus Jobs 列表页解析器',
+    description: 'CIBC Campus Workday 列表页解析器',
   };
 
   canParse(_snapshot, url) {
@@ -30,6 +30,7 @@ export default class CibcWd3MyworkdayjobsComParser extends BaseParser {
     const jobs = [];
     const { maxItems = 50, maxPages = 5 } = options;
 
+    const listUrl = await browser.getCurrentUrl();
     let allJobLinks = [];
     let currentPage = 1;
 
@@ -37,31 +38,27 @@ export default class CibcWd3MyworkdayjobsComParser extends BaseParser {
     while (currentPage <= maxPages && allJobLinks.length < maxItems) {
       console.log('📄 第 ' + currentPage + ' 页...');
 
-      const { tree, refs } = await browser.getSnapshot({ interactive: true, maxPages });
+      const { tree, refs } = await browser.getSnapshot({ interactive: true, maxDepth: 5 });
 
-      // 过滤逻辑：排除非职位链接
-      // 职位链接通常包含年份、城市、职位名称，长度适中
-      const skipKeywords = [
-        'skip to', 'search for jobs', 'sign in', 'facebook', 'youtube', 
-        'linkedin', 'glassdoor', 'google plus', 'direct applicant portal'
-      ];
-      
-      const jobRefs = Object.entries(refs).filter(([key, ref]) => {
-        if (ref.role != 'link' || !ref.name) return false;
-        
-        const nameLower = ref.name.toLowerCase();
-        // 排除导航和页脚链接
-        if (skipKeywords.some(kw => nameLower.includes(kw))) return false;
-        
-        // 职位标题通常较长且包含特定关键词
-        if (ref.name.length < 15) return false;
-        
-        // Workday 职位链接通常包含特定模式，这里主要依赖文本特征
-        return true;
-      });
+      // ✅ 使用 LLM 智能识别职位链接
+      const jobLinks = await browser.llmIdentifyJobLinks(tree, refs);
+      console.log('🤖 LLM 识别到 ' + jobLinks.length + ' 个职位链接');
 
-      const pageLinks = await this.collectJobLinks(browser, jobRefs);
-      console.log('🔗 找到 ' + pageLinks.length + ' 个职位链接');
+      if (jobLinks.length == 0) {
+        console.log('⚠️  LLM 未识别到职位链接，尝试 HTML 解析...');
+        const htmlLinks = await browser.getJobLinksFromHTML();
+        if (htmlLinks.length > 0) {
+          for (const link of htmlLinks) {
+            allJobLinks.push({ url: link.url, name: link.name });
+          }
+        }
+        break;
+      }
+
+      // 转换 LLM 返回格式为 collectJobLinks 需要的格式
+      const jobRefs = jobLinks.map(jl => [jl.ref.replace('@', ''), { role: 'link', name: jl.name }]);
+      const pageLinks = await this. collectJobLinks(browser, jobRefs);
+      console.log('🔗 收集到 ' + pageLinks.length + ' 个职位链接');
 
       // 去重合并
       const existingUrls = new Set(allJobLinks.map(l => l.url));
@@ -72,15 +69,17 @@ export default class CibcWd3MyworkdayjobsComParser extends BaseParser {
       if (allJobLinks.length >= maxItems) break;
 
       // === 翻页逻辑 ===
-      // 查找 "next" 按钮
+      // 优先查找 "next" 按钮
       const nextBtn = Object.entries(refs).find(([k, r]) =>
-        (r.role == 'button') && /next/i.test(r.name || '')
+        (r.role == 'link' || r.role == 'button') && /next|下一页|›|»/i.test(r.name || '')
       );
 
       if (nextBtn) {
+        console.log('➡️ 点击下一页');
         await browser.click('@' + nextBtn[0]);
-        await this.delay(2000); // 等待页面加载
+        await this.delay(2000);
         currentPage++;
+        continue;
       } else {
         console.log('⚠️ 未找到下一页按钮，停止翻页');
         break;
@@ -97,7 +96,7 @@ export default class CibcWd3MyworkdayjobsComParser extends BaseParser {
         const titleFromList = link.name;
 
         await browser.navigate(link.url);
-        await this.delay(2000); // 等待详情页加载
+        await this.delay(2000);
 
         // 自己提取 description
         let rawText = '';
@@ -106,7 +105,6 @@ export default class CibcWd3MyworkdayjobsComParser extends BaseParser {
         } catch (e) {
           rawText = await browser.getCleanPageText();
         }
-        
         const description = this.cleanDescription(rawText, titleFromList);
 
         // 提取其他字段
@@ -123,7 +121,7 @@ export default class CibcWd3MyworkdayjobsComParser extends BaseParser {
           job_type: jobType,
           description: description,
           salary: '',
-          source: 'CIBC',
+          source: this.getCompanyName(),
         });
 
         jobs.push(jobData);
@@ -143,18 +141,21 @@ export default class CibcWd3MyworkdayjobsComParser extends BaseParser {
     let text = rawText;
 
     // 移除标题部分，避免重复
-    if (title && text.includes(title)) {
-      text = text.replace(title, '');
+    if (title) {
+      const titleIdx = text.indexOf(title);
+      if (titleIdx != -1) {
+        text = text.substring(titleIdx + title.length);
+      }
     }
 
-    // Workday 详情页通常在 "We’re building..." 或 "At CIBC..." 开始
-    // 也可以通过移除顶部元数据后的内容作为正文
+    // Workday 特征：正文通常在 "We're building" 或 "Job Description" 之后
     const startMarkers = [
-      'We’re building a relationship-oriented bank',
-      'At CIBC, we embrace',
-      'CIBC’s Summer Internship Program',
       'Job Description',
-      'About the Role'
+      'About the Job',
+      'We’re building a relationship-oriented bank',
+      "We're building a relationship-oriented bank",
+      'At CIBC, we embrace your strengths',
+      'CIBC’s Summer Internship Program'
     ];
 
     let startIdx = -1;
@@ -177,7 +178,8 @@ export default class CibcWd3MyworkdayjobsComParser extends BaseParser {
       'Privacy Policy',
       'Cookie Settings',
       'Follow us',
-      'Unsubscribe'
+      'Help',
+      'Report a problem'
     ];
 
     let endIdx = text.length;
@@ -194,26 +196,21 @@ export default class CibcWd3MyworkdayjobsComParser extends BaseParser {
   }
 
   extractLocation(text) {
-    // Workday 格式: "locationsMiami, FL" 或 "locationsToronto, ON"
-    // 尝试匹配 "locations" 后面的内容
-    const locPattern = /locations([A-Za-z\s,.-]+)/i;
-    const match = text.match(locPattern);
-    if (match && match[1]) {
-      // 清理可能紧跟的单词，如 "time type"
-      let loc = match[1].replace(/time type.*/i, '').trim();
-      if (loc.length > 2 && loc.length < 60) return loc;
-    }
-
-    // 备用通用模式
+    // Workday 格式: "locationsMiami, FL" 或 "location: Miami, FL"
     const patterns = [
-      /([A-Z][a-z]+,\s*[A-Z]{2})/,
-      /([A-Z][a-z]+,\s*[A-Z][a-z]+)/,
+      /locations\s*([A-Za-z\s,.-]+)\s*time/i,
+      /location:\s*([A-Za-z\s,.-]+)\s*time/i,
+      /([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?,\s*[A-Z]{2})/,
+      /([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?,\s*[A-Z][a-z]+)/,
     ];
 
     for (const p of patterns) {
       const m = text.match(p);
-      if (m && m[1].length > 3 && m[1].length < 60) {
-        return m[1].trim();
+      if (m && m[1]) {
+        const loc = m[1].trim();
+        if (loc.length > 2 && loc.length < 60) {
+          return loc;
+        }
       }
     }
 
@@ -221,31 +218,32 @@ export default class CibcWd3MyworkdayjobsComParser extends BaseParser {
   }
 
   extractPostDate(text) {
-    // Workday 格式: "posted onPosted Today" 或 "posted onPosted Date"
-    const pattern = /posted on(.*?)(?=time type|job requisition|$)/i;
-    const match = text.match(pattern);
-    if (match && match[1]) {
-      return match[1].trim();
+    // Workday 格式: "posted onPosted Today" 或 "posted onPosted 1/15/2026"
+    const patterns = [
+      /posted onPosted\s*(Today|\d{1,2}\/\d{1,2}\/\d{4}|\w+\s+\d{1,2},\s+\d{4})/i,
+      /Posted:\s*(Today|\d{1,2}\/\d{1,2}\/\d{4})/i,
+      /Date Posted:\s*(\d{4}-\d{2}-\d{2})/,
+    ];
+
+    for (const p of patterns) {
+      const m = text.match(p);
+      if (m) return m[1].trim();
     }
-    
-    // 备用
-    const backup = /Posted:\s*(.*)/i;
-    const m2 = text.match(backup);
-    if (m2) return m2[1].trim();
 
     return '';
   }
 
-.extractJobType(text) {
+  extractJobType(text) {
     // Workday 格式: "time typeFull time"
-    const pattern = /time type([A-Za-z\s-]+)/i;
-    const match = text.match(pattern);
-    if (match && match[1]) {
-      let type = match[1].replace(/posted on.*/i, '').trim();
-      // 标准化
-      if (type.toLowerCase() == 'full time') return 'Full-time';
-      if (type.toLowerCase() == 'part time') return 'Part-time';
-      return type;
+    const patterns = [
+      /time type\s*(Full time|Part time|Contract|Permanent|Internship)/i,
+      /Job Type:\s*(Full time|Part time|Contract|Permanent|Internship)/i,
+      /Employment Type:\s*(Full time|Part time|Contract)/i,
+    ];
+
+    for (const p of patterns) {
+      const m = text.match(p);
+      if (m) return m[1].trim();
     }
 
     return '';

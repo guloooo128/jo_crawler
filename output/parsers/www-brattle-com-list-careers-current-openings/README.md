@@ -5,7 +5,7 @@
 - **域名**: www.brattle.com
 - **URL**: https://www.brattle.com/careers/current-openings/
 - **页面类型**: list
-- **生成时间**: 2026-02-10T03:47:52.534Z
+- **生成时间**: 2026-02-10T04:26:15.142Z
 
 ## 文件说明
 
@@ -33,7 +33,7 @@ const jobs = await parser.parse(browser, { maxItems: 10 });
   "domain": "www.brattle.com",
   "url": "https://www.brattle.com/careers/current-openings/",
   "pageType": "list",
-  "generatedAt": "2026-02-10T03:47:52.534Z"
+  "generatedAt": "2026-02-10T04:26:15.142Z"
 }
 ```
 
