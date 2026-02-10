@@ -5,7 +5,7 @@
 - **域名**: careers.cbre.com
 - **URL**: https://careers.cbre.com/en_US/careers/SearchJobs/?9577=%5B17134%5D&9577_format=10224&listFilterMode=1&jobSort=relevancy&jobRecordsPerPage=25&
 - **页面类型**: list
-- **生成时间**: 2026-02-09T04:36:34.691Z
+- **生成时间**: 2026-02-10T03:43:55.899Z
 
 ## 文件说明
 
@@ -33,7 +33,7 @@ const jobs = await parser.parse(browser, { maxItems: 10 });
   "domain": "careers.cbre.com",
   "url": "https://careers.cbre.com/en_US/careers/SearchJobs/?9577=%5B17134%5D&9577_format=10224&listFilterMode=1&jobSort=relevancy&jobRecordsPerPage=25&",
   "pageType": "list",
-  "generatedAt": "2026-02-09T04:36:34.691Z"
+  "generatedAt": "2026-02-10T03:43:55.899Z"
 }
 ```
 

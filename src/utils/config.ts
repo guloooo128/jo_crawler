@@ -37,6 +37,7 @@ export const config = {
   paths: {
     parsers: path.join(process.cwd(), 'src/parsers/generated'),
     output: path.join(process.cwd(), 'output'),
+    database: getEnv('DATABASE_PATH', path.join(process.cwd(), 'output', 'jobs.db')),
     links: path.join(process.cwd(), 'links.txt'),
     linksCsv: path.join(process.cwd(), 'links.csv'),
   },

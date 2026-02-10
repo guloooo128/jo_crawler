@@ -4,6 +4,7 @@ import chalk from 'chalk';
 import packageJson from '../package.json';
 import { generateCommand } from './commands/generate.js';
 import { crawlCommand } from './commands/crawl.js';
+import { exportCommand } from './commands/export.js';
 
 /**
  * JO Crawler CLI
@@ -19,6 +20,7 @@ program
 // 添加命令
 program.addCommand(generateCommand());
 program.addCommand(crawlCommand());
+program.addCommand(exportCommand());
 
 // 解析参数
 program.parse();

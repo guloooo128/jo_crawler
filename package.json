@@ -1,5 +1,6 @@
 {
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
     "@types/csv-parse": "^1.1.12",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^25.2.0",
@@ -33,6 +34,7 @@
     "bare-url": "^2.3.2",
     "base64-js": "^1.5.1",
     "basic-ftp": "^5.1.0",
+    "better-sqlite3": "^12.6.2",
     "bluebird": "^3.7.2",
     "boolbase": "^1.0.0",
     "brace-expansion": "^2.0.2",
@@ -222,6 +224,7 @@
     "build": "tsc",
     "generate": "tsx src/index.ts generate",
     "crawl": "tsx src/index.ts crawl",
+    "export": "tsx src/index.ts export",
     "dev": "tsx src/index.ts"
   },
   "keywords": [],

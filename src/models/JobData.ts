@@ -2,6 +2,7 @@
  * 职位数据模型（JO 标准字段）
  */
 export interface JobData {
+  job_id: string;               // 唯一标识（从 URL 提取或生成的哈希）
   company_name: string;       // 公司名称
   job_title: string;          // 职位标题
   location: string;           // 工作地点
