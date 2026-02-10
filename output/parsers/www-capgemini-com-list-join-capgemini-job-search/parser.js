@@ -1,6 +1,6 @@
 /**
  * Auto-generated parser for www.capgemini.com
- * Generated at: 2026-02-10T03:40:21.406Z
+ * Generated at: 2026-02-10T06:30:32.970Z
  * Author: AI (GLM-4.7)
  * URL: https://www.capgemini.com/careers/join-capgemini/job-search/?size=15
  * Type: list
@@ -10,16 +10,16 @@
 
 import { BaseParser } from '../base/BaseParser.js';
 
-export default class CapgeminiComParser extends BaseParser {
+export default class CapgeminiComParserParser extends BaseParser {
   metadata = {
-    name: 'CapgeminiComParser',
+    name: 'CapgeminiComParserParser',
     version: '1.0.0',
     domain: 'www.capgemini.com',
     url: 'https://www.capgemini.com/careers/join-capgemini/job-search/',
     pageType: 'list',
     author: 'AI',
     createdAt: new Date(),
-    description: 'Capgemini 列表页解析器 (Load More 模式)',
+    description: 'Capgemini 列表页解析器，支持 Load More 翻页',
   };
 
   canParse(_snapshot, url) {
@@ -39,25 +39,25 @@ export default class CapgeminiComParser extends BaseParser {
 
       const { tree, refs } = await browser.getSnapshot({ interactive: true, maxDepth: 5 });
 
-      // 根据快照分析编写过滤逻辑
-      // Capgemini 的职位链接通常包含 "Experienced Professionals", "Permanent" 等关键词，且长度较长
-      const skipKeywords = ['facebook', 'linkedin', 'youtube', 'instagram', 'glassdoor', 'cookie', 'privacy', 'terms', 'contact', 'investors', 'accessibility', 'insights', 'industries', 'services', 'careers', 'news', 'about us', 'speakup', 'frog', 'sogeti', 'capgemini invent', 'capgemini engineering'];
-      const jobRefs = Object.entries(refs).filter(([key, ref]) => {
-        if (ref.role != 'link' || !ref.name) return false;
-        // 过滤掉太短或太长的非职位链接
-        if (ref.name.length < 30) return false;
-        
-        const nameLower = ref.name.toLowerCase();
-        // 排除页脚和导航链接
-        if (skipKeywords.some(kw => nameLower.includes(kw))) return false;
-        
-        // 职位链接通常包含职位类型关键词
-        const jobKeywords = ['experienced professionals', 'permanent', 'internship', 'contract', 'student'];
-        return jobKeywords.some(kw => nameLower.includes(kw));
-      });
+      // ✅ 推荐：使用 LLM 智能识别职位链接
+      const jobLinks = await browser.llmIdentifyJobLinks(tree, refs);
+      console.log('🤖 LLM 识别到 ' + jobLinks.length + ' 个职位链接');
 
+      if (jobLinks.length == 0) {
+        console.log('⚠️  LLM 未识别到职位链接，尝试 HTML 解析...');
+        const htmlLinks = await browser.getJobLinksFromHTML();
+        if (htmlLinks.length > 0) {
+          for (const link of htmlLinks) {
+            allJobLinks.push({ url: link.url, name: link.name });
+          }
+        }
+        break;
+      }
+
+      // 转换 LLM 返回格式为 collectJobLinks 需要的格式
+      const jobRefs = jobLinks.map(jl => [jl.ref.replace('@', ''), { role: 'link', name: jl.name }]);
       const pageLinks = await this.collectJobLinks(browser, jobRefs);
-      console.log('🔗 找到 ' + pageLinks.length + ' 个职位链接');
+      console.log('🔗 收集到 ' + pageLinks.length + ' 个职位链接');
 
       // 去重合并
       const existingUrls = new Set(allJobLinks.map(l => l.url));
@@ -67,20 +67,19 @@ export default class CapgeminiComParser extends BaseParser {
       if (newLinks.length == 0) break;
       if (allJobLinks.length >= maxItems) break;
 
-      // === 翻页逻辑 ===
-      // 查找 "Load More" 按钮
+      // === 翻页逻辑：点击 Load More ===
       const loadMoreBtn = Object.entries(refs).find(([k, r]) =>
         r.role == 'button' && /load more/i.test(r.name || '')
       );
 
       if (loadMoreBtn) {
-        console.log('🔄 点击 Load More...');
+        console.log('🖱️  点击 Load More...');
         await browser.click('@' + loadMoreBtn[0]);
         await this.delay(3000); // 等待内容加载
         currentPage++;
         continue;
       } else {
-        console.log('⚠️ 未找到 Load More 按钮，翻页结束');
+        console.log('🛑 未找到 Load More 按钮，翻页结束');
         break;
       }
     }
@@ -88,6 +87,7 @@ export default class CapgeminiComParser extends BaseParser {
     console.log('✅ 共收集 ' + allJobLinks.length + ' 个职位链接');
 
     // === 阶段二：逐个导航提取 ===
+
     for (const link of allJobLinks.slice(0, maxItems)) {
       try {
         console.log('🚀 提取: ' + link.name);
@@ -104,12 +104,12 @@ export default class CapgeminiComParser extends BaseParser {
         } catch (e) {
           rawText = await browser.getCleanPageText();
         }
-        const description = this.cleanDescription(rawText, titleFromList);
+        const description = this.cleanDescription(rawText,);
 
         // 提取其他字段
-        const location = this.extractLocation(rawText, titleFromList);
+        const location = this.extractLocation(rawText);
         const postDate = this.extractPostDate(rawText);
-        const jobType = this.extractJobType(rawText, titleFromList);
+        const jobType = this.extractJobType(rawText);
 
         const jobData = this.createJobData({
           job_title: titleFromList,
@@ -134,22 +134,15 @@ export default class CapgeminiComParser extends BaseParser {
 
   // ===== 辅助方法 =====
 
-  cleanDescription(rawText, titleFromList) {
+  cleanDescription(rawText) {
     if (!rawText) return '';
 
     let text = rawText;
 
     // 找正文起点
-    // Capgemini 详情页通常以 "Descripción larga" 或 "YOUR ROLE" 开头
     const startMarkers = [
-      'Descripción larga',
-      'Job Description', 
-      'Overview', 
-      'About This Role',
-      'Responsibilities', 
-      'What You\'ll Do', 
-      'Your Role',
-      'YOUR ROLE'
+      'Job Description', 'Overview', 'About This Role',
+      'Responsibilities', 'What You\'ll Do', 'Your Role', 'Your mission'
     ];
 
     let startIdx = -1;
@@ -166,14 +159,8 @@ export default class CapgeminiComParser extends BaseParser {
 
     // 找终点
     const endMarkers = [
-      'Similar Jobs', 
-      'Related Jobs', 
-      'Share this job',
-      'Privacy Policy', 
-      'Cookie Settings', 
-      'Follow us',
-      'Apply now',
-      'Return to search'
+      'Similar Jobs', 'Related Jobs', 'Share this job',
+      'Privacy Policy', 'Cookie Settings', 'Follow us', 'Apply now'
     ];
 
     let endIdx = text.length;
@@ -189,23 +176,12 @@ export default class CapgeminiComParser extends BaseParser {
     return this.cleanText(text);
   }
 
-  extractLocation(text, titleFromList) {
-    // 优先从标题中提取 (Capgemini 标题包含地点，如 "Ukraine Kyiv")
-    if (titleFromList) {
-      // 尝试匹配 "Country City" 模式
-      const titleMatch = titleFromList.match(/([A-Z][a-zA-Z\s]+)\s+(Experienced|Permanent|Internship|Contract)/);
-      if (titleMatch && titleMatch[1]) {
-        let loc = titleMatch[1].trim();
-        if (loc.length > 3 && loc.length < 100) return loc;
-      }
-    }
-
-    // 从正文中提取
+  extractLocation(text) {
+    // 尝试从文本中提取地点，通常包含 City, Country 格式
     const patterns = [
+      /([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?,\s*[A-Z][a-z]+)/, // City, Country
       /Location:\s*([A-Za-z][A-Za-z0-9 ,]+)/i,
-      /Country:\s*([A-Za-z][A-Za-z0-9 ,]+)/i,
-      /([A-Z][a-z]+,\s*[A-Z]{2})/,
-      /([A-Z][a-z]+,\s*[A-Z][a-z]+)/,
+      /([A-Z][a-z]+,\s*[A-Z]{2})/, // US State format
     ];
 
     for (const p of patterns) {
@@ -223,7 +199,7 @@ export default class CapgeminiComParser extends BaseParser {
       /Posted:\s*(\d{1,2}\s+\w+\s+\d{4})/i,
       /Date Posted:\s*(\d{4}-\d{2}-\d{2})/,
       /Posted\s+(\d+\s+days?\s+ago)/i,
-      /Publication date:\s*(\d{1,2}\/\d{1,2}\/\d{4})/i,
+      /Published:\s*(\d{1,2}\/\d{1,2}\/\d{4})/,
     ];
 
     for (const p of patterns) {
@@ -234,27 +210,17 @@ export default class CapgeminiComParser extends BaseParser {
     return '';
   }
 
-  extractJobType(text, titleFromList) {
-    // 优先从标题中提取 (Capgemini 标题包含类型，如 "Permanent")
-    if (titleFromList) {
-      if (titleFromList.includes('Permanent')) return 'Permanent';
-      if (titleFromList.includes('Contract')) return 'Contract';
-      if (titleFromList.includes('Internship')) return 'Internship';
-      if (titleFromList.includes('Experienced')) return 'Full-time'; // 默认为全职
-    }
-
-    // 从正文中提取
+  extractJobType(text) {
     const patterns = [
-      /Job Type:\s*(Full-time|Part-time|Contract|Permanent|Internship)/i,
+      /Job Type:\s*(Full-time|Part-time|Contract|Permanent|Internship|Fixed Term Contract)/i,
       /Employment Type:\s*(Full-time|Part-time|Contract|Permanent|Internship)/i,
       /Contract Type:\s*(Full-time|Part-time|Contract|Permanent|Internship)/i,
+      /(Full-time|Part-time)\s*Position/i,
     ];
 
     for (const p of patterns) {
-      for (const p of patterns) {
-        const m = text.match(p);
-        if (m) return m[1].trim();
-      }
+      const m = text.match(p);
+      if (m) return m[1].trim();
     }
 
     return '';

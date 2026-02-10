@@ -1,6 +1,6 @@
 /**
  * Auto-generated parser for td.wd3.myworkdayjobs.com
- * Generated at: 2026-02-10T03:41:42.724Z
+ * Generated at: 2026-02-10T06:32:14.139Z
  * Author: AI (GLM-4.7)
  * URL: https://td.wd3.myworkdayjobs.com/en-US/TD_Bank_Careers/details/Retail-Market-Manager--US----Lehigh-Montgomery-Regions_R_1456219?locationCountry=bc33aa3152ec42d4995f4791a106ed09&locationCountry=29247e57dbaf46fb855b224e03170bc7&locationCountry=80938777cac5440fab50d729f9634969&locationCountry=a30a87ed25634629aa6c3958aa2b91ea&timeType=14c9322ea8e3014f4096d9d2dc025400
  * Type: list
@@ -10,20 +10,20 @@
 
 import { BaseParser } from '../base/BaseParser.js';
 
-export default class TdWd3MyworkdayjobsComParser extends BaseParser {
+export default class MyworkdayjobsComParser extends BaseParser {
   metadata = {
-    name: 'TdWd3MyworkdayjobsComParser',
+    name: 'MyworkdayjobsComParser',
     version: '1.0.0',
     domain: 'td.wd3.myworkdayjobs.com',
-    url: 'https://td.wd3.myworkdayjobs.com/en-US/TD_Bank_Careers',
+    url: 'https://td.wd3.myworkdayjobs.com',
     pageType: 'list',
     author: 'AI',
     createdAt: new Date(),
-    description: 'TD Bank Workday 列表页解析器 (左侧列表，右侧详情)',
+    description: 'TD Bank Workday 列表页解析器',
   };
 
   canParse(_snapshot, url) {
-    return url.includes('td.wd3.myworkdayjobs.com');
+    return url.includes('myworkdayjobs.com');
   }
 
   async parse(browser, options) {
@@ -39,23 +39,25 @@ export default class TdWd3MyworkdayjobsComParser extends BaseParser {
 
       const { tree, refs } = await browser.getSnapshot({ interactive: true, maxDepth: 5 });
 
-      // 根据快照分析编写过滤逻辑
-      // 过滤掉非职位链接 (如 home, privacy, linkedin 等)
-      const skipKeywords = [
-        'skip to', 'privacy', 'cookie', 'linkedin', 'facebook', 'careers home', 
-        'sign in', 'why choose us', 'search for jobs', 'close job details'
-      ];
-      
-      const jobRefs = Object.entries(refs).filter(([key, ref]) => {
-        if (ref.role != 'link' || !ref.name) return false;
-        // 长度过滤：职位标题通常较长
-        if (ref.name.length < 15) return false;
-        const nameLower = ref.name.toLowerCase();
-        return !skipKeywords.some(kw => nameLower.includes(kw));
-      });
+      // ✅ 使用 LLM 智能识别职位链接
+      const jobLinks = await browser.llmIdentifyJobLinks(tree, refs);
+      console.log('🤖 LLM 识别到 ' + jobLinks.length + ' 个职位链接');
 
+      if (jobLinks.length == 0) {
+        console.log('⚠️  LLM 未识别到职位链接，尝试 HTML 解析...');
+        const htmlLinks = await browser.getJobLinksFromHTML();
+        if (htmlLinks.length > 0) {
+          for (const link of htmlLinks) {
+            allJobLinks.push({ url: link.url, name: link.name });
+          }
+        }
+        break;
+      }
+
+      // 转换 LLM 返回格式为 collectJobLinks 需要的格式
+      const jobRefs = jobLinks.map(jl => [jl.ref.replace('@', ''), { role: 'link', name: jl.name }]);
       const pageLinks = await this.collectJobLinks(browser, jobRefs);
-      console.log('🔗 找到 ' + pageLinks.length + ' 个职位链接');
+      console.log('🔗 收集到 ' + pageLinks.length + ' 个职位链接');
 
       // 去重合并
       const existingUrls = new Set(allJobLinks.map(l => l.url));
@@ -66,18 +68,18 @@ export default class TdWd3MyworkdayjobsComParser extends BaseParser {
       if (allJobLinks.length >= maxItems) break;
 
       // === 翻页逻辑 ===
-      // 优先查找 "next" 按钮
+      // Workday 通常使用 "next" 按钮或页码按钮
       const nextBtn = Object.entries(refs).find(([k, r]) =>
-        (r.role == 'link' || r.role == 'button') && /next/i.test(r.name || '')
+        (r.role == 'button' || r.role == 'link') && /next/i.test(r.name || '')
       );
 
       if (nextBtn) {
         await browser.click('@' + nextBtn[0]);
-        await this.delay(2000); // 等待页面加载
+        await this.delay(2000);
         currentPage++;
         continue;
       } else {
-        console.log('⚠️ 未找到下一页按钮，停止翻页');
+        console.log('⚠️  未找到下一页按钮，停止翻页');
         break;
       }
     }
@@ -91,11 +93,10 @@ export default class TdWd3MyworkdayjobsComParser extends BaseParser {
 
         const titleFromList = link.name;
 
-        // 导航到详情页
         await browser.navigate(link.url);
-        await this.delay(2000); // 等待详情页加载
+        await this.delay(2000);
 
-        // 自己提取 description（最可靠）
+        // 自己提取 description
         let rawText = '';
         try {
           rawText = await browser.getMainContentText();
@@ -104,8 +105,6 @@ export default class TdWd3MyworkdayjobsComParser extends BaseParser {
         }
         
         const description = this.cleanDescription(rawText, titleFromList);
-
-        // 提取其他字段
         const location = this.extractLocation(rawText);
         const postDate = this.extractPostDate(rawText);
         const jobType = this.extractJobType(rawText);
@@ -139,10 +138,22 @@ export default class TdWd3MyworkdayjobsComParser extends BaseParser {
 
     let text = rawText;
 
-    // 找正文起点
+    // 移除标题部分，避免干扰
+    if (title) {
+      const titleIdx = text.indexOf(title);
+      if (titleIdx != -1) {
+        text = text.substring(titleIdx + title.length);
+      }
+    }
+
+    // Workday 特征：通常以 "Job Description:" 或 "About the Job:" 开头
     const startMarkers = [
-      'Job Description', 'Overview', 'About This Role',
-      'Responsibilities', 'What You\'ll Do', 'Your Role', 'Depth & Scope'
+      'Job Description:',
+      'Job Description',
+      'About the Job:',
+      'About This Role',
+      'Responsibilities',
+      'What You\'ll Do'
     ];
 
     let startIdx = -1;
@@ -157,10 +168,17 @@ export default class TdWd3MyworkdayjobsComParser extends BaseParser {
       text = text.substring(startIdx);
     }
 
-    // 找终点
+    // 清理结尾噪音
     const endMarkers = [
-      'Similar Jobs', 'Related Jobs', 'Share this job',
-      'Privacy Policy', 'Cookie Settings', 'Follow us', 'LinkedIn'
+      'Similar Jobs',
+      'Related Jobs',
+      'Share this job',
+      'Privacy Policy',
+      'Cookie Settings',
+      'Follow us',
+      'Unsubscribe',
+      'Job requisition id', // Workday 特征
+      'Pay Details' // Workday 特征，通常在描述前
     ];
 
     let endIdx = text.length;
@@ -177,22 +195,23 @@ export default class TdWd3MyworkdayjobsComParser extends BaseParser {
   }
 
   extractLocation(text) {
-    // 针对 Workday 格式优化: "locationsMount Laurel, New Jersey" 或 "Work Location:..."
+    // Workday 格式: "locationsMount Laurel, New Jersey" 或 "Work Location:Mount Laurel, New Jersey"
     const patterns = [
-      /locations\s*([A-Z][a-z]+(?:,\s*[A-Z][a-z]+(?:,\s*[A-Z][a-z]+)?)?)/,
-      /Work Location:\s*([^\n]+)/i,
-      /Location:\s*([A-Za-z][A-Za-z0-9 ,]+)/i,
-      /([A-Z][a-z]+,\s*[A-Z]{2})/,
+      /locations\s*([A-Z][a-zA-Z\s,]+(?:\s+[A-Z]{2})?)/i,
+      /Work Location:\s*([A-Za-z][A-Za-z0-9 ,.-]+)/i,
+      /Location:\s*([A-Za-z][A-Za-z0-9 ,.-]+)/i,
+      /([A-Z][a-z]+(?:\s+[A-Z][a-z]+),\s*[A-Z]{2})/ // City, State
     ];
 
     for (const p of patterns) {
       const m = text.match(p);
       if (m && m[1]) {
         let loc = m[1].trim();
-        // 清理可能的后缀
-        loc = loc.replace(/time type.*/i, '');
-        loc = loc.replace(/posted on.*/i, '');
-        if (loc.length > 3 && loc.length < 100) return loc;
+        // 移除常见的后缀噪音
+        loc = loc.replace(/time type.*/i, '').replace(/posted on.*/i, '').trim();
+        if (loc.length > 3 && loc.length < 100) {
+          return loc;
+        }
       }
     }
 
@@ -200,12 +219,12 @@ export default class TdWd3MyworkdayjobsComParser extends BaseParser {
   }
 
   extractPostDate(text) {
-    // 针对 Workday 格式: "posted onPosted Today" 或 "posted onPosted Date"
+    // Workday 格式: "posted onPosted Today" 或 "posted onPosted Date"
     const patterns = [
-      /posted on(Posted\s+\w+)/i,
+      /posted onPosted\s+(Today|\d{1,2}\/\d{1,2}\/\d{4}|[A-Za-z]+\s+\d{1,2},\s+\d{4})/i,
       /Posted:\s*(\d{1,2}\s+\w+\s+\d{4})/i,
       /Date Posted:\s*(\d{4}-\d{2}-\d{2})/,
-      /Posted\s+(\d+\s+days?\s+ago)/i,
+      /Posted\s+(\d+\s+days?\s+ago)/i
     ];
 
     for (const p of patterns) {
@@ -217,11 +236,11 @@ export default class TdWd3MyworkdayjobsComParser extends BaseParser {
   }
 
   extractJobType(text) {
-    // 针对 Workday 格式: "time typeFull time"
+    // Workday 格式: "time typeFull time"
     const patterns = [
-      /time type(Full time|Part time|Contract|Permanent|Internship)/i,
-      /Job Type:\s*(Full-time|Part-time|Contract|Permanent|Internship)/i,
-      /Employment:\s*(Full-time|Part-time|Contract)/i,
+      /time type\s*(Full time|Part time|Contract|Internship|Permanent)/i,
+      /Employment Type:\s*(Full time|Part time|Contract|Internship)/i,
+      /Job Type:\s*(Full-time|Part-time|Contract|Permanent|Internship)/i
     ];
 
     for (const p of patterns) {
@@ -233,19 +252,16 @@ export default class TdWd3MyworkdayjobsComParser extends BaseParser {
   }
 
   extractSalary(text) {
-    // 针对 Workday 格式: "Pay Details:$200,000 - $225,000 USD"
+    // Workday 格式: "Pay Details:$200,000 - $225,000 USD"
     const patterns = [
-      /Pay Details:\s*([^\n]+)/i,
-      /Salary:\s*([^\n]+)/i,
-      /\$\d{1,3}(?:,\d{3})*(?:\s*-\s*\$\d{1,3}(?:,\d{3})*)?/,
+      /Pay Details:\s*([$€£][\d,,-]+(?:\s*[-–]\s*[$€£][\d,,-]+)?)/i,
+      /Salary:\s*([$€£][\d,,-]+(?:\s*[-–]\s*[$€£][\d,,-]+)?)/i,
+      /Compensation:\s*([$€£][\d,,-]+(?:\s*[-–]\s*[$€£][\d,,-]+)?)/i
     ];
 
     for (const p of patterns) {
       const m = text.match(p);
-      if (m) {
-        let sal = m[1] ? m[1].trim() : m[0];
-        if (sal.length > 3 && sal.length < 50) return sal;
-      }
+      if (m) return m[1].trim();
     }
 
     return '';

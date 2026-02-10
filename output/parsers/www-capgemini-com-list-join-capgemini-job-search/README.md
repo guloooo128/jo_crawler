@@ -5,7 +5,7 @@
 - **域名**: www.capgemini.com
 - **URL**: https://www.capgemini.com/careers/join-capgemini/job-search/?size=15
 - **页面类型**: list
-- **生成时间**: 2026-02-10T03:40:21.415Z
+- **生成时间**: 2026-02-10T06:30:32.977Z
 
 ## 文件说明
 
@@ -33,7 +33,7 @@ const jobs = await parser.parse(browser, { maxItems: 10 });
   "domain": "www.capgemini.com",
   "url": "https://www.capgemini.com/careers/join-capgemini/job-search/?size=15",
   "pageType": "list",
-  "generatedAt": "2026-02-10T03:40:21.415Z"
+  "generatedAt": "2026-02-10T06:30:32.977Z"
 }
 ```
 

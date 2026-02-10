@@ -1,7 +1,7 @@
 type,url,max_jobs,prompt
 ,,,
-list,https://www.capgemini.com/careers/join-capgemini/job-search/?size=15,1,分页需要点击 LoadMore
+,https://www.capgemini.com/careers/join-capgemini/job-search/?size=15,1,分页需要点击 LoadMore
 list,https://td.wd3.myworkdayjobs.com/en-US/TD_Bank_Careers/details/Retail-Market-Manager--US----Lehigh-Montgomery-Regions_R_1456219?locationCountry=bc33aa3152ec42d4995f4791a106ed09&locationCountry=29247e57dbaf46fb855b224e03170bc7&locationCountry=80938777cac5440fab50d729f9634969&locationCountry=a30a87ed25634629aa6c3958aa2b91ea&timeType=14c9322ea8e3014f4096d9d2dc025400,1,左侧是岗位列表，右侧是详情
 list,https://cibc.wd3.myworkdayjobs.com/en-US/campus,1,左侧是岗位列表，右侧是详情
 list,https://careers.cbre.com/en_US/careers/SearchJobs/?9577=%5B17134%5D&9577_format=10224&listFilterMode=1&jobSort=relevancy&jobRecordsPerPage=25&,1,注意要dismiss cookie
-list,https://www.brattle.com/careers/current-openings/,1,"""Learn More About"" 不是职位详情 "
+,https://www.brattle.com/careers/current-openings/,1,""

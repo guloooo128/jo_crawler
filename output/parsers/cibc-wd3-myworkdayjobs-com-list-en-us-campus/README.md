@@ -5,7 +5,7 @@
 - **域名**: cibc.wd3.myworkdayjobs.com
 - **URL**: https://cibc.wd3.myworkdayjobs.com/en-US/campus
 - **页面类型**: list
-- **生成时间**: 2026-02-10T03:42:54.494Z
+- **生成时间**: 2026-02-10T06:33:41.766Z
 
 ## 文件说明
 
@@ -33,7 +33,7 @@ const jobs = await parser.parse(browser, { maxItems: 10 });
   "domain": "cibc.wd3.myworkdayjobs.com",
   "url": "https://cibc.wd3.myworkdayjobs.com/en-US/campus",
   "pageType": "list",
-  "generatedAt": "2026-02-10T03:42:54.494Z"
+  "generatedAt": "2026-02-10T06:33:41.766Z"
 }
 ```
 

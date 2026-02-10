@@ -1,6 +1,6 @@
 /**
  * Auto-generated parser for careers.cbre.com
- * Generated at: 2026-02-10T03:43:55.894Z
+ * Generated at: 2026-02-10T06:28:35.454Z
  * Author: AI (GLM-4.7)
  * URL: https://careers.cbre.com/en_US/careers/SearchJobs/?9577=%5B17134%5D&9577_format=10224&listFilterMode=1&jobSort=relevancy&jobRecordsPerPage=25&
  * Type: list
@@ -10,16 +10,16 @@
 
 import { BaseParser } from '../base/BaseParser.js';
 
-export default class CareersCbreComParser extends BaseParser {
+export default class CbreComParser extends BaseParser {
   metadata = {
-    name: 'CareersCbreComParser',
+    name: 'CbreComParser',
     version: '1.0.0',
     domain: 'careers.cbre.com',
     url: 'https://careers.cbre.com/en_US/careers/SearchJobs/',
     pageType: 'list',
     author: 'AI',
     createdAt: new Date(),
-    'description': 'CBRE Careers 列表页解析器',
+    description: 'CBRE Careers 列表页解析器',
   };
 
   canParse(_snapshot, url) {
@@ -30,19 +30,18 @@ export default class CareersCbreComParser extends BaseParser {
     const jobs = [];
     const { maxItems = 50, maxPages = 5 } = options;
 
-    // 尝试关闭 Cookie 弹窗
+    // Dismiss cookies if present
     try {
-      const { refs: cookieRefs } = await browser.getSnapshot({ interactive: true, maxDepth: 3 });
-      const acceptBtn = Object.entries(cookieRefs).find(([k, r]) =>
-        (r.role == 'button' || r.role == 'link') && 
-        /accept|agree|allow|close|dismiss/i.test(r.name || '')
+      const { refs } = await browser.getSnapshot({ interactive: true, maxDepth: 3 });
+      const rejectBtn = Object.entries(refs).find(([k, r]) =>
+        r.role == 'button' && /reject all/i.test(r.name || '')
       );
-      if (acceptBtn) {
-        await browser.click('@' + acceptBtn[0]);
+      if (rejectBtn) {
+        await browser.click('@' + rejectBtn[0]);
         await this.delay(1000);
       }
     } catch (e) {
-      // 忽略关闭弹窗时的错误
+      // Ignore cookie errors
     }
 
     const listUrl = await browser.getCurrentUrl();
@@ -55,21 +54,25 @@ export default class CareersCbreComParser extends BaseParser {
 
       const { tree, refs } = await browser.getSnapshot({ interactive: true, maxDepth: 5 });
 
-      // 根据快照分析编写过滤逻辑
-      const skipKeywords = ['about', 'contact', 'home', 'privacy', 'login', 'register', 'search', 'filter', 'save', 'share'];
-      const jobRefs = Object.entries(refs).filter(([key, ref]) => {
-        if (ref.role != 'link' || !ref.name) return false;
-        // 职位标题通常长度适中，包含常见职位关键词
-        if (ref.name.length < 10 || ref.name.length > 150) return false;
-        const nameLower = ref.name.toLowerCase();
-        if (skipKeywords.some(kw => nameLower.includes(kw))) return false;
-        // 必须包含有效的 URL
-        if (!ref.url || !ref.url.includes('http')) return false;
-        return true;
-      });
+      // ✅ 推荐：使用 LLM 智能识别职位链接
+      const jobLinks = await browser.llmIdentifyJobLinks(tree, refs);
+      console.log('🤖 LLM 识别到 ' + jobLinks.length + ' 个职位链接');
 
+      if (jobLinks.length == 0) {
+        console.log('⚠️  LLM 未识别到职位链接，尝试 HTML 解析...');
+        const htmlLinks = await browser.getJobLinksFromHTML();
+        if (htmlLinks.length > 0) {
+          for (const link of htmlLinks) {
+            allJobLinks.push({ url: link.url, name: link.name });
+          }
+        }
+        break;
+      }
+
+      // 转换 LLM 返回格式为 collectJobLinks 需要的格式
+      const jobRefs = jobLinks.map(jl => [jl.ref.replace('@', ''), { role: 'link', name: jl.name }]);
       const pageLinks = await this.collectJobLinks(browser, jobRefs);
-      console.log('🔗 找到 ' + pageLinks.length + ' 个职位链接');
+      console.log('🔗 收集到 ' + pageLinks.length + ' 个职位链接');
 
       // 去重合并
       const existingUrls = new Set(allJobLinks.map(l => l.url));
@@ -80,34 +83,20 @@ export default class CareersCbreComParser extends BaseParser {
       if (allJobLinks.length >= maxItems) break;
 
       // === 翻页逻辑 ===
-      const loadMoreBtn = Object.entries(refs).find(([k, r]) =>
-        r.role == 'button' && /load more|show more|更多/i.test(r.name || '')
-      );
       const nextBtn = Object.entries(refs).find(([k, r]) =>
-        (r.role == 'link' || r.role == 'button') && /next|下一页|›|»/i.test(r.name || '')
+        (r.role == 'link' || r.role == 'button') && /next|下一页|go to next/i.test(r.name || '')
       );
 
-      if (loadMoreBtn) {
-        await browser.click('@' + loadMoreBtn[0]);
-        await this.delay(2000);
-        currentPage++;
-        continue;
-      } else if (nextBtn) {
+      if (nextBtn) {
         await browser.click('@' + nextBtn[0]);
         await this.delay(2000);
         currentPage++;
         continue;
       } else {
         // 尝试URL参数翻页
-        let nextPageUrl = '';
-        if (listUrl.includes('page=')) {
-          nextPageUrl = listUrl.replace(/page=\d+/, 'page=' + (currentPage + 1));
-        } else if (listUrl.includes('?')) {
-          nextPageUrl = listUrl + '&page=' + (currentPage + 1);
-        } else {
-          nextPageUrl = listUrl + '?page=' + (currentPage + 1);
-        }
-        
+        const nextPageUrl = listUrl.includes('?')
+          ? listUrl + '&page=' + (currentPage + 1)
+          : listUrl + '?page=' + (currentPage + 1);
         await browser.navigate(nextPageUrl);
         await this.delay(2000);
         currentPage++;
@@ -166,16 +155,26 @@ export default class CareersCbreComParser extends BaseParser {
 
   // ===== 辅助方法 =====
 
-  cleanDescription(rawText) {
+  cleanDescription(rawText, title) {
     if (!rawText) return '';
 
     let text = rawText;
 
-    // 找正文起点
+    // 移除标题部分，避免重复
+    if (title) {
+      const titleIdx = text.indexOf(title);
+      if (titleIdx != -1) {
+        text = text.substring(titleIdx + title.length);
+      }
+    }
+
+    // 找正文起点 (CBRE 特有: About the Role)
     const startMarkers = [
-      'Job Description', 'Overview', 'About This Role',
-      'Responsibilities', 'What You\'ll Do', 'Your Role',
-      'Job Summary', 'Description'
+      'About the Role',
+      'Job Description',
+      'Overview',
+      'What You’ll Do',
+      'Responsibilities'
     ];
 
     let startIdx = -1;
@@ -192,9 +191,13 @@ export default class CareersCbreComParser extends BaseParser {
 
     // 找终点
     const endMarkers = [
-      'Similar Jobs', 'Related Jobs', 'Share this job',
-      'Privacy Policy', 'Cookie Settings', 'Follow us',
-      'Apply Now', 'Back to Search'
+      'Similar Jobs',
+      'Related Jobs',
+      'Share this job',
+      'Privacy Policy',
+      'Cookie Settings',
+      'Follow us',
+      'Return to Search'
     ];
 
     let endIdx = text.length;
@@ -211,8 +214,10 @@ export default class CareersCbreComParser extends BaseParser {
   }
 
   extractLocation(text) {
+    // CBRE 格式: Location(s) \n Hong Kong - Hong Kong
     const patterns = [
-      /Location:\s*([A-Za-z][A-Za-z0-9 ,]+)/i,
+      /Location\(s\)\s*([^\n]+)/i,
+      /Location:\s*([^\n]+)/i,
       /([A-Z][a-z]+,\s*[A-Z]{2})/,
       /([A-Z][a-z]+,\s*[A-Z][a-z]+)/,
     ];
@@ -228,11 +233,11 @@ export default class CareersCbreComParser extends BaseParser {
   }
 
   extractPostDate(text) {
+    // CBRE 格式: Posted \n 05-Feb-2026
     const patterns = [
-      /Posted:\s*(\d{1,2}\s+\w+\s+\d{4})/i,
+      /Posted\s*([A-Za-z0-9\-]+)/i,
       /Date Posted:\s*(\d{4}-\d{2}-\d{2})/,
-      /Posted\s+(\d+\s+days?\s+ago)/i,
-      /Date:\s*(\d{1,2}\/\d{1,2}\/\d{4})/,
+      /Posted:\s*(\d{1,2}\s+\w+\s+\d{4})/i,
     ];
 
     for (const p of patterns) {
@@ -244,11 +249,11 @@ export default class CareersCbreComParser extends BaseParser {
   }
 
   extractJobType(text) {
+    // CBRE 格式: Role type \n Full-time
     const patterns = [
+      /Role type\s*([^\n]+)/i,
       /Job Type:\s*(Full-time|Part-time|Contract|Permanent|Internship)/i,
-      /Employment Type:\s*(Full-time|Part-time|Contract|Permanent|Internship)/i,
       /Employment:\s*(Full-time|Part-time|Contract)/i,
-      /(Full-time|Part-time)\s*Position/i,
     ];
 
     for (const p of patterns) {

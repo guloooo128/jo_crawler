@@ -1,4 +1,5 @@
 import { BrowserManager } from 'agent-browser/dist/browser.js';
+import { LLMService } from './LLMService.js';
 
 /**
  * 增强快照类型（包含 tree 和 refs）
@@ -35,9 +36,18 @@ export class BrowserService {
   private manager: BrowserManager;
   private currentUrl?: string;
   private savedRefMap?: Record<string, any>;
+  private llmService?: LLMService;
 
-  constructor() {
+  constructor(llmService?: LLMService) {
     this.manager = new BrowserManager();
+    this.llmService = llmService;
+  }
+
+  /**
+   * 设置 LLM 服务（用于智能识别职位链接）
+   */
+  setLLMService(llmService: LLMService): void {
+    this.llmService = llmService;
   }
 
   /**
@@ -660,16 +670,12 @@ export class BrowserService {
     const page = this.manager.getPage();
 
     for (let i = 0; i < scrollCount; i++) {
-      await page.evaluate(() => {
-        window.scrollBy(0, window.innerHeight);
-      });
+      await page.evaluate('() => { window.scrollBy(0, window.innerHeight); }');
       await this.waitForTimeout(scrollDelay);
     }
 
     // 滚动回顶部
-    await page.evaluate(() => {
-      window.scrollTo(0, 0);
-    });
+    await page.evaluate('() => { window.scrollTo(0, 0); }');
     await this.waitForTimeout(500);
   }
 
@@ -683,9 +689,9 @@ export class BrowserService {
     let allLinks: Array<{ url: string; name: string; location?: string }> = [];
 
     // 首先检查主页面
-    // @ts-ignore - browser environment code
-    const mainPageLinks = await page.evaluate(() => {
+    const extractLinksFn = String(function() {
       const links = [];
+      // @ts-ignore - browser environment
       const allLinks = document.querySelectorAll('a');
 
       for (const link of allLinks) {
@@ -725,10 +731,13 @@ export class BrowserService {
         if (jobTitle.length < 5 || jobTitle.length > 200) continue;
 
         // 构建完整 URL
+        // @ts-ignore - browser environment
         let fullUrl = href;
         if (href.startsWith('/')) {
+          // @ts-ignore - browser environment
           fullUrl = window.location.origin + href;
         } else if (!href.startsWith('http')) {
+          // @ts-ignore - browser environment
           fullUrl = window.location.origin + '/' + href;
         }
 
@@ -748,6 +757,8 @@ export class BrowserService {
       });
     });
 
+    // @ts-ignore - browser environment code
+    const mainPageLinks = await page.evaluate(extractLinksFn) as Array<{ url: string; name: string; location?: string }>;
     allLinks = allLinks.concat(mainPageLinks);
 
     // 检查是否有 iframe（特别是 Greenhouse 嵌入式 job board）
@@ -764,58 +775,7 @@ export class BrowserService {
 
         // 从 iframe 中提取职位链接
         // @ts-ignore - browser environment code
-        const iframeLinks = await frame.evaluate(() => {
-          const links = [];
-          const allLinks = document.querySelectorAll('a');
-
-          for (const link of allLinks) {
-            const href = link.getAttribute('href');
-            if (!href) continue;
-
-            const text = link.textContent ? link.textContent.trim() : '';
-            const linkLower = href.toLowerCase();
-
-            // 排除非职位链接（登录、注册等）
-            if (linkLower.includes('sign_in') ||
-                linkLower.includes('login') ||
-                linkLower.includes('signup') ||
-                linkLower.includes('create') && text.toLowerCase().includes('alert')) {
-              continue;
-            }
-
-            // 清理标题
-            const jobTitle = text.replace(/\s+/g, ' ').trim();
-            if (jobTitle.length < 5 || jobTitle.length > 200) continue;
-
-            // 提取地点信息
-            let location = '';
-            const locationEl = link.querySelector('[class*="location"], [class*="metadata"]');
-            if (locationEl) location = locationEl.textContent ? locationEl.textContent.trim() : '';
-
-            // 构建完整 URL
-            let fullUrl = href;
-            if (href.startsWith('/')) {
-              fullUrl = window.location.origin + href;
-            } else if (!href.startsWith('http')) {
-              fullUrl = window.location.origin + '/' + href;
-            }
-
-            links.push({
-              url: fullUrl,
-              name: jobTitle,
-              location: location || undefined,
-            });
-          }
-
-          // 去重
-          const seen = new Set();
-          return links.filter(function(link) {
-            if (seen.has(link.url)) return false;
-            seen.add(link.url);
-            return true;
-          });
-        });
-
+        const iframeLinks = await frame.evaluate(extractLinksFn) as Array<{ url: string; name: string; location?: string }>;
         console.log(`✅ 从 iframe 中找到 ${iframeLinks.length} 个职位链接`);
         allLinks = allLinks.concat(iframeLinks);
       }
@@ -830,6 +790,27 @@ export class BrowserService {
       seen.add(link.url);
       return true;
     });
+  }
+
+  /**
+   * 使用 LLM 智能识别职位链接
+   * 比传统 skipKeywords 过滤更准确，能理解语义避免误识别导航链接
+   */
+  async llmIdentifyJobLinks(
+    snapshot: string,
+    refs: Record<string, any>
+  ): Promise<Array<{ ref: string; name: string; reason: string }>> {
+    if (!this.llmService) {
+      console.warn('⚠️  LLMService 未设置，无法使用智能识别');
+      return [];
+    }
+
+    try {
+      return await this.llmService.identifyJobLinks(snapshot, refs);
+    } catch (error: any) {
+      console.error('❌ LLM 识别职位链接失败:', error.message);
+      return [];
+    }
   }
 
   /**
