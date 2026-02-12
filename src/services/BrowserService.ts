@@ -16,6 +16,8 @@ export interface BrowserOptions {
   headless?: boolean;
   timeout?: number;
   userAgent?: string;
+  /** CDP 端口或 URL，用于连接已有的 Chrome 浏览器（绕过反爬） */
+  cdpUrl?: string;
 }
 
 /**
@@ -58,13 +60,56 @@ export class BrowserService {
       return;
     }
 
+    const headless = options.headless ?? true;
+
+    // CDP 连接模式：连接到用户已打开的真实 Chrome
+    if (options.cdpUrl) {
+      const cdp = options.cdpUrl;
+      // 支持传入纯端口号、ws:// URL、或 http://host:port
+      const cdpOption = /^\d+$/.test(cdp) ? { cdpPort: parseInt(cdp) } : { cdpUrl: cdp };
+      await this.manager.launch({
+        id: 'launch-1',
+        action: 'launch',
+        ...cdpOption,
+      } as any);
+      console.log(`✅ 已连接到 Chrome (CDP: ${cdp})`);
+      return;
+    }
+
     await this.manager.launch({
       id: 'launch-1',
       action: 'launch',
-      headless: options.headless ?? true,
+      headless,
+      // 反检测参数：隐藏 Playwright/Headless 特征
+      args: [
+        '--disable-blink-features=AutomationControlled',
+        '--no-first-run',
+        '--no-default-browser-check',
+        ...(headless ? ['--disable-gpu'] : []),
+      ],
+      userAgent: options.userAgent || 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
     });
 
-    console.log(`✅ 浏览器已启动 (headless: ${options.headless ?? true})`);
+    // 注入反检测脚本：覆盖 navigator.webdriver 等指纹
+    try {
+      const page = this.manager.getPage();
+      await page.addInitScript(() => {
+        // 隐藏 webdriver 标记
+        Object.defineProperty(navigator, 'webdriver', { get: () => false });
+        // 模拟正常的 plugins
+        Object.defineProperty(navigator, 'plugins', {
+          get: () => [1, 2, 3, 4, 5],
+        });
+        // 模拟正常的 languages
+        Object.defineProperty(navigator, 'languages', {
+          get: () => ['en-US', 'en', 'zh-CN'],
+        });
+      });
+    } catch {
+      // addInitScript 可能在某些 agent-browser 版本不支持，忽略
+    }
+
+    console.log(`✅ 浏览器已启动 (headless: ${headless})`);
   }
 
   /**
@@ -441,6 +486,13 @@ export class BrowserService {
   }
 
   /**
+   * 获取底层 Playwright Page 对象（用于高级操作）
+   */
+  getPage() {
+    return this.manager.getPage();
+  }
+
+  /**
    * 获取 Ref 映射表
    */
   getRefMap() {
@@ -688,7 +740,7 @@ export class BrowserService {
     const page = this.manager.getPage();
     let allLinks: Array<{ url: string; name: string; location?: string }> = [];
 
-    // 首先检查主页面
+    // 首先检查主页面 —— 包括 <a href="..."> 职位链接和 <a href="#"> SPA 点击式卡片
     const extractLinksFn = String(function() {
       const links = [];
       // @ts-ignore - browser environment
@@ -701,19 +753,49 @@ export class BrowserService {
         const text = link.textContent ? link.textContent.trim() : '';
         const linkLower = href.toLowerCase();
 
-        // 检查是否是职位链接
-        const isJobLink =
+        // ── 策略 1: 传统 URL 匹配（href 含职位相关路径） ──
+        const isJobUrlLink =
           linkLower.includes('/jobs/') ||
+          linkLower.includes('/job/') ||
           linkLower.includes('greenhouse.io') ||
           linkLower.includes('lever.co') ||
           linkLower.includes('myworkdayjobs.com') ||
           linkLower.includes('workday.com');
 
-        if (!isJobLink) continue;
+        // ── 策略 2: SPA 点击式卡片（href="#" 或 javascript:，但文本像职位名） ──
+        const isClickableCard = (href === '#' || href === '#/' || href.startsWith('javascript:')) &&
+          text.length >= 15 && text.length <= 300;
+
+        if (!isJobUrlLink && !isClickableCard) continue;
 
         // 排除导航和过滤链接
         const excludeKeywords = ['login', 'signup', 'signin', 'search', 'filter', 'page=', 'prev', 'next'];
-        if (excludeKeywords.some(function(kw) { return linkLower.indexOf(kw) !== -1; })) continue;
+        if (isJobUrlLink && excludeKeywords.some(function(kw) { return linkLower.indexOf(kw) !== -1; })) continue;
+
+        // 对 SPA 点击式卡片做额外过滤：排除明显的非职位链接
+        if (isClickableCard) {
+          var lowerText = text.toLowerCase();
+          var navKeywords = ['about', 'contact', 'privacy', 'terms', 'cookie', 'faq',
+            'blog', 'news', 'login', 'sign in', 'sign up', 'home', 'follow us',
+            'copyright', 'all rights', 'our hiring process'];
+          var isNav = navKeywords.some(function(kw) { return lowerText.indexOf(kw) !== -1 && text.length < 60; });
+          if (isNav) continue;
+
+          // 只保留「主内容区」中的卡片（排除 nav/footer 内）
+          var parent = link;
+          var inNavOrFooter = false;
+          while (parent) {
+            var tag = parent.tagName ? parent.tagName.toLowerCase() : '';
+            var role = parent.getAttribute ? (parent.getAttribute('role') || '') : '';
+            if (tag === 'nav' || tag === 'footer' || tag === 'header' ||
+                role === 'navigation' || role === 'contentinfo' || role === 'banner') {
+              inNavOrFooter = true;
+              break;
+            }
+            parent = parent.parentElement;
+          }
+          if (inNavOrFooter) continue;
+        }
 
         // 提取职位名称和地点
         let jobTitle = text;
@@ -733,7 +815,11 @@ export class BrowserService {
         // 构建完整 URL
         // @ts-ignore - browser environment
         let fullUrl = href;
-        if (href.startsWith('/')) {
+        if (href === '#' || href === '#/' || href.startsWith('javascript:')) {
+          // SPA 点击式卡片：用当前页面 URL + 索引作为标识
+          // @ts-ignore - browser environment
+          fullUrl = window.location.href + '#card-' + links.length;
+        } else if (href.startsWith('/')) {
           // @ts-ignore - browser environment
           fullUrl = window.location.origin + href;
         } else if (!href.startsWith('http')) {
@@ -748,18 +834,21 @@ export class BrowserService {
         });
       }
 
-      // 去重
-      const seen = new Set();
+      // 去重（按 name 去重，因为 SPA 卡片可能有合成 URL）
+      var seen = new Set();
       return links.filter(function(link) {
-        if (seen.has(link.url)) return false;
-        seen.add(link.url);
+        var key = link.name || link.url;
+        if (seen.has(key)) return false;
+        seen.add(key);
         return true;
       });
     });
 
     // @ts-ignore - browser environment code
-    const mainPageLinks = await page.evaluate(extractLinksFn) as Array<{ url: string; name: string; location?: string }>;
-    allLinks = allLinks.concat(mainPageLinks);
+    const mainPageLinks = await page.evaluate(extractLinksFn) as Array<{ url: string; name: string; location?: string }> | null;
+    if (mainPageLinks && mainPageLinks.length > 0) {
+      allLinks = allLinks.concat(mainPageLinks);
+    }
 
     // 检查是否有 iframe（特别是 Greenhouse 嵌入式 job board）
     try {
@@ -767,17 +856,98 @@ export class BrowserService {
       for (const frame of frames) {
         const frameUrl = frame.url();
         // 跳过主页面和非职位相关的 iframe
-        if (frameUrl === 'about:blank' || !frameUrl.includes('greenhouse') && !frameUrl.includes('job')) {
+        if (frameUrl === 'about:blank' || !(frameUrl.includes('greenhouse') || frameUrl.includes('job'))) {
           continue;
         }
 
         console.log(`🔍 检测到职位相关 iframe: ${frameUrl.substring(0, 100)}...`);
 
-        // 从 iframe 中提取职位链接
+        // 等待 iframe 内容加载
+        try {
+          await frame.waitForLoadState('domcontentloaded').catch(() => {});
+          // 额外等待 Greenhouse 渲染（SPA 式加载）
+          await frame.waitForSelector('a[href*="/jobs/"], a[href*="job"], .opening a', { timeout: 8000 }).catch(() => {});
+        } catch { /* 超时也继续尝试提取 */ }
+
+        // Greenhouse 嵌入式 job board 有特殊结构，使用专用提取逻辑
+        const greenhouseExtractFn = String(function() {
+          const links = [];
+          // @ts-ignore - browser environment
+          const allAnchors = document.querySelectorAll('a');
+
+          for (const link of allAnchors) {
+            const href = link.getAttribute('href');
+            if (!href) continue;
+
+            const text = link.textContent ? link.textContent.trim() : '';
+            if (!text || text.length < 3) continue;
+
+            // Greenhouse job board 链接通常包含 /jobs/ 或类似路径
+            const linkLower = href.toLowerCase();
+            const isJobLink =
+              linkLower.includes('/jobs/') ||
+              linkLower.includes('/job/') ||
+              linkLower.includes('greenhouse.io') ||
+              linkLower.includes('lever.co');
+            if (!isJobLink) continue;
+
+            // 排除导航链接
+            const excludeKeywords = ['login', 'signup', 'signin', 'search', 'filter', 'page=', 'prev', 'next', 'sign_in', 'job_alert'];
+            if (excludeKeywords.some(function(kw) { return linkLower.indexOf(kw) !== -1; })) continue;
+
+            // 提取职位名称和地点
+            let jobTitle = text;
+            let location = '';
+
+            // Greenhouse 结构: <div class="opening"><a>Title</a><span class="location">Location</span></div>
+            const parent = link.parentElement;
+            if (parent) {
+              const locationEl = parent.querySelector('.location, [class*="location"]');
+              if (locationEl) {
+                location = locationEl.textContent ? locationEl.textContent.trim() : '';
+                // 从标题中去除地点文本
+                if (location && jobTitle.includes(location)) {
+                  jobTitle = jobTitle.replace(location, '').trim();
+                }
+              }
+            }
+
+            jobTitle = jobTitle.replace(/\s+/g, ' ').trim();
+            if (jobTitle.length < 3 || jobTitle.length > 200) continue;
+
+            // 构建完整 URL
+            // @ts-ignore - browser environment
+            let fullUrl = href;
+            if (href.startsWith('/')) {
+              // @ts-ignore - browser environment
+              fullUrl = window.location.origin + href;
+            } else if (!href.startsWith('http')) {
+              // @ts-ignore - browser environment
+              fullUrl = window.location.origin + '/' + href;
+            }
+
+            links.push({
+              url: fullUrl,
+              name: jobTitle,
+              location: location || undefined,
+            });
+          }
+
+          var seen = new Set();
+          return links.filter(function(l) {
+            if (seen.has(l.url)) return false;
+            seen.add(l.url);
+            return true;
+          });
+        });
+
         // @ts-ignore - browser environment code
-        const iframeLinks = await frame.evaluate(extractLinksFn) as Array<{ url: string; name: string; location?: string }>;
-        console.log(`✅ 从 iframe 中找到 ${iframeLinks.length} 个职位链接`);
-        allLinks = allLinks.concat(iframeLinks);
+        const iframeLinks = await frame.evaluate(greenhouseExtractFn).catch(() => null) as Array<{ url: string; name: string; location?: string }> | null;
+        console.log(`🔍 iframe 提取结果: ${iframeLinks ? iframeLinks.length : 0} 个链接`);
+        if (iframeLinks && iframeLinks.length > 0) {
+          console.log(`✅ 从 iframe 中找到 ${iframeLinks.length} 个职位链接`);
+          allLinks = allLinks.concat(iframeLinks);
+        }
       }
     } catch (e: any) {
       console.log(`⚠️  检查 iframe 时出错: ${e.message}`);
@@ -786,6 +956,7 @@ export class BrowserService {
     // 全局去重
     const seen = new Set<string>();
     return allLinks.filter(link => {
+      if (!link || !link.url) return false;
       if (seen.has(link.url)) return false;
       seen.add(link.url);
       return true;

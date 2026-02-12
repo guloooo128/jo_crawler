@@ -2,6 +2,7 @@
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
     "@types/csv-parse": "^1.1.12",
+    "@types/estree": "^1.0.8",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^25.2.0",
     "agent-browser": "^0.9.0",
@@ -14,6 +15,7 @@
   "main": "index.js",
   "dependencies": {
     "abort-controller": "^3.0.0",
+    "acorn": "^8.15.0",
     "agent-base": "^7.1.4",
     "ansi-regex": "^6.2.2",
     "ansi-styles": "^6.2.3",
@@ -138,6 +140,7 @@
     "nth-check": "^2.1.1",
     "once": "^1.4.0",
     "ora": "^9.2.0",
+    "p-limit": "^7.3.0",
     "pac-proxy-agent": "^7.2.0",
     "pac-resolver": "^7.0.1",
     "package-json-from-dist": "^1.0.1",

@@ -1,0 +1,99 @@
+{
+  "url": "https://careers.shopee.sg/jobs?region_id=25&level=4&name=&limit=50&offset=0",
+  "pageType": "list",
+  "domain": "careers.shopee.sg",
+  "timestamp": "2026-02-10T09:38:36.049Z",
+  "tree": "- link \"Careers\" [ref=e1]\n- link \"About\" [ref=e2]\n- link \"Why Shopee\" [ref=e3]\n- link \"Jobs\" [ref=e4]\n- link \"Early Careers & Internships\" [ref=e5]\n- link \"tech\" [ref=e6]\n- textbox \"Type in keyword\" [ref=e7]\n- link \"videos\" [ref=e8]\n- link \"blog articles\" [ref=e9]\n- link \"Sea\" [ref=e10]\n- link \"Garena\" [ref=e11]\n- link \"Monee\" [ref=e12]\n- link [ref=e13]\n- link [ref=e14] [nth=1]\n- link [ref=e15] [nth=2]\n- link [ref=e16] [nth=3]\n- link \"Terms of service\" [ref=e17]\n- link \"Privacy policy\" [ref=e18]",
+  "refs": {
+    "e1": {
+      "selector": "getByRole('link', { name: \"Careers\", exact: true })",
+      "role": "link",
+      "name": "Careers"
+    },
+    "e2": {
+      "selector": "getByRole('link', { name: \"About\", exact: true })",
+      "role": "link",
+      "name": "About"
+    },
+    "e3": {
+      "selector": "getByRole('link', { name: \"Why Shopee\", exact: true })",
+      "role": "link",
+      "name": "Why Shopee"
+    },
+    "e4": {
+      "selector": "getByRole('link', { name: \"Jobs\", exact: true })",
+      "role": "link",
+      "name": "Jobs"
+    },
+    "e5": {
+      "selector": "getByRole('link', { name: \"Early Careers & Internships\", exact: true })",
+      "role": "link",
+      "name": "Early Careers & Internships"
+    },
+    "e6": {
+      "selector": "getByRole('link', { name: \"tech\", exact: true })",
+      "role": "link",
+      "name": "tech"
+    },
+    "e7": {
+      "selector": "getByRole('textbox', { name: \"Type in keyword\", exact: true })",
+      "role": "textbox",
+      "name": "Type in keyword"
+    },
+    "e8": {
+      "selector": "getByRole('link', { name: \"videos\", exact: true })",
+      "role": "link",
+      "name": "videos"
+    },
+    "e9": {
+      "selector": "getByRole('link', { name: \"blog articles\", exact: true })",
+      "role": "link",
+      "name": "blog articles"
+    },
+    "e10": {
+      "selector": "getByRole('link', { name: \"Sea\", exact: true })",
+      "role": "link",
+      "name": "Sea"
+    },
+    "e11": {
+      "selector": "getByRole('link', { name: \"Garena\", exact: true })",
+      "role": "link",
+      "name": "Garena"
+    },
+    "e12": {
+      "selector": "getByRole('link', { name: \"Monee\", exact: true })",
+      "role": "link",
+      "name": "Monee"
+    },
+    "e13": {
+      "selector": "getByRole('link')",
+      "role": "link",
+      "nth": 0
+    },
+    "e14": {
+      "selector": "getByRole('link')",
+      "role": "link",
+      "nth": 1
+    },
+    "e15": {
+      "selector": "getByRole('link')",
+      "role": "link",
+      "nth": 2
+    },
+    "e16": {
+      "selector": "getByRole('link')",
+      "role": "link",
+      "nth": 3
+    },
+    "e17": {
+      "selector": "getByRole('link', { name: \"Terms of service\", exact: true })",
+      "role": "link",
+      "name": "Terms of service"
+    },
+    "e18": {
+      "selector": "getByRole('link', { name: \"Privacy policy\", exact: true })",
+      "role": "link",
+      "name": "Privacy policy"
+    }
+  }
+}

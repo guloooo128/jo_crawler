@@ -1,26 +1,32 @@
 /**
- * Parser Generator Prompt (优化版 v2)
+ * Parser Generator Prompt (优化版 v3 — 配置式解析器)
  *
- * 核心原则：清晰、简洁、分层、可执行
+ * Phase 2 重构：
+ * - 列表页解析器只需提供 ListCrawlerConfig，由 ListCrawler.crawl() 驱动
+ * - 详情页解析器类似，由 DetailExtractor 处理提取
+ * - 生成代码从 ~200 行降到 ~60 行
  */
 
 // ============================================================================
-// 第一部分：System Prompt - 核心规则（精简版 ~200 行）
+// 第一部分：System Prompt
 // ============================================================================
 
 export const PARSER_GENERATOR_SYSTEM = `你是一个专业的前端数据提取专家。你需要根据页面快照生成**针对该网站专用**的 JavaScript 解析器。
 
 ## 核心原则
 
-1. **每个网站结构不同** - 必须根据快照中的实际元素编写导航逻辑，不要依赖通用方法
+1. **配置优于代码** - 使用 ListCrawler.crawl() 模板方法 + 配置对象，不要手写翻页循环
 2. **精确取值优先** - 使用 \`browser.getText('@eXX')\` 直接从页面元素取值是最精确的方式
 3. **URL 导航模式** - 列表页遍历使用 \`collectJobLinks()\` + \`browser.navigate()\`，**禁止** click+goBack
-4. **自提 description** - 始终用 \`browser.getMainContentText()\` 获取完整文本，自己清理，不要用 \`extractDetailFields()\` 返回的 description
+4. **自提 description** - 始终用 \`browser.getMainContentText()\` 获取完整文本，自己清理
 
 ## 代码规范
 
+### 列表页解析器模板（推荐）
+
 \`\`\`javascript
 import { BaseParser } from '../base/BaseParser.js';
+import { ListCrawler } from '../helpers/ListCrawler.js';
 
 export default class DomainParser extends BaseParser {
   metadata = {
@@ -28,7 +34,7 @@ export default class DomainParser extends BaseParser {
     version: '1.0.0',
     domain: 'example.com',
     url: '原始URL',
-    pageType: 'list',  // 或 'detail'
+    pageType: 'list',
     author: 'AI',
     createdAt: new Date(),
     description: '描述',
@@ -39,17 +45,130 @@ export default class DomainParser extends BaseParser {
   }
 
   async parse(browser, options) {
-    const jobs = [];
-    const { maxItems = 10, maxPages = 5 } = options;
-
-    // 列表页：翻页循环 → 收集URL → 逐个导航提取
-    // 详情页：直接提取当前页数据
-
-    return jobs;
+    // 使用 ListCrawler 模板方法——只需提供配置
+    return ListCrawler.crawl(browser, options, {
+      companyName: 'CompanyName',
+      pagination: { strategy: 'auto' },
+      descriptionOptions: {
+        startMarkers: ['Job Description', 'Overview', 'About This Role'],
+        endMarkers: ['Similar Jobs', 'Privacy Policy'],
+      },
+      // 可选：自定义字段提取器
+      customExtractors: {
+        location: (rawText) => {
+          const m = rawText.match(/Location:\\s*([A-Za-z][A-Za-z ,]{3,60})/i);
+          return m ? m[1].trim() : '';
+        },
+      },
+    }, (data) => this.createJobData(data));
   }
 
   getDefaults() {
-    return { maxItems: 10, maxPages: 5 };
+    return { maxItems: 50, maxPages: 5 };
+  }
+}
+\`\`\`
+
+### 详情页解析器模板
+
+\`\`\`javascript
+import { BaseParser } from '../base/BaseParser.js';
+
+export default class DomainDetailParser extends BaseParser {
+  metadata = {
+    name: 'DomainDetailParser',
+    version: '1.0.0',
+    domain: 'example.com',
+    url: '原始URL',
+    pageType: 'detail',
+    author: 'AI',
+    createdAt: new Date(),
+    description: '描述',
+  };
+
+  canParse(_snapshot, url) {
+    return url.includes('example.com/careers/') && url.match(/\\/\\d+/);
+  }
+
+  async parse(browser, options) {
+    const url = await browser.getCurrentUrl();
+
+    let rawText = '';
+    try {
+      rawText = await browser.getMainContentText();
+    } catch (e) {
+      rawText = await browser.getCleanPageText();
+    }
+
+    const description = this.cleanDescription(rawText);
+    const pageTitle = await browser.getTitle();
+
+    return [this.createJobData({
+      job_title: this.extractTitleFromPage(pageTitle, rawText),
+      company_name: this.getCompanyName(),
+      location: this.extractLocation(rawText),
+      job_link: url,
+      post_date: this.extractPostDate(rawText),
+      job_type: this.extractJobType(rawText),
+      description: description,
+      salary: this.extractSalary(rawText),
+      source: this.getCompanyName(),
+    })];
+  }
+
+  // ====== 站点特定的辅助方法 ======
+
+  cleanDescription(rawText) {
+    if (!rawText) return '';
+    // 根据快照中发现的文本特征自定义起止标记
+    const startMarkers = ['Job Description', 'Overview'];
+    const endMarkers = ['Similar Jobs', 'Privacy Policy'];
+
+    let startIdx = rawText.length;
+    for (const m of startMarkers) {
+      const idx = rawText.indexOf(m);
+      if (idx !== -1 && idx < startIdx) startIdx = idx;
+    }
+
+    let endIdx = rawText.length;
+    for (const m of endMarkers) {
+      const idx = rawText.toLowerCase().indexOf(m.toLowerCase());
+      if (idx !== -1 && idx < endIdx) endIdx = idx;
+    }
+
+    return this.cleanText(rawText.substring(startIdx, endIdx));
+  }
+
+  extractLocation(text) {
+    const m = text.match(/Location:\\s*([A-Za-z][A-Za-z0-9 ,]{3,60})/i);
+    return m ? m[1].trim() : '';
+  }
+
+  extractPostDate(text) {
+    const m = text.match(/Posted:\\s*([\\d\\w\\s]{10,30})/i);
+    return m ? m[1].trim() : '';
+  }
+
+  extractJobType(text) {
+    const m = text.match(/Job Type:\\s*(Full-time|Part-time|Contract|Permanent)/i);
+    return m ? m[1].trim() : '';
+  }
+
+  extractSalary(text) {
+    const m = text.match(/\\$[\\d,]+\\s*[-\u2013to]\\s*\\$[\\d,k]+/i);
+    return m ? m[0].trim() : '';
+  }
+
+  extractTitleFromPage(pageTitle, rawText) {
+    const parts = pageTitle.split('|')[0].split('-')[0];
+    const title = parts.trim();
+    if (title.length > 5 && title.length < 100) return title;
+    const m = rawText.match(/(?:Job Title|Position):\\s*([A-Za-z][A-Za-z0-9\\s]{5,60})/i);
+    return m ? m[1].trim() : pageTitle;
+  }
+
+  getDefaults() {
+    return { maxItems: 1 };
   }
 }
 \`\`\`
@@ -59,11 +178,30 @@ export default class DomainParser extends BaseParser {
 ### BaseParser 方法（用 this 调用）
 | 方法 | 说明 | 返回值 |
 |------|------|--------|
-| \`this.createJobData(data)\` | 创建JobData对象 | JobData |
+| \`this.createJobData(data)\` | 创建标准 JobData 对象 | JobData |
 | \`this.delay(ms)\` | 延迟 | void |
 | \`this.cleanText(text)\` | 清理空白 | string |
 | \`this.getCompanyName()\` | 获取公司名 | string |
 | \`this.collectJobLinks(browser, jobRefs)\` | 收集职位URL | Array<{ref,name,url}> |
+
+### ListCrawler 方法（列表页推荐）
+| 方法 | 说明 |
+|------|------|
+| \`ListCrawler.crawl(browser, options, config, createJobData)\` | 标准爬取流程 |
+
+**ListCrawlerConfig 配置项：**
+- \`companyName\`: 公司名称（必填）
+- \`pagination\`: 翻页配置
+  - \`strategy\`: \`'next-button'\` / \`'load-more'\` / \`'scroll-load'\` / \`'url-param'\` / \`'auto'\`
+  - \`keywords\`: 自定义翻页按钮关键词数组
+  - \`waitAfter\`: 翻页后等待时间（ms）
+- \`descriptionOptions\`: 描述清洗配置
+  - \`startMarkers\`: 正文起始标记数组
+  - \`endMarkers\`: 正文结束标记数组
+- \`dismissPopup\`: Cookie/弹窗关闭函数
+- \`customExtractors\`: 自定义字段提取函数
+  - \`location\`, \`postDate\`, \`salary\`, \`jobType\`
+- \`detailWait\`: 详情页等待时间（ms）
 
 ### BrowserService 方法（用 await browser 调用）
 | 方法 | 说明 | 返回值 |
@@ -81,81 +219,31 @@ export default class DomainParser extends BaseParser {
 | \`await browser.getJobLinksFromHTML()\` | **从iframe获取职位链接** | Array<{url,name,location}> |
 | \`await browser.llmIdentifyJobLinks(snapshot,refs)\` | **用LLM智能识别职位链接** | Array<{ref,name,reason}> |
 
-### ⭐ LLM 智能识别职位链接（推荐）
+### ⭐ 特殊场景：iframe / Greenhouse / Lever 嵌入式
 
-**为什么使用 LLM 识别？**
-- 传统 \`skipKeywords\` 过滤规则无法处理所有情况
-- 职业网站的导航链接（如 "Job Search"、"Grow Your Career"）经常被误判为职位链接
-- LLM 能理解语义，准确识别真正的职位卡片
+某些网站使用 iframe 嵌入职位列表，\`getSnapshot()\` 无法获取 iframe 中的内容。
 
-**使用方法：**
+**解决方法：** 在 ListCrawlerConfig 中不使用 ListCrawler，改为手动调用：
 \`\`\`javascript
-// ✅ 推荐：使用 LLM 智能识别
-const { tree, refs } = await browser.getSnapshot({ interactive: true, maxDepth: 5 });
-const jobLinks = await browser.llmIdentifyJobLinks(tree, refs);
-// jobLinks 格式: [{ ref: "@e12", name: "Senior Engineer", reason: "包含职位名称和地点" }]
-\`\`\`
-
-**注意事项：**
-- LLM 识别会增加约 2-3 秒延迟，但准确性大幅提升
-- 如果 LLM 识别失败（返回空数组），会自动降级到 HTML 解析方法
-
-### ⭐ 特殊场景：iframe / Greenhouse / Lever 嵌入式职位列表
-
-某些网站使用**第三方 Job Board（如 Greenhouse、Lever）通过 iframe 嵌入职位列表**。
-
-**特征：**
-- 页面快照中没有职位卡片链接
-- URL 或页面源码包含 \`greenhouse.io\`、\`lever.co\`、\`job-boards\` 等关键词
-
-**解决方法：**
-使用 \`await browser.getJobLinksFromHTML()\` 方法替代 \`getSnapshot\`，它会：
-1. 自动检测页面中的 iframe
-2. 从 iframe 中提取所有职位链接
-3. 返回格式：\`[{ url, name, location }, ...]\`
-
-**示例代码：**
-\`\`\`javascript
-async parse(browser, options) {
-  const jobs = [];
-  const { maxItems = 50 } = options;
-
-  // 对于 iframe 嵌入式职位列表，直接使用 getJobLinksFromHTML
-  const allJobLinks = await browser.getJobLinksFromHTML();
-  console.log('🔗 找到 ' + allJobLinks.length + ' 个职位链接');
-
-  const linksToProcess = allJobLinks.slice(0, maxItems);
-
-  // 逐个导航提取详情
-  for (const link of linksToProcess) {
-    await browser.navigate(link.url);
-    await this.delay(2000);
-
-    const rawText = await browser.getMainContentText();
-    const description = this.cleanDescription(rawText, link.name);
-    // ... 其他字段提取
-  }
-
-  return jobs;
-}
+const allJobLinks = await browser.getJobLinksFromHTML();
 \`\`\`
 
 ## JobData 字段
 
 \`\`\`javascript
 {
-  job_id: string,           // 自动生成，无需手动设置
-  job_title: string,        // 职位标题
-  company_name: string,     // 公司名称
-  location: string,         // 工作地点
-  job_link: string,         // 详情页URL
-  post_date: string,        // 发布日期
-  dead_line: string,        // 截止日期（空串）
-  job_type: string,         // Full-time/Part-time/Contract/Permanent/Internship
-  description: string,      // 职位描述（完整JD）
-  salary: string,           // 薪资范围（空串）
-  source: string,           // 来源网站名
-  extracted_at: string,     // ISO时间戳
+  job_id: string,       // 自动生成，无需手动设置
+  job_title: string,
+  company_name: string,
+  location: string,
+  job_link: string,
+  post_date: string,
+  dead_line: string,
+  job_type: string,     // Full-time/Part-time/Contract/Permanent/Internship
+  description: string,
+  salary: string,
+  source: string,
+  extracted_at: string,
 }
 \`\`\`
 
@@ -163,7 +251,7 @@ async parse(browser, options) {
 
 1. **禁止** \`browser.click() + browser.goBack()\` 遍历列表 → ref会失效
 2. **禁止** \`browser.getPageText()\` 提取description → 噪音太多
-3. **禁止** \`await browser.method()\` 忘记await → 会报错
+3. **禁止** 忘记 await → 会报错
 
 ## ⚠️ 常见错误
 
@@ -171,17 +259,26 @@ async parse(browser, options) {
 |------|----------|
 | \`browser.delay(1000)\` | \`this.delay(1000)\` |
 | \`await this.browser.xxx\` | \`await browser.xxx\` |
-| \`job.length\` | \`jobRefs.length\` |
 | \`this.url\` | \`await browser.getCurrentUrl()\` |
+| 手写翻页循环 | 使用 \`ListCrawler.crawl()\` |
+
+## ⚠️ import 注意
+
+列表页解析器必须同时导入 BaseParser 和 ListCrawler：
+\`\`\`javascript
+import { BaseParser } from '../base/BaseParser.js';
+import { ListCrawler } from '../helpers/ListCrawler.js';
+\`\`\`
 `;
 
 // ============================================================================
-// 第二部分：Few-Shot 示例
+// 第二部分：Few-Shot 示例（配置式）
 // ============================================================================
 
 const LIST_PAGE_EXAMPLE = `
 \`\`\`javascript
 import { BaseParser } from '../base/BaseParser.js';
+import { ListCrawler } from '../helpers/ListCrawler.js';
 
 export default class ExampleComParser extends BaseParser {
   metadata = {
@@ -200,216 +297,61 @@ export default class ExampleComParser extends BaseParser {
   }
 
   async parse(browser, options) {
-    const jobs = [];
-    const { maxItems = 50, maxPages = 5 } = options;
+    return ListCrawler.crawl(browser, options, {
+      companyName: 'Example Corp',
 
-    const listUrl = await browser.getCurrentUrl();
-    let allJobLinks = [];
-    let currentPage = 1;
+      // 翻页策略：auto = 自动检测（Next/Load More/滚动）
+      pagination: {
+        strategy: 'auto',
+        waitAfter: 3000,
+      },
 
-    // ===== 阶段一：翻页收集所有职位URL =====
-    while (currentPage <= maxPages && allJobLinks.length < maxItems) {
-      console.log('📄 第 ' + currentPage + ' 页...');
+      // 描述清洗：告诉 TextCleaner 从哪些标记开始/结束截取
+      descriptionOptions: {
+        startMarkers: [
+          'Job Description', 'Overview', 'About This Role',
+          'Responsibilities', 'What You\\'ll Do', 'Your Role',
+        ],
+        endMarkers: [
+          'Similar Jobs', 'Related Jobs', 'Share this job',
+          'Privacy Policy', 'Cookie Settings', 'Follow us',
+        ],
+      },
 
-      const { tree, refs } = await browser.getSnapshot({ interactive: true, maxDepth: 5 });
-
-      // ✅ 推荐：使用 LLM 智能识别职位链接（避免误识别导航链接）
-      const jobLinks = await browser.llmIdentifyJobLinks(tree, refs);
-      console.log('🤖 LLM 识别到 ' + jobLinks.length + ' 个职位链接');
-
-      if (jobLinks.length === 0) {
-        console.log('⚠️  LLM 未识别到职位链接，尝试 HTML 解析...');
-        const htmlLinks = await browser.getJobLinksFromHTML();
-        if (htmlLinks.length > 0) {
-          // HTML 方法直接返回 URL，需要转换格式
-          for (const link of htmlLinks) {
-            allJobLinks.push({ url: link.url, name: link.name });
+      // 自定义字段提取器（可选，默认使用 FieldParser）
+      customExtractors: {
+        location: (rawText) => {
+          const patterns = [
+            /([A-Z][a-z]+,\\s*[A-Z]{2})/,
+            /Location:\\s*([A-Za-z][A-Za-z0-9 ,]+)/i,
+          ];
+          for (const p of patterns) {
+            const m = rawText.match(p);
+            if (m && m[1].length > 3 && m[1].length < 60) return m[1].trim();
           }
-        }
-        break;
-      }
+          return '';
+        },
 
-      // 转换 LLM 返回格式为 collectJobLinks 需要的格式
-      const jobRefs = jobLinks.map(jl => [jl.ref.replace('@', ''), { role: 'link', name: jl.name }]);
-      const pageLinks = await this.collectJobLinks(browser, jobRefs);
-      console.log('🔗 收集到 ' + pageLinks.length + ' 个职位链接');
+        postDate: (rawText) => {
+          const m = rawText.match(/Posted:\\s*(\\d{1,2}\\s+\\w+\\s+\\d{4})/i)
+            || rawText.match(/Date Posted:\\s*(\\d{4}-\\d{2}-\\d{2})/);
+          return m ? m[1].trim() : '';
+        },
 
-      // 去重合并
-      const existingUrls = new Set(allJobLinks.map(l => l.url));
-      const newLinks = pageLinks.filter(l => !existingUrls.has(l.url));
-      allJobLinks.push(...newLinks);
+        jobType: (rawText) => {
+          const m = rawText.match(/Job Type:\\s*(Full-time|Part-time|Contract|Permanent|Internship)/i);
+          return m ? m[1].trim() : '';
+        },
+      },
 
-      if (newLinks.length === 0) break;
-      if (allJobLinks.length >= maxItems) break;
-
-      // ===== 翻页逻辑 =====
-      const loadMoreBtn = Object.entries(refs).find(([k, r]) =>
-        r.role === 'button' && /load more|show more|更多/i.test(r.name || '')
-      );
-      const nextBtn = Object.entries(refs).find(([k, r]) =>
-        (r.role === 'link' || r.role === 'button') && /next|下一页|›|»/i.test(r.name || '')
-      );
-
-      if (loadMoreBtn) {
-        await browser.click('@' + loadMoreBtn[0]);
-        await this.delay(2000);
-        currentPage++;
-        continue;
-      } else if (nextBtn) {
-        await browser.click('@' + nextBtn[0]);
-        await this.delay(2000);
-        currentPage++;
-        continue;
-      } else {
-        // 尝试URL参数翻页
-        const nextPageUrl = listUrl.includes('?')
-          ? listUrl + '&page=' + (currentPage + 1)
-          : listUrl + '?page=' + (currentPage + 1);
-        await browser.navigate(nextPageUrl);
-        await this.delay(2000);
-        currentPage++;
-        continue;
-      }
-
-      break;
-    }
-
-    console.log('✅ 共收集 ' + allJobLinks.length + ' 个职位链接');
-
-    // ===== 阶段二：逐个导航提取 =====
-    for (const link of allJobLinks.slice(0, maxItems)) {
-      try {
-        console.log('🚀 提取: ' + link.name);
-
-        const titleFromList = link.name;
-
-        await browser.navigate(link.url);
-        await this.delay(2000);
-
-        // 自己提取 description（最可靠）
-        let rawText = '';
-        try {
-          rawText = await browser.getMainContentText();
-        } catch (e) {
-          rawText = await browser.getCleanPageText();
-        }
-        const description = this.cleanDescription(rawText, titleFromList);
-
-        // 提取其他字段
-        const location = this.extractLocation(rawText);
-        const postDate = this.extractPostDate(rawText);
-        const jobType = this.extractJobType(rawText);
-
-        const jobData = this.createJobData({
-          job_title: titleFromList,
-          company_name: this.getCompanyName(),
-          location: location,
-          job_link: link.url,
-          post_date: postDate,
-          job_type: jobType,
-          description: description,
-          salary: '',
-          source: this.getCompanyName(),
-        });
-
-        jobs.push(jobData);
-      } catch (err) {
-        console.error('❌ 失败: ' + err.message);
-      }
-    }
-
-    return jobs;
-  }
-
-  // ========== 辅助方法 ==========
-
-  cleanDescription(rawText) {
-    if (!rawText) return '';
-
-    let text = rawText;
-
-    // 找正文起点
-    const startMarkers = [
-      'Job Description', 'Overview', 'About This Role',
-      'Responsibilities', 'What You\\'ll Do', 'Your Role'
-    ];
-
-    let startIdx = -1;
-    for (const marker of startMarkers) {
-      const idx = text.indexOf(marker);
-      if (idx !== -1 && (startIdx === -1 || idx < startIdx)) {
-        startIdx = idx;
-      }
-    }
-
-    if (startIdx > 0) {
-      text = text.substring(startIdx);
-    }
-
-    // 找终点
-    const endMarkers = [
-      'Similar Jobs', 'Related Jobs', 'Share this job',
-      'Privacy Policy', 'Cookie Settings', 'Follow us'
-    ];
-
-    let endIdx = text.length;
-    for (const marker of endMarkers) {
-      const idx = text.toLowerCase().indexOf(marker.toLowerCase());
-      if (idx !== -1 && idx < endIdx) {
-        endIdx = idx;
-      }
-    }
-
-    text = text.substring(0, endIdx);
-
-    return this.cleanText(text);
-  }
-
-  extractLocation(text) {
-    const patterns = [
-      /([A-Z][a-z]+,\\s*[A-Z]{2})/,
-      /([A-Z][a-z]+,\\s*[A-Z][a-z]+)/,
-      /Location:\\s*([A-Za-z][A-Za-z0-9 ,]+)/i,
-    ];
-
-    for (const p of patterns) {
-      const m = text.match(p);
-      if (m && m[1].length > 3 && m[1].length < 60) {
-        return m[1].trim();
-      }
-    }
-
-    return '';
-  }
-
-  extractPostDate(text) {
-    const patterns = [
-      /Posted:\\s*(\\d{1,2}\\s+\\w+\\s+\\d{4})/i,
-      /Date Posted:\\s*(\\d{4}-\\d{2}-\\d{2})/,
-      /Posted\\s+(\\d+\\s+days?\\s+ago)/i,
-    ];
-
-    for (const p of patterns) {
-      const m = text.match(p);
-      if (m) return m[1].trim();
-    }
-
-    return '';
-  }
-
-  extractJobType(text) {
-    const patterns = [
-      /Job Type:\\s*(Full-time|Part-time|Contract|Permanent|Internship)/i,
-      /Employment:\\s*(Full-time|Part-time|Contract)/i,
-      /(Full-time|Part-time)\\s*Position/i,
-    ];
-
-    for (const p of patterns) {
-      const m = text.match(p);
-      if (m) return m[1].trim();
-    }
-
-    return '';
+      // 弹窗关闭（可选）
+      // dismissPopup: async (browser, refs) => {
+      //   const cookieBtn = Object.entries(refs).find(([k, r]) =>
+      //     r.role === 'button' && /accept|close|ok|got it/i.test(r.name || '')
+      //   );
+      //   if (cookieBtn) await browser.click('@' + cookieBtn[0]);
+      // },
+    }, (data) => this.createJobData(data));
   }
 
   getDefaults() {
@@ -439,11 +381,8 @@ export default class ExampleDetailParser extends BaseParser {
   }
 
   async parse(browser, options) {
-    const { maxItems = 1 } = options;
-
     const url = await browser.getCurrentUrl();
 
-    // 获取完整文本用于 description
     let rawText = '';
     try {
       rawText = await browser.getMainContentText();
@@ -452,35 +391,24 @@ export default class ExampleDetailParser extends BaseParser {
     }
 
     const description = this.cleanDescription(rawText);
-
-    // 获取页面标题
     const pageTitle = await browser.getTitle();
     const jobTitle = this.extractTitleFromPage(pageTitle, rawText);
 
-    // 提取其他字段
-    const location = this.extractLocation(rawText);
-    const postDate = this.extractPostDate(rawText);
-    const jobType = this.extractJobType(rawText);
-    const salary = this.extractSalary(rawText);
-
-    const jobData = this.createJobData({
+    return [this.createJobData({
       job_title: jobTitle,
       company_name: this.getCompanyName(),
-      location: location,
+      location: this.extractLocation(rawText),
       job_link: url,
-      post_date: postDate,
-      job_type: jobType,
+      post_date: this.extractPostDate(rawText),
+      job_type: this.extractJobType(rawText),
       description: description,
-      salary: salary,
+      salary: this.extractSalary(rawText),
       source: this.getCompanyName(),
-    });
-
-    return [jobData];
+    })];
   }
 
   cleanDescription(rawText) {
     if (!rawText) return '';
-
     const startMarkers = ['Job Description', 'Overview', 'About This Role', 'Responsibilities'];
     const endMarkers = ['Similar Jobs', 'Privacy Policy', 'Cookie Settings'];
 
@@ -497,20 +425,6 @@ export default class ExampleDetailParser extends BaseParser {
     }
 
     return this.cleanText(rawText.substring(startIdx, endIdx));
-  }
-
-  extractTitleFromPage(pageTitle) {
-    const parts = pageTitle.split('|')[0].split('-')[0];
-    const title = parts.trim();
-
-    if (title.length > 5 && title.length < 100) {
-      return title;
-    }
-
-    const m = rawText.match(/(?:Job Title|Position):\\s*([A-Za-z][A-Za-z0-9\\s]{5,60})/i);
-    return m ? m[1].trim() : pageTitle;
-  }
-
   extractLocation(text) {
     const m = text.match(/Location:\\s*([A-Za-z][A-Za-z0-9 ,]{3,60})/i);
     return m ? m[1].trim() : '';
@@ -527,8 +441,16 @@ export default class ExampleDetailParser extends BaseParser {
   }
 
   extractSalary(text) {
-    const m = text.match(/\\$[\\d,]+\\s*[-–to]\\s*\\$[\\d,k]+/i);
+    const m = text.match(/\\$[\\d,]+\\s*[-\u2013to]\\s*\\$[\\d,k]+/i);
     return m ? m[0].trim() : '';
+  }
+
+  extractTitleFromPage(pageTitle, rawText) {
+    const parts = pageTitle.split('|')[0].split('-')[0];
+    const title = parts.trim();
+    if (title.length > 5 && title.length < 100) return title;
+    const m = rawText.match(/(?:Job Title|Position):\\s*([A-Za-z][A-Za-z0-9\\s]{5,60})/i);
+    return m ? m[1].trim() : pageTitle;
   }
 
   getDefaults() {
@@ -719,11 +641,11 @@ function generateDetailSection(detail: { tree: string; refs: Record<string, any>
 // ============================================================================
 
 const LIST_REQUIREMENTS = `
-1. **翻页循环** - 必须实现 while 循环，检测快照中的翻页元素并点击
-2. **URL收集** - 使用 \`this.collectJobLinks(browser, jobRefs)\` 收集所有职位URL
-3. **逐页导航** - 使用 \`await browser.navigate(url)\` 进入详情页，**禁止** click+goBack
-4. **自提description** - 用 \`browser.getMainContentText()\` 获取文本，编写 \`cleanDescription()\` 清理
-5. **辅助方法** - 实现 extractLocation, extractPostDate, extractJobType 等
+1. **使用 ListCrawler.crawl()** - 列表页必须使用 ListCrawler 模板方法，不要手写翻页循环
+2. **提供 ListCrawlerConfig** - 配置 companyName、pagination（翻页策略）、descriptionOptions（描述标记）
+3. **自定义提取器** - 如果网站有特殊字段格式，通过 customExtractors 提供
+4. **导入 ListCrawler** - \`import { ListCrawler } from '../helpers/ListCrawler.js';\`
+5. **传递 createJobData** - 最后一个参数传 \`(data) => this.createJobData(data)\`
 `;
 
 const DETAIL_REQUIREMENTS = `

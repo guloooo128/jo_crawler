@@ -30,6 +30,8 @@ export interface GenerateOptions {
   validate?: boolean;
   force?: boolean;
   verbose?: boolean;
+  /** CDP 端口或 URL，连接到已打开的 Chrome */
+  cdp?: string;
 }
 
 export interface CrawlOptions {
@@ -42,4 +44,6 @@ export interface CrawlOptions {
   csv?: boolean;
   headless?: boolean;
   verbose?: boolean;
+  /** CDP 端口或 URL，连接到已打开的 Chrome */
+  cdp?: string;
 }
