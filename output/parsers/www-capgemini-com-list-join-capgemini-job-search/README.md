@@ -5,7 +5,7 @@
 - **域名**: www.capgemini.com
 - **URL**: https://www.capgemini.com/careers/join-capgemini/job-search/?size=15
 - **页面类型**: list
-- **生成时间**: 2026-02-10T06:30:32.977Z
+- **生成时间**: 2026-02-10T07:55:01.333Z
 
 ## 文件说明
 
@@ -14,28 +14,6 @@
 - **snapshot.json**: 页面快照（可访问性树和 refs）
 - **screenshot.png**: 页面截图
 - **generation.log**: 生成过程的详细日志
-
-## 使用方法
-
-```javascript
-// 方式1: 从 output/parsers 导入
-import Parser from './output/parsers/www-capgemini-com-list-join-capgemini-job-search/parser.js';
-
-// 方式2: 自动加载（系统会从 src/parsers/generated 加载）
-const parser = new Parser();
-const jobs = await parser.parse(browser, { maxItems: 10 });
-```
-
-## 元数据
-
-```json
-{
-  "domain": "www.capgemini.com",
-  "url": "https://www.capgemini.com/careers/join-capgemini/job-search/?size=15",
-  "pageType": "list",
-  "generatedAt": "2026-02-10T06:30:32.977Z"
-}
-```
 
 ---
 

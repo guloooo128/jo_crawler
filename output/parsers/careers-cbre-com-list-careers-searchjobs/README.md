@@ -5,7 +5,7 @@
 - **域名**: careers.cbre.com
 - **URL**: https://careers.cbre.com/en_US/careers/SearchJobs/?9577=%5B17134%5D&9577_format=10224&listFilterMode=1&jobSort=relevancy&jobRecordsPerPage=25&
 - **页面类型**: list
-- **生成时间**: 2026-02-10T06:28:35.458Z
+- **生成时间**: 2026-02-10T07:58:49.061Z
 
 ## 文件说明
 
@@ -14,28 +14,6 @@
 - **snapshot.json**: 页面快照（可访问性树和 refs）
 - **screenshot.png**: 页面截图
 - **generation.log**: 生成过程的详细日志
-
-## 使用方法
-
-```javascript
-// 方式1: 从 output/parsers 导入
-import Parser from './output/parsers/careers-cbre-com-list-careers-searchjobs/parser.js';
-
-// 方式2: 自动加载（系统会从 src/parsers/generated 加载）
-const parser = new Parser();
-const jobs = await parser.parse(browser, { maxItems: 10 });
-```
-
-## 元数据
-
-```json
-{
-  "domain": "careers.cbre.com",
-  "url": "https://careers.cbre.com/en_US/careers/SearchJobs/?9577=%5B17134%5D&9577_format=10224&listFilterMode=1&jobSort=relevancy&jobRecordsPerPage=25&",
-  "pageType": "list",
-  "generatedAt": "2026-02-10T06:28:35.458Z"
-}
-```
 
 ---
 

@@ -2,6 +2,8 @@ import path from 'path';
 import fs from 'fs-extra';
 import { BrowserService } from './BrowserService.js';
 import { LLMService } from './LLMService.js';
+import { CodePostProcessor } from './CodePostProcessor.js';
+import { ParserPersistence } from './ParserPersistence.js';
 import { config } from '../utils/config.js';
 import type { LinkConfig } from '../models/LinksConfig.js';
 import { generateParserFilename } from '../utils/parserFilename.js';
@@ -149,47 +151,27 @@ export class ParserGenerator {
   }
 
   /**
-   * 验证生成的解析器代码语法
+   * 验证生成的解析器代码语法（使用 AST）
    */
   private async validateParserSyntax(parserPath: string): Promise<void> {
     try {
-      // 检查文件是否存在
       if (!(await fs.pathExists(parserPath))) {
         throw new Error(`解析器文件不存在: ${parserPath}`);
       }
 
-      // 检查文件大小
-      const stats = await fs.stat(parserPath);
-      if (stats.size === 0) {
+      const content = await fs.readFile(parserPath, 'utf-8');
+
+      if (content.trim().length === 0) {
         throw new Error(`解析器文件为空: ${parserPath}`);
       }
 
-      // 读取内容检查基本结构
-      const content = await fs.readFile(parserPath, 'utf-8');
+      // 使用 CodePostProcessor 进行 AST + 结构验证
+      const result = CodePostProcessor.process(content);
+      console.log(CodePostProcessor.formatReport(result));
 
-      // 检查必需的类和方法
-      const hasClass = content.includes('class ') && content.includes('extends');
-      const hasParseMethod = content.includes('async parse(');
-      const hasCanParseMethod = content.includes('canParse(');
-      const hasMetadata = content.includes('metadata');
-
-      if (!hasClass) {
-        console.warn('⚠️  警告: 生成的代码可能缺少类定义');
+      if (!result.valid) {
+        console.warn('⚠️  解析器有验证问题，但已保存');
       }
-
-      if (!hasParseMethod) {
-        console.warn('⚠️  警告: 生成的代码可能缺少 parse 方法');
-      }
-
-      if (!hasCanParseMethod) {
-        console.warn('⚠️  警告: 生成的代码可能缺少 canParse 方法');
-      }
-
-      if (!hasMetadata) {
-        console.warn('⚠️  警告: 生成的代码可能缺少 metadata');
-      }
-
-      console.log('✅ 解析器代码语法验证通过');
     } catch (error: any) {
       console.error('❌ 解析器验证失败:', error.message);
       throw error;
@@ -221,9 +203,9 @@ export class ParserGenerator {
       }
     }
 
-    const identifiedLinks = await this.llm.identifyJobLinks(tree, refs, excludeKeywords);
+    const identifiedLinks = await this.llm.identifyJobLinks(tree, refs, excludeKeywords, customPrompt);
 
-    // 如果 LLM 识别不到，尝试使用 HTML 解析方法（支持 JavaScript 渲染的内容）
+    // 如果 LLM 识别不到，尝试使用 HTML 解析方法（支持 JavaScript 渲染的内容和 SPA 点击式卡片）
     if (identifiedLinks.length === 0) {
       log('⚠️  LLM 未识别到职位链接，尝试使用 HTML 解析方法...');
       try {
@@ -238,47 +220,120 @@ export class ParserGenerator {
 
         if (htmlLinks.length > 0) {
           log(`✅ HTML 解析找到 ${htmlLinks.length} 个职位链接`);
-          // 转换为 LLM 返回的格式
           const firstLink = htmlLinks[0];
           const detailUrl = firstLink.url;
 
-          log(`📄 获取详情页快照: "${firstLink.name}"`);
-          log(`🔗 详情页 URL: ${detailUrl}`);
+          // 判断是否是 SPA 点击式卡片（合成 URL 含 #card-）
+          const isSpaCard = detailUrl.includes('#card-');
 
-          // 导航到详情页
-          await this.browser.navigate(detailUrl);
-          await this.browser.waitForContent(5000, 2);  // 从 10 秒减少到 5 秒
+          if (isSpaCard) {
+            // SPA 点击式卡片：通过文本定位并点击进入详情页
+            log(`📄 SPA 点击式卡片: "${firstLink.name.substring(0, 60)}"`);
+            log('🖱️  通过文本匹配点击第一个职位卡片...');
 
-          // 关闭 cookie banner
-          await this.browser.dismissCookieBanner();
+            try {
+              const page = this.browser.getPage();
+              // 找到包含该职位名的 <a> 元素并点击
+              const titleSnippet = firstLink.name.substring(0, 40).replace(/['"]/g, '');
+              const clicked = await page.evaluate((snippet) => {
+                const links = document.querySelectorAll('a');
+                for (const link of links) {
+                  const text = (link.textContent || '').trim();
+                  if (text.includes(snippet)) {
+                    (link as HTMLElement).click();
+                    return true;
+                  }
+                }
+                return false;
+              }, titleSnippet);
 
-          // 获取详情页快照 - 减少重试
-          const detailSnapshot = await this.browser.getSnapshotWithRetry(
-            { interactive: true, maxDepth: 5 },
-            2,  // 从 3 减少到 2
-            1000  // 从 1500ms 减少到 1000ms
-          );
-          log(`✅ 详情页快照获取成功 (${detailSnapshot.tree.length} 字符, ${Object.keys(detailSnapshot.refs).length} 个 refs)`);
+              if (!clicked) {
+                log('⚠️  未能通过文本匹配找到并点击职位卡片');
+                log('⚠️  无法获取职位链接，跳过详情页快照');
+                return undefined;
+              }
 
-          // 获取原始文本
-          let rawText = '';
-          try {
-            rawText = await this.browser.getMainContentText();
-          } catch (e) {
-            rawText = await this.browser.getCleanPageText();
+              log('✅ 已点击职位卡片，等待详情页加载...');
+              await this.browser.waitForTimeout(3000);
+
+              // 检查是否导航到了新 URL
+              const currentUrl = await this.browser.getCurrentUrl();
+              const navigatedToDetail = currentUrl !== listUrl;
+
+              if (navigatedToDetail) {
+                log(`🔗 已跳转到详情页: ${currentUrl}`);
+              } else {
+                log('ℹ️  URL 未变化，可能是弹窗/侧边栏式详情');
+              }
+
+              // 等待内容渲染
+              await this.browser.waitForContent(8000, 3);
+
+              // 获取详情页快照
+              const detailSnapshot = await this.browser.getSnapshotWithRetry(
+                { interactive: true, maxDepth: 5 },
+                2, 1000
+              );
+              log(`✅ 详情页快照获取成功 (${detailSnapshot.tree.length} 字符, ${Object.keys(detailSnapshot.refs).length} 个 refs)`);
+
+              // 获取原始文本
+              let rawText = '';
+              try {
+                rawText = await this.browser.getMainContentText();
+              } catch (e) {
+                rawText = await this.browser.getCleanPageText();
+              }
+              log(`✅ 详情页原始文本获取成功 (${rawText.length} 字符)`);
+
+              // 导航回列表页
+              await this.browser.navigateWithRetry(listUrl, 1);
+              log('↩️  已导航回列表页');
+
+              return {
+                tree: detailSnapshot.tree,
+                refs: detailSnapshot.refs,
+                url: navigatedToDetail ? currentUrl : detailUrl,
+                rawText,
+              };
+            } catch (e: any) {
+              log(`⚠️  SPA 点击式卡片处理失败: ${e.message}`);
+              // 确保回到列表页
+              try { await this.browser.navigateWithRetry(listUrl, 1); } catch {}
+            }
+          } else {
+            // 传统链接：直接导航
+            log(`📄 获取详情页快照: "${firstLink.name}"`);
+            log(`🔗 详情页 URL: ${detailUrl}`);
+
+            await this.browser.navigate(detailUrl);
+            await this.browser.waitForContent(5000, 2);
+
+            await this.browser.dismissCookieBanner();
+
+            const detailSnapshot = await this.browser.getSnapshotWithRetry(
+              { interactive: true, maxDepth: 5 },
+              2, 1000
+            );
+            log(`✅ 详情页快照获取成功 (${detailSnapshot.tree.length} 字符, ${Object.keys(detailSnapshot.refs).length} 个 refs)`);
+
+            let rawText = '';
+            try {
+              rawText = await this.browser.getMainContentText();
+            } catch (e) {
+              rawText = await this.browser.getCleanPageText();
+            }
+            log(`✅ 详情页原始文本获取成功 (${rawText.length} 字符)`);
+
+            await this.browser.navigateWithRetry(listUrl, 1);
+            log('↩️  已导航回列表页');
+
+            return {
+              tree: detailSnapshot.tree,
+              refs: detailSnapshot.refs,
+              url: detailUrl,
+              rawText,
+            };
           }
-          log(`✅ 详情页原始文本获取成功 (${rawText.length} 字符)`);
-
-          // 导航回列表页
-          await this.browser.navigateWithRetry(listUrl, 1);
-          log('↩️  已导航回列表页');
-
-          return {
-            tree: detailSnapshot.tree,
-            refs: detailSnapshot.refs,
-            url: detailUrl,
-            rawText,
-          };
         }
       } catch (e: any) {
         log(`⚠️  HTML 解析方法失败: ${e.message}`);
@@ -381,9 +436,9 @@ export class ParserGenerator {
    */
   async generateBatchWithConfigs(
     configs: LinkConfig[],
-    options?: { force?: boolean }
+    options?: { force?: boolean; cdpUrl?: string }
   ): Promise<Array<{ config: LinkConfig; success: boolean; error?: string; skipped?: boolean }>> {
-    await this.browser.launch({ headless: config.browser.headless });
+    await this.browser.launch({ headless: config.browser.headless, cdpUrl: options?.cdpUrl });
 
     const results: Array<{ config: LinkConfig; success: boolean; error?: string; skipped?: boolean }> = [];
     const force = options?.force ?? false;
@@ -513,6 +568,29 @@ export class ParserGenerator {
     const { tree, refs } = enhancedSnapshot;
     addLog(`✅ 快照获取成功 (${tree.length} 字符, ${Object.keys(refs).length} 个 refs)`);
 
+    // 3.5 稀疏快照检测 — 尝试获取页面文本作为补充
+    let supplementaryPageText = '';
+    const refCount = Object.keys(refs).length;
+    const isSparseSnapshot = tree.length < 1000 || refCount < 25;
+
+    if (isSparseSnapshot) {
+      addLog(`⚠️  快照内容稀疏 (${tree.length} 字符, ${refCount} 个 refs)，可能是反爬/SPA 未完整渲染`);
+      addLog('💡 建议使用 --cdp 9222 连接已打开的 Chrome 浏览器以绕过反爬检测');
+      addLog('📄 尝试获取页面文本作为补充信息...');
+
+      try {
+        supplementaryPageText = await this.browser.getCleanPageText();
+        if (supplementaryPageText.length > 200) {
+          addLog(`✅ 获取到补充页面文本 (${supplementaryPageText.length} 字符)`);
+        } else {
+          supplementaryPageText = '';
+          addLog('⚠️  补充页面文本也很少，页面可能被反爬拦截');
+        }
+      } catch (e: any) {
+        addLog(`⚠️  获取补充页面文本失败: ${e.message}`);
+      }
+    }
+
     // 4. 截图
     addLog('📷 获取页面截图...');
     let screenshotPath: string | undefined;
@@ -542,33 +620,43 @@ export class ParserGenerator {
     const domain = this.extractDomain(url);
     addLog(`🌐 域名: ${domain}`);
 
+    // 6.1 如果快照稀疏但有补充文本，将其追加到 customPrompt 中供 LLM 参考
+    let enrichedCustomPrompt = customPrompt;
+    if (supplementaryPageText && isSparseSnapshot) {
+      const textPreview = supplementaryPageText.substring(0, 2000);
+      const pageTextSection = `\n\n【补充信息 — 页面可见文本（因快照稀疏自动获取）】:\n${textPreview}`;
+      enrichedCustomPrompt = (customPrompt || '') + pageTextSection;
+      addLog('📎 已将页面文本作为补充信息附加到提示词中');
+    }
+
     // 6.5 如果是列表页，获取第一个职位的详情页快照
     let detailSnapshot: { tree: string; refs: Record<string, any>; url: string; rawText: string } | undefined;
     if (pageType === 'list') {
       try {
-        detailSnapshot = await this.captureDetailPageSnapshot(tree, refs, url, customPrompt, addLog);
+        detailSnapshot = await this.captureDetailPageSnapshot(tree, refs, url, enrichedCustomPrompt, addLog);
       } catch (error: any) {
         addLog(`⚠️  获取详情页快照失败: ${error.message}`);
       }
     }
 
-    // 7. 生成解析器代码
+    // 7. 生成解析器代码（带重试循环）
     addLog('🤖 使用 LLM 生成解析器代码...');
-    if (customPrompt) {
-      addLog(`📝 自定义提示词: ${customPrompt.substring(0, 50)}...`);
+    if (enrichedCustomPrompt) {
+      addLog(`📝 自定义提示词: ${(customPrompt || '').substring(0, 50)}${customPrompt && customPrompt.length > 50 ? '...' : ''}`);
     }
 
-    const generateResult = await this.llm.generateParser(
+    const generateResult = await this.llm.generateParserWithRetry(
       domain,
       tree,
       url,
       refs,
-      customPrompt,
+      enrichedCustomPrompt,
       pageType,
-      detailSnapshot  // ✅ Pass detail page snapshot to LLM
+      detailSnapshot,
+      2  // 最多重试 2 次
     );
 
-    addLog(`✅ 解析器代码生成成功 (${generateResult.code.length} 字符)`);
+    addLog(`✅ 解析器代码生成成功 (${generateResult.code.length} 字符, 重试 ${generateResult.retries} 次)`);
     addLog(`📊 Token 使用: ${generateResult.usage.prompt_tokens} + ${generateResult.usage.completion_tokens} = ${generateResult.usage.total_tokens}`);
     addLog(`⏱️  请求耗时: ${generateResult.requestTime}ms`);
 

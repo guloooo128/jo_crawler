@@ -23,6 +23,7 @@ export function generateCommand(): Command {
     .option('-v, --verbose', '详细输出')
     .option('--csv', '使用 CSV 配置文件（links.csv）')
     .option('--txt', '使用 TXT 配置文件（links.txt）')
+    .option('--cdp <url>', '连接已有 Chrome（CDP 端口或 ws:// URL），绕过反爬')
     .action(async (options: GenerateOptions & { csv?: boolean; txt?: boolean }) => {
       try {
         await runGenerate(options);
@@ -94,7 +95,7 @@ async function runGenerate(options: GenerateOptions & { csv?: boolean; txt?: boo
 
   try {
     // 生成解析器
-    const results = await generator.generateBatchWithConfigs(linkConfigs, { force: options.force });
+    const results = await generator.generateBatchWithConfigs(linkConfigs, { force: options.force, cdpUrl: options.cdp });
 
     spinner.stop();
 

@@ -1,17 +1,14 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
-import ora from 'ora';
 import fs from 'fs-extra';
-import { BrowserService } from '../services/BrowserService.js';
 import { LLMService } from '../services/LLMService.js';
 import { DatabaseService } from '../services/DatabaseService.js';
 import { ParserRegistry } from '../parsers/registry.js';
-import { GenericParser } from '../parsers/base/GenericParser.js';
+import { CrawlEngine } from '../services/CrawlEngine.js';
 import { config } from '../utils/config.js';
 import { loadLinksConfig } from '../utils/loadLinksCsv.js';
 import type { CrawlOptions } from '../models/CrawlConfig.js';
 import type { LinkConfig } from '../models/LinksConfig.js';
-import type { JobData } from '../models/JobData.js';
 
 /**
  * 爬取命令
@@ -28,6 +25,7 @@ export function crawlCommand(): Command {
     .option('--csv', '使用 CSV 配置文件（links.csv）')
     .option('--db <path>', '数据库文件路径', config.paths.database)
     .option('--no-headless', '显示浏览器窗口')
+    .option('--cdp <url>', '连接已有 Chrome（CDP 端口或 ws:// URL），绕过反爬')
     .option('-v, --verbose', '详细输出')
     .action(async (options: CrawlOptions) => {
       try {
@@ -56,13 +54,16 @@ async function runCrawl(options: CrawlOptions) {
   const concurrency = parseInt(String(options.concurrency || '1'), 10);
   const headless = options.headless !== false;
   const dbPath = (options as any).db || config.paths.database;
+  const cdpUrl = options.cdp;
 
   console.log(chalk.gray('配置:'));
   console.log(chalk.gray(`  最大职位数: ${maxJobs}`));
   console.log(chalk.gray(`  最大翻页数: ${maxPages}`));
   console.log(chalk.gray(`  并发数: ${concurrency}`));
   console.log(chalk.gray(`  数据库: ${dbPath}`));
-  console.log(chalk.gray(`  无头模式: ${headless}\n`));
+  console.log(chalk.gray(`  无头模式: ${headless}`));
+  if (cdpUrl) console.log(chalk.gray(`  CDP 连接: ${cdpUrl}`));
+  console.log('');
 
   // 初始化数据库
   const db = new DatabaseService(dbPath);
@@ -124,105 +125,36 @@ async function runCrawl(options: CrawlOptions) {
   });
 
   const registry = new ParserRegistry(config.paths.parsers);
-  const genericParser = new GenericParser(llmService);
 
   // 加载所有解析器
   console.log(chalk.yellow('📦 加载解析器...\n'));
   await registry.loadAll();
 
-  // 爬取统计
-  let totalExtracted = 0;
-  let totalInserted = 0;
-  let totalSkipped = 0;
-
-  const browser = new BrowserService(llmService);
+  // ── 使用 CrawlEngine ──────────────────────────────
+  const engine = new CrawlEngine(llmService, registry, db, {
+    concurrency,
+    maxJobs,
+    maxPages,
+    headless,
+    verbose: !!options.verbose,
+    cdpUrl,
+  });
 
   try {
-    await browser.launch({ headless });
-
-    for (let i = 0; i < linkConfigs.length; i++) {
-      const linkConfig = linkConfigs[i];
-      const { url, type: configType, maxJobs: configMaxJobs } = linkConfig;
-      const actualMaxJobs = configMaxJobs || maxJobs;
-
-      // 如果类型是 'auto'，则不传递 pageType（让系统自动判断）
-      const pageType = configType === 'auto' ? undefined : configType;
-
-      const spinner = ora(`[${i + 1}/${linkConfigs.length}] 爬取: ${url}`).start();
-
-      try {
-        // 导航到页面
-        await browser.navigate(url);
-
-        // 等待页面内容加载（SPA 可能需要更长时间）
-        await browser.waitForContent(15000, 3);
-
-        // 获取快照（带重试，处理 SPA 延迟渲染）
-        const { tree } = await browser.getSnapshotWithRetry({
-          interactive: true,
-          maxDepth: 5,
-        }, 5, 2000);
-
-        // 查找匹配的解析器（传入 pageType 用于三段式命名匹配）
-        let parser = registry.findMatchingParser(tree, url, pageType);
-
-        if (!parser) {
-          // 尝试动态加载（传入 pageType）
-          const domain = extractDomain(url);
-          const loadedParser = await registry.loadParser(domain, url, pageType);
-          if (loadedParser) {
-            parser = loadedParser;
-          }
-        }
-
-        if (!parser) {
-          // 使用通用解析器
-          spinner.warn(`未找到专用解析器，使用通用解析器`);
-          parser = genericParser;
-        } else {
-          spinner.succeed(`使用解析器: ${parser.metadata.name}`);
-        }
-
-        // 执行解析
-        const jobs = await parser.parse(browser, {
-          maxItems: actualMaxJobs,
-          maxPages: maxPages,
-          followPagination: maxPages > 1,
-          includeDetails: true,
-        });
-
-        totalExtracted += jobs.length;
-
-        // 去重：过滤已存在的职位
-        const { newJobs, skippedCount } = db.filterNewJobs(jobs);
-        totalSkipped += skippedCount;
-
-        // 保存新职位到数据库
-        const inserted = db.saveJobs(newJobs);
-        totalInserted += inserted;
-
-        if (skippedCount > 0) {
-          spinner.succeed(`提取 ${jobs.length} 个职位 → 新增 ${inserted}, 跳过 ${skippedCount} (已存在)`);
-        } else {
-          spinner.succeed(`提取 ${jobs.length} 个职位 → 全部新增`);
-        }
-      } catch (error: any) {
-        spinner.fail(`爬取失败: ${error.message}`);
-        if (options.verbose) {
-          console.error(error.stack);
-        }
-      }
-    }
-
-    await browser.close();
+    const summary = concurrency > 1
+      ? await engine.crawlAll(linkConfigs)
+      : await engine.crawlSerial(linkConfigs);
 
     // 输出统计
     const finalCount = db.getJobCount();
     console.log(chalk.bold('\n✅ 爬取完成!\n'));
-    console.log(chalk.green(`  本次提取: ${totalExtracted} 个职位`));
-    console.log(chalk.green(`  新增入库: ${totalInserted}`));
-    if (totalSkipped > 0) {
-      console.log(chalk.yellow(`  跳过重复: ${totalSkipped}`));
+    console.log(chalk.green(`  本次提取: ${summary.totalExtracted} 个职位`));
+    console.log(chalk.green(`  新增入库: ${summary.totalInserted}`));
+    if (summary.totalSkipped > 0) {
+      console.log(chalk.yellow(`  跳过重复: ${summary.totalSkipped}`));
+    }
+    if (summary.failed > 0) {
+      console.log(chalk.red(`  失败站点: ${summary.failed}`));
     }
     console.log(chalk.cyan(`  数据库总量: ${finalCount}`));
     console.log(chalk.gray(`  数据库路径: ${dbPath}\n`));
@@ -236,23 +168,7 @@ async function runCrawl(options: CrawlOptions) {
       }
       console.log('');
     }
-
+  } finally {
     db.close();
-  } catch (error: any) {
-    await browser.close();
-    db.close();
-    throw error;
-  }
-}
-
-/**
- * 提取域名
- */
-function extractDomain(url: string): string {
-  try {
-    const urlObj = new URL(url);
-    return urlObj.hostname;
-  } catch {
-    return 'unknown';
   }
 }
