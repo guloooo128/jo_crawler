@@ -1,0 +1,20 @@
+{
+  "domain": "www.lifeatspotify.com",
+  "name": "Spotify 学生招聘",
+  "card_selector": "[class*=\"entry_container__\"]",
+  "fields": {
+    "title": "h2",
+    "location": "[class*=\"entry_locationCommitment__\"] p",
+    "category": "[class*=\"tags_container__\"] p",
+    "job_type": "[class*=\"entry_jobType__\"]"
+  },
+  "url_mode": "click_newtab",
+  "url_selector": "",
+  "wait_after_click_ms": 2000,
+  "pre_actions": [
+    {
+      "action": "wait_for_content",
+      "timeout_ms": 15000
+    }
+  ]
+}

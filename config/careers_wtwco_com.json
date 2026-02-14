@@ -1,0 +1,19 @@
+{
+  "domain": "careers.wtwco.com",
+  "name": "WTW 招聘",
+  "card_selector": "tbody tr",
+  "fields": {
+    "title": ".job-search-results-title a",
+    "location": ".job-search-results-location li",
+    "department": ".job-search-results-dropdown_field_1"
+  },
+  "url_mode": "href",
+  "url_selector": ".job-search-results-title a",
+  "wait_after_click_ms": 2000,
+  "pre_actions": [
+    {
+      "action": "wait_for_content",
+      "timeout_ms": 15000
+    }
+  ]
+}
