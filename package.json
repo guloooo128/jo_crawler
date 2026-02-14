@@ -1,0 +1,23 @@
+{
+  "name": "jo_crawler",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guloooo128/jo_crawler.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/guloooo128/jo_crawler/issues"
+  },
+  "homepage": "https://github.com/guloooo128/jo_crawler#readme",
+  "dependencies": {
+    "agent-browser": "^0.10.0"
+  }
+}

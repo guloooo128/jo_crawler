@@ -14,7 +14,8 @@
       "Bash(npm run generate:*)",
       "Bash(python3:*)",
       "Bash(curl:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(npx agent-browser:*)"
     ]
   }
 }
