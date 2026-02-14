@@ -1,0 +1,21 @@
+{
+  "domain": "www.workatastartup.com",
+  "name": "Work at a Startup",
+  "card_selector": ".jobs-list > div > div",
+  "fields": {
+    "title": ".job-name a",
+    "company": ".company-details .font-bold",
+    "location": ".job-details span:nth-child(2)",
+    "category": ".job-details span:nth-child(3)",
+    "date": ".company-details .text-gray-300"
+  },
+  "url_mode": "href",
+  "url_selector": ".job-name a",
+  "wait_after_click_ms": 2000,
+  "pre_actions": [
+    {
+      "action": "wait_for_content",
+      "timeout_ms": 15000
+    }
+  ]
+}
