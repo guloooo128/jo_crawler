@@ -1,0 +1,21 @@
+{
+  "domain": "career.gjzq.com.cn",
+  "name": "国金证券招聘",
+  "card_selector": "[class*='style__STListItem-editor__sc-10r1nhd-0']",
+  "fields": {
+    "title": "[class*='style__STJobTitle-editor__sc-10r1nhd-4'] span",
+    "location": "[class*='style__STLableIcon-editor__sc-10r1nhd-15'] + [class*='style__STLabelText-editor__sc-10r1nhd-13']",
+    "date": "[class*='style__STJobTime-editor__sc-10r1nhd-16']",
+    "category": "[class*='style__STLabelSection-editor__sc-10r1nhd-11'] > div:nth-child(1) [class*='style__STLabelText-editor__sc-10r1nhd-13']",
+    "job_type": "[class*='style__STLabelSection-editor__sc-10r1nhd-11'] > div:nth-child(2) [class*='style__STLabelText-editor__sc-10r1nhd-13']"
+  },
+  "url_mode": "click_newtab",
+  "url_selector": "[class*='style__STDetailBtn-editor__sc-10r1nhd-29']",
+  "wait_after_click_ms": 2000,
+  "pre_actions": [
+    {
+      "action": "wait_for_content",
+      "timeout_ms": 15000
+    }
+  ]
+}

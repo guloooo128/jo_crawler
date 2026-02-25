@@ -16,7 +16,13 @@
       "Bash(curl:*)",
       "Bash(grep:*)",
       "Bash(npx agent-browser:*)",
-      "Bash(python -c:*)"
+      "Bash(python -c:*)",
+      "Bash(ls /Users/gollum/Projects/jo_crawler/config/dwzq*)",
+      "Bash(python debug_click.py)",
+      "Bash(gtimeout 45 python debug_click.py)",
+      "Bash(python /Users/gollum/Projects/jo_crawler/debug_click.py)",
+      "Bash(python debug_hotjob.py)",
+      "WebFetch(domain:www.swhyhk.com)"
     ]
   }
 }

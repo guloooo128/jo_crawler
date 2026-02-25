@@ -45,18 +45,21 @@ _HEURISTIC_JS = """
         // ── 评分 ──
         let score = 0;
 
-        // 重复子元素数量（log 缩放，最高 50 分）
-        // 1 个: 0 分, 2 个: 10 分, 3 个: 15.8 分, 10 个: 33.2 分
+        // 重复子元素数量（最高 60 分）
+        // 职位列表最显著的特征就是有大量重复卡片
+        // 1 个: 0, 2 个: 5, 3 个: 10, 5 个: 25, 10 个: 40, 20+: 60
         if (count >= 2) {
-            score += Math.min(Math.log2(count) * 10, 50);
+            if (count <= 3) score += count * 5;         // 2-3: 低分，可能是布局容器
+            else if (count <= 5) score += 15 + (count - 3) * 5;  // 4-5: 中等
+            else score += Math.min(25 + count * 2, 60); // 6+: 高分，很可能是列表
         }
 
-        // 子元素含 <a> 链接的比例（最高 20 分）
+        // 子元素含 <a> 链接的比例（最高 15 分）
         const dominantChildren = children.filter(c => c.tagName === dominantTag);
         const childrenWithLinks = dominantChildren.filter(c =>
             c.querySelector('a[href]') || (c.tagName === 'A' && c.href)
         ).length;
-        score += (childrenWithLinks / dominantChildren.length) * 20;
+        score += (childrenWithLinks / dominantChildren.length) * 15;
 
         // 子元素文字丰富度（最高 25 分）
         const avgTextLen = dominantChildren.reduce((sum, c) =>
@@ -75,7 +78,7 @@ _HEURISTIC_JS = """
                 (typeof c.className === 'string' ? c.className : '') + ' ' + (c.id || '')
             ).join(' ')
         ).toLowerCase();
-        const jobPatterns = ['job', 'position', 'career', 'vacancy', 'opening', 'posting', 'role', 'listing', 'result'];
+        const jobPatterns = ['job', 'position', 'career', 'vacancy', 'opening', 'posting', 'role', 'listing', 'result', 'item', 'list'];
         for (const pattern of jobPatterns) {
             if (attrText.includes(pattern)) { score += 15; break; }
         }
@@ -146,11 +149,17 @@ _HEURISTIC_JS = """
         for (let i = 0; i < Math.min(MAX_SAMPLE_CHILDREN, dominantChildren.length); i++) {
             clone.appendChild(dominantChildren[i].cloneNode(true));
         }
+        // 推荐的 card_selector = 容器选择器 + ' > ' + 子元素标签
+        const containerSel = buildSelector(el);
+        const childTag = cand.dominantTag.toLowerCase();
+        const cardSelector = containerSel + ' > ' + childTag;
+
         return {
             index: idx,
-            selector: buildSelector(el),
+            selector: containerSel,
+            card_selector: cardSelector,
             child_count: cand.childCount,
-            child_tag: cand.dominantTag.toLowerCase(),
+            child_tag: childTag,
             score: Math.round(cand.score * 10) / 10,
             avg_text_len: cand.avgTextLen,
             sample_html: clone.outerHTML,

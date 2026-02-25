@@ -18,65 +18,54 @@ from dom_extractor import find_job_containers
 from gen_config import call_doubao, call_doubao_raw, fix_url_mode, domain_to_filename, CONFIG_DIR
 
 
-# LLM 从多个候选中选择职位列表的 system prompt
-_PICK_SYSTEM_PROMPT = """你是一个网页结构分析专家。用户会给你多个从招聘页面中检测到的候选 HTML 容器。
-你需要判断哪一个是真正的职位列表容器。
+# LLM 逐个判断候选是否为职位列表的 system prompt
+_VERIFY_SYSTEM_PROMPT = """你是一个网页结构分析专家。用户会给你一段从招聘页面中检测到的 HTML 容器。
+你需要判断这个容器是否是职位列表。
 
 判断依据：
-- 职位列表包含多个职位卡片，每个卡片通常有：职位名称、地点、部门等信息
-- 不是导航菜单、页脚链接、侧边栏筛选器、面包屑等
+- 职位列表包含职位卡片，每个卡片通常有：职位名称、地点、部门等信息
+- 不是导航菜单、页脚链接、侧边栏筛选器、面包屑、FAQ 列表等
 
-只返回你选择的候选编号（数字），不要返回任何其他内容。
-例如: 0"""
-
-
-def _needs_llm_pick(candidates: list[dict]) -> bool:
-    """判断是否需要 LLM 介入选择"""
-    if len(candidates) > 1:
-        return True
-    if candidates[0]["child_count"] < 3:
-        return True
-    return False
+只返回 yes 或 no，不要返回任何其他内容。"""
 
 
-def _llm_pick(candidates: list[dict], url: str) -> dict:
-    """用 LLM 从多个候选中选择真正的职位列表容器"""
-    parts = [f"页面 URL: {url}\n"]
-    for cand in candidates:
-        parts.append(
-            f"候选 {cand['index']}:\n"
-            f"  子元素数量: {cand['child_count']} 个 <{cand['child_tag']}>\n"
-            f"  平均文字长度: {cand['avg_text_len']} 字符\n"
-            f"  HTML 片段:\n```html\n{cand['sample_html'][:3000]}\n```\n"
-        )
+def _llm_verify(candidate: dict, url: str) -> bool:
+    """用 LLM 判断单个候选是否为职位列表"""
+    user_message = (
+        f"页面 URL: {url}\n\n"
+        f"子元素数量: {candidate['child_count']} 个 <{candidate['child_tag']}>\n"
+        f"平均文字长度: {candidate['avg_text_len']} 字符\n\n"
+        f"HTML 片段:\n```html\n{candidate['sample_html'][:3000]}\n```\n\n"
+        f"这是职位列表容器吗？只返回 yes 或 no。"
+    )
 
-    user_message = "\n".join(parts) + "\n请选择哪个候选是职位列表容器，只返回编号数字。"
-
-    print(f"  LLM 从 {len(candidates)} 个候选中判断...")
-    raw = call_doubao_raw(_PICK_SYSTEM_PROMPT, user_message)
-
-    try:
-        chosen = int(raw.strip())
-        if 0 <= chosen < len(candidates):
-            return candidates[chosen]
-    except ValueError:
-        pass
-
-    print(f"  LLM 返回无法解析 ({raw.strip()})，使用评分最高的候选")
-    return candidates[0]
+    raw = call_doubao_raw(_VERIFY_SYSTEM_PROMPT, user_message)
+    answer = raw.strip().lower()
+    return answer.startswith("yes")
 
 
-def _pick_best_candidate(candidates: list[dict], url: str) -> dict:
-    """选择最佳候选容器
+def _pick_best_candidate(candidates: list[dict], url: str) -> dict | None:
+    """按评分从高到低逐个让 LLM 验证，命中即返回
 
     快速路径：只有 1 个候选且子元素 >= 3 → 直接用，不调 LLM
-    慢速路径：多个候选 或 子元素 < 3 → 调 LLM 判断
+    慢速路径：多个候选 或 子元素 < 3 → 逐个验证
     """
-    if not _needs_llm_pick(candidates):
-        print(f"  唯一候选且子元素充足，直接使用")
-        return candidates[0]
+    # if len(candidates) == 1 and candidates[0]["child_count"] >= 3:
+    #     print(f"  唯一候选且子元素充足，直接使用")
+    #     return candidates[0]
 
-    return _llm_pick(candidates, url)
+    # 按评分降序逐个验证
+    for cand in candidates:
+        print(f"  验证候选 {cand['index']}: {cand['selector'][:50]}...")
+        if _llm_verify(cand, url):
+            print(f"  ✓ 确认为职位列表")
+            return cand
+        else:
+            print(f"  ✗ 不是职位列表，跳过")
+
+    # 全部验证失败
+    print(f"  所有候选均未通过验证")
+    return None
 
 
 async def generate_config(url: str, headed: bool = False) -> dict | None:
@@ -125,11 +114,14 @@ async def generate_config(url: str, headed: bool = False) -> dict | None:
                   f"评分 {c['score']})")
 
         chosen = _pick_best_candidate(candidates, url)
+        if not chosen:
+            print("  [自动生成] 错误: 未找到有效的职位列表容器")
+            return None
         print(f"  [自动生成] 选中候选 {chosen['index']}: {chosen['selector'][:60]}")
 
         # Step 5: 调用 LLM 生成配置
         print(f"  [自动生成] 调用 LLM 生成配置...")
-        raw_config = call_doubao(chosen["sample_html"], url)
+        raw_config = call_doubao(chosen["sample_html"], url, card_selector=chosen.get("card_selector", ""))
 
         try:
             config = json.loads(raw_config)

@@ -1,0 +1,20 @@
+{
+  "domain": "online.asia.ccb.com",
+  "name": "建行亚洲招聘",
+  "card_selector": "tbody tr",
+  "fields": {
+    "title": "td:first-child a",
+    "department": "td:nth-child(2)",
+    "location": "td:nth-child(3)",
+    "job_status": "td:nth-child(4)"
+  },
+  "url_mode": "click_newtab",
+  "url_selector": "td:first-child a",
+  "wait_after_click_ms": 2000,
+  "pre_actions": [
+    {
+      "action": "wait_for_content",
+      "timeout_ms": 15000
+    }
+  ]
+}

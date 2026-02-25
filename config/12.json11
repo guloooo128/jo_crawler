@@ -1,7 +1,7 @@
 {
   "domain": "careers.shopee.sg",
   "name": "Shopee 招聘",
-  "card_selector": "li.item",
+  "card_selector": ".position-list .item",
   "fields": {
     "title": ".title",
     "department": ".department",

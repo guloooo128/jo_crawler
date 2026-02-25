@@ -1,0 +1,19 @@
+{
+  "domain": "www.jpmorganchase.com",
+  "name": "摩根大通职业项目",
+  "card_selector": "ul.program-cards > li",
+  "fields": {
+    "title": "h2.title",
+    "location": "p.location",
+    "category": "p.level"
+  },
+  "url_mode": "href",
+  "url_selector": "a.card",
+  "wait_after_click_ms": 2000,
+  "pre_actions": [
+    {
+      "action": "wait_for_content",
+      "timeout_ms": 15000
+    }
+  ]
+}

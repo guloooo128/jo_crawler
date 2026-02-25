@@ -1,0 +1,210 @@
+[
+  {
+    "url": "https://dwzq.zhiye.com/campus/jobs",
+    "jobs": []
+  },
+  {
+    "url": "http://career.gjzq.com.cn/campus?r=&p=&c=8100&d=&k=#jlt",
+    "jobs": []
+  },
+  {
+    "url": "https://wecruit.hotjob.cn/SU6419745cbef57c635fe10142/pb/school.html?workPlaceCode=0%2F4%2F23000%2F23001%2F133401",
+    "jobs": []
+  },
+  {
+    "url": "https://wecruit.hotjob.cn/SU6013d14e5d83dc11e4a8ae4d/pb/interns.html?workPlaceCode=0%2F4%2F595",
+    "jobs": [
+      {
+        "_index": 0,
+        "title": "研究所可选消费行业研究实习生（家电/商贸零售/社会服务/轻工/纺织服装）",
+        "category": "研究业务",
+        "department": "研究所",
+        "location": "北京市、上海市、深圳市、香港",
+        "url": "https://wecruit.hotjob.cn/SU6013d14e5d83dc11e4a8ae4d/pb/posDetail.html?postId=663ddc541c240e60b695e811&postType=intern"
+      }
+    ]
+  },
+  {
+    "url": "https://www.hkma.gov.hk/chi/about-us/join-us/opportunities-for-students-and-graduates-to-join-the-hkma/internship/",
+    "error": "no config",
+    "jobs": []
+  },
+  {
+    "url": "https://www.swhyhk.com/en/career-opportunities/",
+    "error": "no config",
+    "jobs": []
+  },
+  {
+    "url": "http://www.cindahk.com/jobs?lang=zh_cn",
+    "error": "no config",
+    "jobs": []
+  },
+  {
+    "url": "https://cn.chinastock.com.hk/about/job/",
+    "jobs": [
+      {
+        "_index": 0,
+        "title": "证券分析师（高端制造方向）",
+        "date": "2026.01.08",
+        "location": "工作地点：香港",
+        "salary": "薪资范围：面议",
+        "url": "https://cn.chinastock.com.hk/about/job/25.html"
+      }
+    ]
+  },
+  {
+    "url": "https://online.asia.ccb.com/PersonalHKWeb/careeropportunity/webForm/actShowList.do",
+    "jobs": []
+  },
+  {
+    "url": "https://boci.recruitmentplatform.com/index.html?searchCriteria",
+    "error": "no config",
+    "jobs": []
+  },
+  {
+    "url": "https://boci.recruitmentplatform.com/index.html",
+    "jobs": []
+  },
+  {
+    "url": "https://aidc-jobs.alibaba.com/en/campus/position-list?campusType=freshman&lang=en",
+    "jobs": [
+      {
+        "_index": 0,
+        "title": "Product Manager",
+        "date": "Updated on 2025-08-05",
+        "category": "Product",
+        "location": "Beijing / Hangzhou / Shenzhen",
+        "url": "https://aidc-jobs.alibaba.com/en/campus/position-detail?lang=en&positionId=302155006"
+      }
+    ]
+  },
+  {
+    "url": "https://careers.allianz.com/global/en/search-results?p=ChIJ38WHZwf9KysRUhNblaFnglM&location=Australia",
+    "jobs": [
+      {
+        "_index": 0,
+        "title": "Motor Assessor Digital and Regional",
+        "location": "",
+        "category": "Customer Services & Claims",
+        "job_level": "Professional",
+        "unit": "Allianz Australia",
+        "url": "https://careers.allianz.com/global/en/job/92224/Motor-Assessor-Digital-and-Regional"
+      }
+    ]
+  },
+  {
+    "url": "https://careers.allianz.com/global/en/search-results?p=ChIJdZOLiiMR2jERxPWrUs9peIg&location=Singapore",
+    "jobs": [
+      {
+        "_index": 0,
+        "title": "Allianz Polytechnic Apprenticeship Programme - Finance",
+        "location": "",
+        "category": "Finance & Accounting",
+        "job_level": "Apprenticeship / Dual Studies",
+        "unit": "Allianz Singapore",
+        "url": "https://careers.allianz.com/global/en/job/85943/Allianz-Polytechnic-Apprenticeship-Programme-Finance"
+      }
+    ]
+  },
+  {
+    "url": "https://careers.allianz.com/global/en/search-results?p=ChIJ2WrMN9MDDUsRpY9Doiq3aJk&location=Canada",
+    "jobs": [
+      {
+        "_index": 0,
+        "title": "Senior Property Engineer - Wildfire Expert",
+        "location": "Available in 4 locations",
+        "category": "Risk Management",
+        "job_level": "Professional",
+        "unit": "Allianz Commercial",
+        "url": "https://careers.allianz.com/global/en/job/88146/Senior-Property-Engineer-Wildfire-Expert"
+      }
+    ]
+  },
+  {
+    "url": "https://www.alphasights.com/careers/open-roles/#filter=.new-york%2C.new-york-remote%2C.san-francisco%2C.san-francisco-remote%2C.intern",
+    "jobs": [
+      {
+        "_index": 0,
+        "title": "Associate, Client Service",
+        "department": "Client Service",
+        "location": "Multiple",
+        "type": "Full-time",
+        "url": "https://www.alphasights.com/careers/open-roles/client-service/"
+      }
+    ]
+  },
+  {
+    "url": "https://www.alphasights.com/careers/open-roles/#filter=.hong-kong%2C.hong-kong-remote%2C.london%2C.london-remote%2C.new-york%2C.new-york-remote%2C.san-francisco%2C.san-francisco-remote%2C.full-time%2C.intern",
+    "jobs": [
+      {
+        "_index": 0,
+        "title": "Associate, Client Service",
+        "department": "Client Service",
+        "location": "Multiple",
+        "type": "Full-time",
+        "url": "https://www.alphasights.com/careers/open-roles/client-service/"
+      }
+    ]
+  },
+  {
+    "url": "https://amazon.jobs/content/en/career-programs/university/internships-for-students?country%5B%5D=SG",
+    "jobs": [
+      {
+        "_index": 0,
+        "title": "Professional Services Intern, A2C(Associate to Consultant)",
+        "location": "Singapore, SGP",
+        "date": "Updated: 2/19/2026",
+        "url": "https://amazon.jobs/jobs/3133600"
+      }
+    ]
+  },
+  {
+    "url": "https://careers.amd.com/careers-home/jobs?page=1&sortBy=posted_date&descending=true&country=Singapore&categories=Student%20%2F%20Intern%20%2F%20Temp",
+    "error": "no config",
+    "jobs": []
+  },
+  {
+    "url": "https://aexp.eightfold.ai/careers?query=Australia&pid=39166220&domain=aexp.com&sort_by=relevance&hl=zh-CN",
+    "jobs": [
+      {
+        "_index": 0,
+        "title": "Project Manager, Risk Management (10 Month Secondment / Fixed Term)",
+        "location": "Sydney,  New South Wales,  Australia",
+        "url": "https://aexp.eightfold.ai/careers?query=Australia&pid=40144127&domain=aexp.com&sort_by=relevance&hl=zh-CN"
+      }
+    ]
+  },
+  {
+    "url": "https://aexp.eightfold.ai/careers?query=Singapore&pid=38469570&domain=aexp.com&sort_by=relevance&hl=zh-CN",
+    "jobs": [
+      {
+        "_index": 0,
+        "title": "Legal Intern",
+        "location": "Singapore,  Singapore,  Singapore",
+        "url": "https://aexp.eightfold.ai/careers?query=Singapore&pid=40136942&domain=aexp.com&sort_by=relevance&hl=zh-CN"
+      }
+    ]
+  },
+  {
+    "url": "https://aexp.eightfold.ai/careers?location=Hong+Kong&intlink=us-amex-career-en-us-hong-kong-discover-jobs&hl=zh-CN",
+    "jobs": [
+      {
+        "_index": 0,
+        "title": "Manager, Financial Crime APAC",
+        "location": "Hong Kong,  Hong Kong,  Hong Kong",
+        "url": ""
+      }
+    ]
+  },
+  {
+    "url": "https://aexp.eightfold.ai/careers?query=USA&pid=39737500&domain=aexp.com&sort_by=relevance&hl=zh-CN&triggerGoButton=false",
+    "jobs": [
+      {
+        "_index": 0,
+        "title": "Customer Service Analyst T3-I",
+        "location": "Gurugram,  Haryana,  India",
+        "url": "https://aexp.eightfold.ai/careers?query=USA&pid=40416359&domain=aexp.com&sort_by=relevance&hl=zh-CN"
+      }
+    ]
+  }
+]
