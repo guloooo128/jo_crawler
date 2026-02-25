@@ -15,7 +15,8 @@
       "Bash(python3:*)",
       "Bash(curl:*)",
       "Bash(grep:*)",
-      "Bash(npx agent-browser:*)"
+      "Bash(npx agent-browser:*)",
+      "Bash(python -c:*)"
     ]
   }
 }
