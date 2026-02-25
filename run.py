@@ -1,9 +1,10 @@
 """配置驱动职位爬虫 - 入口脚本
 
 用法:
-    python run.py <URL>                     # 自动匹配配置
+    python run.py <URL>                     # 自动匹配配置，无配置则自动生成
     python run.py <URL> --config path.json  # 指定配置文件
-    python run.py --batch urls.txt          # 批量处理
+    python run.py <URL> --no-auto           # 禁止自动生成配置
+    python run.py --batch urls.txt          # 批量处理（无配置时自动生成）
 """
 
 import argparse
@@ -68,7 +69,7 @@ def load_config_file(path: str) -> dict:
         return json.load(f)
 
 
-async def crawl_one(url: str, config: dict) -> list[dict]:
+async def crawl_one(url: str, config: dict, limit: int = 0) -> list[dict]:
     """爬取单个 URL"""
     headless = config.get("headless", True)
     session_name = urlparse(url).netloc.replace(".", "_")
@@ -77,10 +78,30 @@ async def crawl_one(url: str, config: dict) -> list[dict]:
     crawler = JobCrawler(browser)
 
     try:
-        jobs = await crawler.crawl(url, config)
+        jobs = await crawler.crawl(url, config, limit=limit)
         return jobs
     finally:
         await browser.close()
+
+
+async def _ensure_config(url: str, no_auto: bool = False) -> dict | None:
+    """确保有配置：先查本地，没有则自动生成"""
+    config = load_config_for_url(url)
+    if config:
+        return config
+
+    if no_auto:
+        print(f"未找到 {urlparse(url).netloc} 的配置文件")
+        print(f"提示: 去掉 --no-auto 可自动生成配置")
+        return None
+
+    print(f"未找到 {urlparse(url).netloc} 的配置，自动生成中...")
+    from auto_gen import generate_config
+    config = await generate_config(url)
+    if not config:
+        print(f"自动生成配置失败，可手动生成:")
+        print(f'  python gen_config.py --url "{url}" --file dom.html')
+    return config
 
 
 async def main():
@@ -89,6 +110,8 @@ async def main():
     parser.add_argument("--config", "-c", help="指定配置文件路径")
     parser.add_argument("--batch", "-b", help="批量 URL 文件路径")
     parser.add_argument("--output", "-o", help="输出 JSON 文件路径")
+    parser.add_argument("--no-auto", action="store_true", help="禁止自动生成配置")
+    parser.add_argument("--limit", "-l", type=int, default=0, help="最大爬取职位数（默认不限制）")
     args = parser.parse_args()
 
     if args.batch:
@@ -102,13 +125,12 @@ async def main():
             print(f"[{i}/{len(urls)}] {url}")
             print(f"{'='*60}")
 
-            config = load_config_for_url(url)
+            config = await _ensure_config(url, no_auto=args.no_auto)
             if not config:
-                print(f"  未找到配置，跳过")
                 all_results.append({"url": url, "error": "no config", "jobs": []})
                 continue
 
-            jobs = await crawl_one(url, config)
+            jobs = await crawl_one(url, config, limit=args.limit)
             jobs = [j for j in jobs if j.get("title", "").strip()]
             all_results.append({"url": url, "jobs": jobs})
             print(f"  完成: {len(jobs)} 个职位")
@@ -123,13 +145,11 @@ async def main():
         if args.config:
             config = load_config_file(args.config)
         else:
-            config = load_config_for_url(args.url)
+            config = await _ensure_config(args.url, no_auto=args.no_auto)
             if not config:
-                print(f"未找到 {urlparse(args.url).netloc} 的配置文件")
-                print(f"请在 config/ 目录下创建对应的 JSON 配置")
                 return
 
-        jobs = await crawl_one(args.url, config)
+        jobs = await crawl_one(args.url, config, limit=args.limit)
         jobs = [j for j in jobs if j.get("title", "").strip()]
 
         print(f"\n{'='*60}")
