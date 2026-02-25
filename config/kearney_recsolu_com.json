@@ -1,0 +1,21 @@
+{
+  "domain": "kearney.recsolu.com",
+  "name": "Kearney 招聘",
+  "card_selector": ".search-results__item",
+  "fields": {
+    "title": ".search-results__req_title",
+    "type": ".search-results__jobinfo div span:nth-child(1)",
+    "region": ".search-results__jobinfo div span:nth-child(2)",
+    "location": ".search-results__jobinfo div span:nth-child(3)",
+    "tags": ".search-results__post-time"
+  },
+  "url_mode": "href",
+  "url_selector": ".search-results__req_title",
+  "wait_after_click_ms": 2000,
+  "pre_actions": [
+    {
+      "action": "wait_for_content",
+      "timeout_ms": 15000
+    }
+  ]
+}

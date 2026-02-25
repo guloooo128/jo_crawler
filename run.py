@@ -69,9 +69,9 @@ def load_config_file(path: str) -> dict:
         return json.load(f)
 
 
-async def crawl_one(url: str, config: dict, limit: int = 0) -> list[dict]:
+async def crawl_one(url: str, config: dict, limit: int = 0, headed: bool = False) -> list[dict]:
     """爬取单个 URL"""
-    headless = config.get("headless", True)
+    headless = not headed and config.get("headless", True)
     session_name = urlparse(url).netloc.replace(".", "_")
 
     browser = BrowserService(session=session_name, headless=headless)
@@ -84,7 +84,7 @@ async def crawl_one(url: str, config: dict, limit: int = 0) -> list[dict]:
         await browser.close()
 
 
-async def _ensure_config(url: str, no_auto: bool = False) -> dict | None:
+async def _ensure_config(url: str, no_auto: bool = False, headed: bool = False) -> dict | None:
     """确保有配置：先查本地，没有则自动生成"""
     config = load_config_for_url(url)
     if config:
@@ -97,7 +97,7 @@ async def _ensure_config(url: str, no_auto: bool = False) -> dict | None:
 
     print(f"未找到 {urlparse(url).netloc} 的配置，自动生成中...")
     from auto_gen import generate_config
-    config = await generate_config(url)
+    config = await generate_config(url, headed=headed)
     if not config:
         print(f"自动生成配置失败，可手动生成:")
         print(f'  python gen_config.py --url "{url}" --file dom.html')
@@ -111,6 +111,7 @@ async def main():
     parser.add_argument("--batch", "-b", help="批量 URL 文件路径")
     parser.add_argument("--output", "-o", help="输出 JSON 文件路径")
     parser.add_argument("--no-auto", action="store_true", help="禁止自动生成配置")
+    parser.add_argument("--headed", action="store_true", help="强制使用有头浏览器（可视化调试）")
     parser.add_argument("--limit", "-l", type=int, default=0, help="最大爬取职位数（默认不限制）")
     args = parser.parse_args()
 
@@ -119,37 +120,68 @@ async def main():
         with open(args.batch, "r") as f:
             urls = [line.strip() for line in f if line.strip() and not line.startswith("#")]
 
+        output_path = args.output or "batch_results.json"
+
+        # 加载已有结果（支持断点续爬）
         all_results = []
+        done_urls = set()
+        if Path(output_path).exists():
+            try:
+                with open(output_path, "r", encoding="utf-8") as f:
+                    all_results = json.load(f)
+                done_urls = {r["url"] for r in all_results}
+                print(f"已加载 {len(done_urls)} 个已完成的 URL，跳过已处理的")
+            except Exception:
+                pass
+
+        success_count = 0
+        fail_count = 0
+
         for i, url in enumerate(urls, 1):
+            if url in done_urls:
+                print(f"\n[{i}/{len(urls)}] 跳过（已处理）: {url}")
+                continue
+
             print(f"\n{'='*60}")
             print(f"[{i}/{len(urls)}] {url}")
             print(f"{'='*60}")
 
-            config = await _ensure_config(url, no_auto=args.no_auto)
-            if not config:
-                all_results.append({"url": url, "error": "no config", "jobs": []})
-                continue
+            try:
+                config = await _ensure_config(url, no_auto=args.no_auto, headed=args.headed)
+                if not config:
+                    all_results.append({"url": url, "error": "no config", "jobs": []})
+                    fail_count += 1
+                else:
+                    jobs = await crawl_one(url, config, limit=args.limit, headed=args.headed)
+                    jobs = [j for j in jobs if j.get("title", "").strip()]
+                    all_results.append({"url": url, "jobs": jobs})
+                    print(f"  完成: {len(jobs)} 个职位")
+                    success_count += 1
+            except Exception as e:
+                print(f"  错误: {e}")
+                all_results.append({"url": url, "error": str(e), "jobs": []})
+                fail_count += 1
 
-            jobs = await crawl_one(url, config, limit=args.limit)
-            jobs = [j for j in jobs if j.get("title", "").strip()]
-            all_results.append({"url": url, "jobs": jobs})
-            print(f"  完成: {len(jobs)} 个职位")
-
-        if args.output:
-            with open(args.output, "w", encoding="utf-8") as f:
+            # 每处理一个 URL 就增量保存
+            with open(output_path, "w", encoding="utf-8") as f:
                 json.dump(all_results, f, ensure_ascii=False, indent=2)
-            print(f"\n结果已保存: {args.output}")
+
+        print(f"\n{'='*60}")
+        print(f"批量处理完成: 成功 {success_count}, 失败 {fail_count}, "
+              f"跳过 {len(done_urls)}, 总计 {len(urls)}")
+        print(f"结果已保存: {output_path}")
+        print(f"{'='*60}")
 
     elif args.url:
         # 单 URL 模式
         if args.config:
             config = load_config_file(args.config)
         else:
-            config = await _ensure_config(args.url, no_auto=args.no_auto)
+            config = await _ensure_config(args.url, no_auto=args.no_auto, headed=args.headed)
             if not config:
                 return
 
-        jobs = await crawl_one(args.url, config, limit=args.limit)
+        jobs = await crawl_one(args.url, config, limit=args.limit, headed=args.headed)
         jobs = [j for j in jobs if j.get("title", "").strip()]
 
         print(f"\n{'='*60}")

@@ -384,6 +384,147 @@ class BrowserService:
         logger.debug(f"No cookie banner found in {len(refs)} refs")
         return False
 
+    async def dismiss_popup(self) -> bool:
+        """尝试关闭页面上的弹窗/遮罩层（通用版）
+
+        检测顺序：
+        1. Cookie banner（英文，已有逻辑）
+        2. Modal/Dialog/Popup 容器中的关闭按钮
+        3. 固定定位高 z-index 遮罩层中的关闭按钮
+
+        Returns True if a popup was found and dismissed.
+        """
+        try:
+            return await asyncio.wait_for(
+                self._dismiss_popup_inner(), timeout=15
+            )
+        except asyncio.TimeoutError:
+            logger.warning("Popup dismissal timed out (15s)")
+            return False
+        except Exception as e:
+            logger.debug(f"Popup dismissal failed: {e}")
+            return False
+
+    async def _dismiss_popup_inner(self) -> bool:
+        # 1. 先尝试 cookie banner
+        dismissed = await self.dismiss_cookie_banner()
+        if dismissed:
+            return True
+
+        # 2. 用 JS 检测通用弹窗并关闭
+        close_js = """
+        (() => {
+            function isVisible(el) {
+                const s = window.getComputedStyle(el);
+                return s.display !== 'none' && s.visibility !== 'hidden' && s.opacity !== '0';
+            }
+
+            function findCloseBtn(container) {
+                // 策略1：class/aria 含 close 的元素（最精确）
+                const closeBtn = container.querySelector(
+                    '[class*="close"], [class*="Close"], ' +
+                    '[aria-label*="close"], [aria-label*="关闭"], [aria-label*="Close"], ' +
+                    '.close-btn, .closeBtn, .close_btn'
+                );
+                if (closeBtn && isVisible(closeBtn)) return {el: closeBtn, method: 'close_class'};
+
+                // 策略2：小面积的关闭图标符号（×/✕ 等）
+                const icons = container.querySelectorAll('span, i, svg, button');
+                for (const icon of icons) {
+                    const text = (icon.textContent || '').trim();
+                    const rect = icon.getBoundingClientRect();
+                    if (['×', '✕', '✖'].includes(text) && rect.width < 60 && rect.height < 60) {
+                        return {el: icon, method: 'close_icon'};
+                    }
+                }
+
+                // 策略3：弹窗内的按钮（不依赖文本匹配）
+                // 收集所有可见的按钮元素
+                const allBtns = [...container.querySelectorAll(
+                    'button, [role="button"], ' +
+                    '[class*="button"], [class*="Button"], [class*="btn"], [class*="Btn"]'
+                )].filter(b => {
+                    if (!isVisible(b)) return false;
+                    const r = b.getBoundingClientRect();
+                    return r.width > 20 && r.height > 10;
+                });
+
+                // 如果弹窗内只有 1 个按钮，直接点它（确认/关闭/知悉 等）
+                if (allBtns.length === 1) {
+                    return {el: allBtns[0], method: 'sole_button'};
+                }
+
+                // 如果有多个按钮，取最后一个（通常是 primary/确认按钮，排在右边或下方）
+                if (allBtns.length >= 2) {
+                    return {el: allBtns[allBtns.length - 1], method: 'last_button'};
+                }
+
+                return null;
+            }
+
+            // 查找 role="dialog" 或 class 含 modal/popup/dialog 的容器
+            const modals = document.querySelectorAll(
+                '[role="dialog"], [class*="modal"], [class*="Modal"], ' +
+                '[class*="popup"], [class*="Popup"], [class*="dialog"], [class*="Dialog"]'
+            );
+
+            for (const modal of modals) {
+                if (!isVisible(modal)) continue;
+                const style = window.getComputedStyle(modal);
+                // 真正的弹窗通常有 fixed/absolute 定位或高 z-index
+                const zIndex = parseInt(style.zIndex || '0', 10);
+                if (style.position === 'static' && zIndex < 10) continue;
+                const rect = modal.getBoundingClientRect();
+                if (rect.width < 100 || rect.height < 50) continue;
+
+                const result = findCloseBtn(modal);
+                if (result) {
+                    result.el.click();
+                    const cls = typeof modal.className === 'string' ? modal.className : '';
+                    return JSON.stringify({found: true, method: result.method, cls: cls.substring(0, 50), text: (result.el.textContent || '').trim().substring(0, 30)});
+                }
+            }
+
+            // 查找固定定位的高 z-index 遮罩层（仅扫描 body 直接子元素及一层深）
+            const candidates = [...document.body.children];
+            for (const child of document.body.children) {
+                if (child.children) candidates.push(...child.children);
+            }
+            const fixed = candidates.filter(el => {
+                if (el.tagName !== 'DIV' && el.tagName !== 'SECTION') return false;
+                const s = window.getComputedStyle(el);
+                return (s.position === 'fixed' || s.position === 'absolute')
+                    && parseInt(s.zIndex || '0', 10) > 100
+                    && el.getBoundingClientRect().width > 200
+                    && isVisible(el);
+            });
+            for (const el of fixed) {
+                const result = findCloseBtn(el);
+                if (result) {
+                    result.el.click();
+                    return JSON.stringify({found: true, method: result.method, text: (result.el.textContent || '').trim().substring(0, 20)});
+                }
+            }
+
+            return JSON.stringify({found: false});
+        })()
+        """
+        raw = await self.eval_js(close_js)
+        try:
+            result = json.loads(raw) if isinstance(raw, str) else raw
+            if isinstance(result, str):
+                result = json.loads(result)
+        except Exception as e:
+            logger.debug(f"Failed to parse popup JS result: {raw!r} - {e}")
+            result = {}
+
+        if result.get("found"):
+            logger.info(f"Popup dismissed: {result.get('method')} - {result.get('text', result.get('cls', ''))}")
+            await asyncio.sleep(1)
+            return True
+
+        return False
+
     # ── Tab management ──────────────────────────────────────────────
 
     async def get_tabs(self) -> list[str]:

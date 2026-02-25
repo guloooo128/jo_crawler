@@ -1,0 +1,20 @@
+{
+  "domain": "wecruit.hotjob.cn",
+  "name": "Wecruit 招聘",
+  "card_selector": ".list-item-main",
+  "fields": {
+    "title": ".list-cell.pos-name .list-cell-span",
+    "category": ".list-cell.pos-cate .list-cell-span",
+    "department": ".list-cell.pos-department .list-cell-span",
+    "location": ".list-cell.pos-locate .list-cell-span"
+  },
+  "url_mode": "click_newtab",
+  "url_selector": ".list-cell.pos-detail",
+  "wait_after_click_ms": 2000,
+  "pre_actions": [
+    {
+      "action": "wait_for_content",
+      "timeout_ms": 15000
+    }
+  ]
+}
