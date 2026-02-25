@@ -37,12 +37,13 @@ class JobCrawler:
     def __init__(self, browser: BrowserService):
         self.browser = browser
 
-    async def crawl(self, url: str, config: dict) -> list[dict]:
+    async def crawl(self, url: str, config: dict, limit: int = 0) -> list[dict]:
         """根据配置爬取职位列表
 
         Args:
             url: 目标页面 URL
             config: 站点配置字典
+            limit: 最大爬取数量，0 表示不限制
 
         Returns:
             职位列表 [{title, url, date?, category?, location?, ...}]
@@ -67,6 +68,11 @@ class JobCrawler:
             print("  未找到卡片")
             return []
         print(f"  找到 {len(jobs)} 个卡片")
+
+        # 截断到 limit
+        if limit > 0 and len(jobs) > limit:
+            print(f"  限制爬取前 {limit} 个")
+            jobs = jobs[:limit]
 
         # 4. 获取 detail URL
         url_mode = config.get("url_mode", "href")
