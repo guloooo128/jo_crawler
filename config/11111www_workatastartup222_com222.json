@@ -1,13 +1,13 @@
 {
   "domain": "www.workatastartup.com",
-  "name": "Work at a Startup 招聘",
-  "card_selector": ".jobs-list .bg-beige-lighter",
+  "name": "Work at a Startup",
+  "card_selector": ".jobs-list > div > div",
   "fields": {
     "title": ".job-name a",
     "company": ".company-details .font-bold",
     "location": ".job-details span:nth-child(2)",
-    "job_type": ".job-details span:nth-child(1)",
-    "date": ".text-gray-300"
+    "category": ".job-details span:nth-child(3)",
+    "date": ".company-details .text-gray-300"
   },
   "url_mode": "href",
   "url_selector": ".job-name a",
