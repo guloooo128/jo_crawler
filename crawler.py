@@ -38,7 +38,7 @@ class JobCrawler:
         self.browser = browser
 
     async def crawl(self, url: str, config: dict, limit: int = 0) -> list[dict]:
-        """根据配置爬取职位列表
+        """根据配置爬取职位列表，支持自动翻页
 
         Args:
             url: 目标页面 URL
@@ -67,7 +67,7 @@ class JobCrawler:
         except Exception:
             pass
 
-        # 3. 提取卡片字段数据
+        # 3. 提取第一页卡片
         card_selector = config["card_selector"]
         fields = config["fields"]
         print(f"  提取卡片: {card_selector}")
@@ -78,15 +78,36 @@ class JobCrawler:
             return []
         print(f"  找到 {len(jobs)} 个卡片")
 
-        # 截断到 limit
+        # 3.5 提取 URL 前先截断到 limit（避免对多余卡片执行点击）
         if limit > 0 and len(jobs) > limit:
-            print(f"  限制爬取前 {limit} 个")
             jobs = jobs[:limit]
 
-        # 4. 获取 detail URL
+        # 4. 第一页提取 URL
+        jobs = await self._extract_urls(config, jobs)
+
+        # 5. 判断是否需要翻页
+        if limit > 0 and len(jobs) >= limit:
+            print(f"  已满足 limit={limit}，无需翻页")
+            return jobs[:limit]
+
+        if limit == 0 or len(jobs) < limit:
+            pagination = config.get("pagination")
+            if not pagination:
+                pagination = await self._detect_pagination()
+            if pagination:
+                jobs = await self._paginate(config, pagination, jobs, limit)
+
+        # 截断到 limit
+        if limit > 0 and len(jobs) > limit:
+            jobs = jobs[:limit]
+
+        return jobs
+
+    async def _extract_urls(self, config: dict, jobs: list[dict]) -> list[dict]:
+        """根据 config 的 url_mode 提取所有 job 的详情 URL"""
+        card_selector = config["card_selector"]
         url_mode = config.get("url_mode", "href")
         wait_ms = config.get("wait_after_click_ms", 2000)
-
         url_selector = config.get("url_selector")
 
         if url_mode == "href":
@@ -97,16 +118,291 @@ class JobCrawler:
             jobs = await self._get_urls_click_navigate(card_selector, jobs, wait_ms, url_selector)
         elif url_mode.startswith("attr:"):
             attr_name = url_mode[5:]
-            jobs = await self._get_urls_attr(card_selector, attr_name, config.get("url_selector"), jobs)
+            jobs = await self._get_urls_attr(card_selector, attr_name, url_selector, jobs)
         elif url_mode == "js":
             url_js = config.get("url_js", "")
             jobs = await self._get_urls_js(card_selector, url_js, jobs)
         elif url_mode == "none":
-            pass  # 不需要提取 URL
+            pass
         else:
             print(f"  未知 url_mode: {url_mode}")
 
         return jobs
+
+    # ── Pagination ────────────────────────────────────────────────
+
+    async def _detect_pagination(self) -> dict | None:
+        """启发式检测页面翻页机制，返回 pagination 配置或 None
+
+        检测优先级：load_more > click_next > scroll
+        """
+        js = """
+        (() => {
+            function isVisible(el) {
+                if (!el) return false;
+                const s = window.getComputedStyle(el);
+                return s.display !== 'none' && s.visibility !== 'hidden'
+                    && s.opacity !== '0' && el.offsetHeight > 0;
+            }
+            function isDisabled(el) {
+                return el.disabled || el.classList.contains('disabled')
+                    || el.getAttribute('aria-disabled') === 'true';
+            }
+            function buildSelector(el) {
+                if (el.id) return '#' + el.id;
+                if (el.getAttribute('aria-label'))
+                    return '[aria-label="' + el.getAttribute('aria-label').replace(/"/g, '\\\\"') + '"]';
+                if (el.getAttribute('rel') === 'next')
+                    return '[rel="next"]';
+                if (el.className && typeof el.className === 'string') {
+                    const cls = el.className.trim().split(/\\s+/)
+                        .filter(c => c.length > 0 && c.length < 30);
+                    if (cls.length > 0)
+                        return el.tagName.toLowerCase() + '.' + cls.slice(0, 3).join('.');
+                }
+                // 兜底：用 data 属性标记元素
+                el.setAttribute('data-crawler-pagination', 'true');
+                return '[data-crawler-pagination="true"]';
+            }
+
+            // 1. 检测 "加载更多" 按钮
+            const loadMoreTexts = ['load more', 'show more', '加载更多', '查看更多',
+                'more jobs', 'see more', 'view more', 'load more jobs', '更多职位',
+                '显示更多'];
+            const allClickable = document.querySelectorAll('button, a, [role="button"]');
+            for (const el of allClickable) {
+                if (!isVisible(el) || isDisabled(el)) continue;
+                const text = el.textContent.trim().toLowerCase();
+                if (text.length > 50) continue;
+                for (const pattern of loadMoreTexts) {
+                    if (text.includes(pattern)) {
+                        return JSON.stringify({
+                            mode: 'load_more',
+                            next_selector: buildSelector(el),
+                            text: text.substring(0, 30)
+                        });
+                    }
+                }
+            }
+
+            // 2. 检测 "下一页" 按钮
+            const nextTexts = ['next', '下一页', '›', '»', '→', '>>', 'next page'];
+            const nextAriaLabels = ['next page', 'go to next page', 'next', '下一页'];
+            const nextClasses = ['next', 'pagination-next', 'pager-next', 'page-next'];
+
+            for (const el of allClickable) {
+                if (!isVisible(el) || isDisabled(el)) continue;
+                const text = el.textContent.trim().toLowerCase();
+                const ariaLabel = (el.getAttribute('aria-label') || '').toLowerCase();
+                const className = (typeof el.className === 'string' ? el.className : '').toLowerCase();
+                const rel = (el.getAttribute('rel') || '').toLowerCase();
+
+                let matched = false;
+                // 文本匹配（短文本才匹配，避免误触）
+                if (text.length <= 15) {
+                    for (const p of nextTexts) {
+                        if (text === p || text.includes(p)) { matched = true; break; }
+                    }
+                }
+                // aria-label 匹配
+                if (!matched) {
+                    for (const p of nextAriaLabels) {
+                        if (ariaLabel.includes(p)) { matched = true; break; }
+                    }
+                }
+                // class / rel 匹配
+                if (!matched) {
+                    for (const p of nextClasses) {
+                        if (className.includes(p) || rel === 'next') { matched = true; break; }
+                    }
+                }
+
+                if (matched) {
+                    return JSON.stringify({
+                        mode: 'click_next',
+                        next_selector: buildSelector(el),
+                        text: text.substring(0, 30)
+                    });
+                }
+            }
+
+            return JSON.stringify(null);
+        })()
+        """
+        raw = await self.browser.eval_js(js)
+        result = _parse_json(raw)
+        if result:
+            print(f"  检测到翻页: {result['mode']} -> {result.get('next_selector', '')} "
+                  f"(\"{result.get('text', '')}\")")
+        return result
+
+    async def _paginate(
+        self, config: dict, pagination: dict,
+        current_jobs: list[dict], limit: int
+    ) -> list[dict]:
+        """执行翻页循环，收集所有页面的职位
+
+        翻页持续进行直到：
+        - 达到 limit 数量
+        - 翻页失败（按钮不存在/disabled/点击无效）
+        - 无新数据（去重后为空）
+
+        Args:
+            config: 站点配置
+            pagination: 翻页配置 {mode, next_selector, wait_ms}
+            current_jobs: 第一页已提取的职位（含 URL）
+            limit: 目标数量，0 不限
+
+        Returns:
+            合并后的所有职位列表
+        """
+        mode = pagination["mode"]
+        next_selector = pagination.get("next_selector", "")
+        wait_ms = pagination.get("wait_ms", 2000)
+        card_selector = config["card_selector"]
+        fields = config["fields"]
+
+        all_jobs = list(current_jobs)
+        seen_titles = {j.get("title", "") for j in all_jobs}
+
+        print(f"  开始翻页 (mode={mode})")
+
+        page = 1
+        while True:
+            page += 1
+            if limit > 0 and len(all_jobs) >= limit:
+                break
+
+            try:
+                if mode == "click_next":
+                    new_jobs = await self._paginate_click_next(
+                        config, next_selector, wait_ms, card_selector, fields, seen_titles
+                    )
+                elif mode == "load_more":
+                    new_jobs = await self._paginate_load_more(
+                        config, next_selector, wait_ms, card_selector, fields, seen_titles
+                    )
+                elif mode == "scroll":
+                    new_jobs = await self._paginate_scroll(
+                        config, wait_ms, card_selector, fields, seen_titles
+                    )
+                else:
+                    print(f"  未知翻页模式: {mode}")
+                    break
+
+                if not new_jobs:
+                    print(f"  第 {page} 页: 无新数据，停止翻页")
+                    break
+
+                all_jobs.extend(new_jobs)
+                for j in new_jobs:
+                    seen_titles.add(j.get("title", ""))
+
+                print(f"  第 {page} 页: +{len(new_jobs)} 个职位 (累计 {len(all_jobs)})")
+
+            except Exception as e:
+                print(f"  第 {page} 页翻页失败: {e}，停止翻页")
+                break
+
+        return all_jobs
+
+    async def _paginate_click_next(
+        self, config: dict, next_selector: str, wait_ms: int,
+        card_selector: str, fields: dict, seen_titles: set
+    ) -> list[dict]:
+        """click_next 翻页：点击下一页按钮，提取新页面的卡片+URL"""
+        # 检查下一页按钮是否存在且可用
+        escaped = next_selector.replace("'", "\\'")
+        check_js = f"""
+        (() => {{
+            const el = document.querySelector('{escaped}');
+            if (!el) return JSON.stringify({{exists: false}});
+            const s = window.getComputedStyle(el);
+            const visible = s.display !== 'none' && s.visibility !== 'hidden' && el.offsetHeight > 0;
+            const disabled = el.disabled || el.classList.contains('disabled')
+                || el.getAttribute('aria-disabled') === 'true';
+            return JSON.stringify({{exists: true, visible, disabled}});
+        }})()
+        """
+        raw = await self.browser.eval_js(check_js)
+        info = _parse_json(raw)
+        if not info.get("exists") or not info.get("visible") or info.get("disabled"):
+            return []
+
+        # 点击下一页
+        await self.browser.click(next_selector)
+        await self.browser.wait_ms(wait_ms)
+        await self.browser.wait_for_content(timeout_ms=10000)
+
+        # 提取新页面的卡片
+        new_jobs = await self._extract_fields(card_selector, fields)
+        if not new_jobs:
+            return []
+
+        # 去重
+        new_jobs = [j for j in new_jobs if j.get("title", "") not in seen_titles]
+        if not new_jobs:
+            return []
+
+        # 提取 URL
+        new_jobs = await self._extract_urls(config, new_jobs)
+        return new_jobs
+
+    async def _paginate_load_more(
+        self, config: dict, next_selector: str, wait_ms: int,
+        card_selector: str, fields: dict, seen_titles: set
+    ) -> list[dict]:
+        """load_more 翻页：点击加载更多，提取新增的卡片"""
+        escaped = next_selector.replace("'", "\\'")
+        check_js = f"""
+        (() => {{
+            const el = document.querySelector('{escaped}');
+            if (!el) return JSON.stringify({{exists: false}});
+            const s = window.getComputedStyle(el);
+            const visible = s.display !== 'none' && s.visibility !== 'hidden' && el.offsetHeight > 0;
+            const disabled = el.disabled || el.classList.contains('disabled')
+                || el.getAttribute('aria-disabled') === 'true';
+            return JSON.stringify({{exists: true, visible, disabled}});
+        }})()
+        """
+        raw = await self.browser.eval_js(check_js)
+        info = _parse_json(raw)
+        if not info.get("exists") or not info.get("visible") or info.get("disabled"):
+            return []
+
+        # 滚动到按钮并点击
+        scroll_js = f"document.querySelector('{escaped}')?.scrollIntoView({{block: 'center'}})"
+        await self.browser.eval_js(scroll_js)
+        await self.browser.wait_ms(500)
+        await self.browser.click(next_selector)
+        await self.browser.wait_ms(wait_ms)
+
+        # 重新提取所有卡片，去重找新增
+        all_cards = await self._extract_fields(card_selector, fields)
+        new_jobs = [j for j in all_cards if j.get("title", "") not in seen_titles]
+        if not new_jobs:
+            return []
+
+        # 提取 URL（load_more 模式下所有卡片都在 DOM 中，用 _index 对应）
+        new_jobs = await self._extract_urls(config, new_jobs)
+        return new_jobs
+
+    async def _paginate_scroll(
+        self, config: dict, wait_ms: int,
+        card_selector: str, fields: dict, seen_titles: set
+    ) -> list[dict]:
+        """scroll 翻页：滚动到底部触发加载"""
+        await self.browser.scroll(direction="down")
+        await self.browser.wait_ms(wait_ms)
+
+        # 重新提取所有卡片，去重找新增
+        all_cards = await self._extract_fields(card_selector, fields)
+        new_jobs = [j for j in all_cards if j.get("title", "") not in seen_titles]
+        if not new_jobs:
+            return []
+
+        new_jobs = await self._extract_urls(config, new_jobs)
+        return new_jobs
 
     # ── Pre-actions ──────────────────────────────────────────────
 
@@ -179,8 +475,9 @@ class JobCrawler:
         raw = await self.browser.eval_js(js)
         urls = _parse_json(raw)
 
-        for i, job in enumerate(jobs):
-            job["url"] = urls[i] if i < len(urls) else ""
+        for job in jobs:
+            idx = job.get("_index", 0)
+            job["url"] = urls[idx] if idx < len(urls) else ""
         return jobs
 
     async def _get_urls_attr(self, card_selector: str, attr_name: str, url_selector: str | None, jobs: list[dict]) -> list[dict]:
@@ -205,8 +502,9 @@ class JobCrawler:
         raw = await self.browser.eval_js(js)
         urls = _parse_json(raw)
 
-        for i, job in enumerate(jobs):
-            job["url"] = urls[i] if i < len(urls) else ""
+        for job in jobs:
+            idx = job.get("_index", 0)
+            job["url"] = urls[idx] if idx < len(urls) else ""
         return jobs
 
     async def _get_urls_js(self, card_selector: str, url_js: str, jobs: list[dict]) -> list[dict]:
@@ -231,8 +529,9 @@ class JobCrawler:
         raw = await self.browser.eval_js(js)
         urls = _parse_json(raw)
 
-        for i, job in enumerate(jobs):
-            job["url"] = urls[i] if i < len(urls) else ""
+        for job in jobs:
+            idx = job.get("_index", 0)
+            job["url"] = urls[idx] if idx < len(urls) else ""
         return jobs
 
     def _parse_click_result(self, raw: str) -> dict:
@@ -407,11 +706,12 @@ class JobCrawler:
             if fallback_to_href:
                 break
 
+            card_index = job.get("_index", i)
             print(f"    [{i+1}/{len(jobs)}] 点击: {job.get('title', '?')[:40]}...")
 
             tabs_before = await self.browser.get_tabs()
 
-            click_info = await self._click_card_target(card_selector, i, effective_url_selector)
+            click_info = await self._click_card_target(card_selector, card_index, effective_url_selector)
             if click_info.get("status") == "not_found":
                 print(f"      卡片不存在，跳过")
                 job["url"] = ""
@@ -421,7 +721,7 @@ class JobCrawler:
 
             await self.browser.wait_ms(wait_ms)
 
-            detail_url = await self._detect_navigation(list_url, tabs_before)
+            detail_url, _ = await self._detect_navigation(list_url, tabs_before, card_selector)
             if detail_url:
                 job["url"] = detail_url
             elif i == 0:
@@ -435,12 +735,12 @@ class JobCrawler:
                     await self.browser.wait_for_content(timeout_ms=10000)
 
                     tabs_before2 = await self.browser.get_tabs()
-                    click_info2 = await self._click_card_target(card_selector, i, None)
+                    click_info2 = await self._click_card_target(card_selector, card_index, None)
                     if click_info2.get("matched"):
                         print(f"      点击目标: {click_info2['matched']} <{click_info2.get('tag', '?')}> {click_info2.get('text', '')[:20]}")
                     await self.browser.wait_ms(wait_ms)
 
-                    detail_url2 = await self._detect_navigation(list_url, tabs_before2)
+                    detail_url2, _ = await self._detect_navigation(list_url, tabs_before2, card_selector)
                     if detail_url2:
                         job["url"] = detail_url2
                     else:
@@ -459,11 +759,13 @@ class JobCrawler:
 
         return jobs
 
-    async def _detect_navigation(self, list_url: str, tabs_before: list[str]) -> str | None:
+    async def _detect_navigation(self, list_url: str, tabs_before: list[str], card_selector: str = "") -> tuple[str | None, str]:
         """检测点击后是否发生了导航（新 tab 或 URL 变化）
 
         Returns:
-            detail URL 字符串，或 None 表示未跳转
+            (detail_url, nav_type) 二元组
+            - detail_url: 详情页 URL 或 None
+            - nav_type: "newtab" | "spa" | "none"
         """
         tabs_after = await self.browser.get_tabs()
         if len(tabs_after) > len(tabs_before):
@@ -475,7 +777,7 @@ class JobCrawler:
             await self.browser.close_tab()
             await self.browser.switch_tab(0)
             await self.browser.wait_ms(500)
-            return detail_url
+            return detail_url, "newtab"
 
         # 检测 URL 变化（SPA 路由跳转）
         current_url = await self.browser.get_url()
@@ -485,18 +787,49 @@ class JobCrawler:
 
         if current_url != list_url:
             print(f"      (页内跳转) -> {current_url}")
-            await self.browser.go_back()
-            await self.browser.wait_ms(1500)
-            return current_url
+            # SPA 站点用 navigate 回列表页（比 go_back 更可靠）
+            await self.browser.navigate(list_url)
+            await self.browser.wait_for_content(timeout_ms=10000)
+            # 等待卡片选择器出现
+            if card_selector:
+                found = await self._wait_for_selector(card_selector, timeout_ms=5000)
+                if not found:
+                    print(f"      警告: 返回列表页后未找到卡片 ({card_selector})")
+            return current_url, "spa"
 
-        return None
+        return None, "none"
+
+    async def _wait_for_selector(self, selector: str, timeout_ms: int = 5000) -> bool:
+        """等待指定 CSS 选择器的元素出现在 DOM 中
+
+        Returns:
+            True 如果找到，False 如果超时
+        """
+        escaped = selector.replace("'", "\\'")
+        poll_interval = 500
+        elapsed = 0
+        while elapsed < timeout_ms:
+            js = f"document.querySelectorAll('{escaped}').length"
+            try:
+                raw = await self.browser.eval_js(js)
+                count = int(raw)
+                if count > 0:
+                    return True
+            except Exception:
+                pass
+            await self.browser.wait_ms(poll_interval)
+            elapsed += poll_interval
+        return False
 
     async def _get_urls_click_navigate(self, card_selector: str, jobs: list[dict], wait_ms: int, url_selector: str | None = None) -> list[dict]:
         """逐个点击卡片，从 URL 变化获取详情链接"""
+        list_url = await self.browser.get_url()
+
         for i, job in enumerate(jobs):
+            card_index = job.get("_index", i)
             print(f"    [{i+1}/{len(jobs)}] 点击: {job.get('title', '?')[:40]}...")
 
-            click_info = await self._click_card_target(card_selector, i, url_selector)
+            click_info = await self._click_card_target(card_selector, card_index, url_selector)
             if click_info.get("status") == "not_found":
                 job["url"] = ""
                 continue
@@ -506,11 +839,20 @@ class JobCrawler:
             await self.browser.wait_ms(wait_ms)
 
             detail_url = await self.browser.get_url()
-            job["url"] = detail_url
-            print(f"      -> {detail_url}")
+            if detail_url and detail_url != list_url:
+                job["url"] = detail_url
+                print(f"      -> {detail_url}")
 
-            # 返回列表页
-            await self.browser.go_back()
-            await self.browser.wait_ms(1500)
+                # 返回列表页（用 navigate 比 go_back 更可靠，尤其对 SPA）
+                await self.browser.navigate(list_url)
+                await self.browser.wait_for_content(timeout_ms=10000)
+                if card_selector:
+                    found = await self._wait_for_selector(card_selector, timeout_ms=5000)
+                    if not found:
+                        print(f"      警告: 返回列表页后未找到卡片，停止提取")
+                        break
+            else:
+                job["url"] = ""
+                print(f"      (未跳转)")
 
         return jobs

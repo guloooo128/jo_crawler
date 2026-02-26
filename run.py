@@ -4,6 +4,7 @@
     python run.py <URL>                     # 自动匹配配置，无配置则自动生成
     python run.py <URL> --config path.json  # 指定配置文件
     python run.py <URL> --no-auto           # 禁止自动生成配置
+    python run.py <URL> -l 50              # 最多爬取 50 个职位（不够自动翻页）
     python run.py --batch urls.txt          # 批量处理（无配置时自动生成）
     python run.py --batch urls.txt -j 5     # 批量处理，5 路并发
 """
@@ -138,8 +139,8 @@ async def main():
     parser.add_argument("--output", "-o", help="输出 JSON 文件路径")
     parser.add_argument("--no-auto", action="store_true", help="禁止自动生成配置")
     parser.add_argument("--headed", action="store_true", help="强制使用有头浏览器（可视化调试）")
-    parser.add_argument("--limit", "-l", type=int, default=0, help="最大爬取职位数（默认不限制）")
-    parser.add_argument("--concurrency", "-j", type=int, default=3, help="批量模式并发数（默认 3）")
+    parser.add_argument("--limit", "-l", type=int, default=50, help="最大爬取职位数（默认 50，0 表示不限制）")
+    parser.add_argument("--concurrency", "-j", type=int, default=1, help="批量模式并发数（默认 3）")
     args = parser.parse_args()
 
     if args.batch:
