@@ -1,7 +1,7 @@
 {
   "domain": "online.asia.ccb.com",
   "name": "建行亚洲招聘",
-  "card_selector": "tbody tr",
+  "card_selector": ".search_result_tab tbody tr:has(td)",
   "fields": {
     "title": "td:first-child a",
     "department": "td:nth-child(2)",
