@@ -1,0 +1,17 @@
+{
+  "domain": "www.citadelsecurities.com",
+  "name": "Citadel Securities 招聘",
+  "card_selector": "#careers-table-filter-wrap > div.career-listing__container:nth-of-type(1) > a",
+  "fields": {
+    "title": ".careers-listing-card__title h2",
+    "location": ".careers-listing-card__location"
+  },
+  "url_mode": "href",
+  "wait_after_click_ms": 2000,
+  "pre_actions": [
+    {
+      "action": "wait_for_content",
+      "timeout_ms": 15000
+    }
+  ]
+}

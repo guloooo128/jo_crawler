@@ -1,0 +1,19 @@
+{
+  "domain": "careers.occstrategy.com",
+  "name": "OC&C Strategy Consultants 招聘",
+  "card_selector": "#ctl00_ContentContainer_ctl01_VacancyListView > div",
+  "fields": {
+    "title": "h2.vsr-job__title > a",
+    "location": ".vsr-job__list > div[id^='div_VacV_LocationID'] .content span",
+    "date": ".vsr-job__list > div[id^='div_VacV_AdvertisingEndDate'] .content span"
+  },
+  "url_mode": "href",
+  "url_selector": "h2.vsr-job__title > a",
+  "wait_after_click_ms": 2000,
+  "pre_actions": [
+    {
+      "action": "wait_for_content",
+      "timeout_ms": 15000
+    }
+  ]
+}

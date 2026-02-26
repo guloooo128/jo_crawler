@@ -1,0 +1,21 @@
+{
+  "domain": "jobs.amundi.com",
+  "name": "Amundi 招聘",
+  "card_selector": "li.ts-offer-list-item",
+  "fields": {
+    "title": "a.ts-offer-list-item__title-link",
+    "category": "ul.ts-offer-list-item__description li:nth-child(1)",
+    "department": "ul.ts-offer-list-item__description li:nth-child(2)",
+    "country": "ul.ts-offer-list-item__description li:nth-child(3)",
+    "location": "ul.ts-offer-list-item__description li:nth-child(4)"
+  },
+  "url_mode": "href",
+  "url_selector": "a.ts-offer-list-item__title-link",
+  "wait_after_click_ms": 2000,
+  "pre_actions": [
+    {
+      "action": "wait_for_content",
+      "timeout_ms": 15000
+    }
+  ]
+}

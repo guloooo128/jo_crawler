@@ -1,0 +1,19 @@
+{
+  "domain": "eofe.fa.us2.oraclecloud.com",
+  "name": "BNY 招聘",
+  "card_selector": "#panel-list > li",
+  "fields": {
+    "title": ".job-tile__title",
+    "location": ".job-list-item__job-info-item:nth-child(1) .job-list-item__job-info-value span",
+    "date": ".job-list-item__job-info-item:nth-child(2) .job-list-item__job-info-value"
+  },
+  "url_mode": "href",
+  "url_selector": ".job-grid-item__link",
+  "wait_after_click_ms": 2000,
+  "pre_actions": [
+    {
+      "action": "wait_for_content",
+      "timeout_ms": 15000
+    }
+  ]
+}

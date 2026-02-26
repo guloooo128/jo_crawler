@@ -1,0 +1,18 @@
+{
+  "domain": "www.qube-rt.com",
+  "name": "Qube RT 招聘",
+  "card_selector": "#app > section.careers-listing.pb-6:nth-of-type(3) > div.container > div.row > div",
+  "fields": {
+    "title": "h3",
+    "location": "div p span"
+  },
+  "url_mode": "href",
+  "url_selector": "a",
+  "wait_after_click_ms": 2000,
+  "pre_actions": [
+    {
+      "action": "wait_for_content",
+      "timeout_ms": 15000
+    }
+  ]
+}

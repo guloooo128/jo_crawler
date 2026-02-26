@@ -1,0 +1,18 @@
+{
+  "domain": "careers-asia.forvismazars.com",
+  "name": "Forvis Mazars Asia 招聘",
+  "card_selector": "main > section.job-listing > div.container > div.job-listing__lower-row.row:nth-of-type(2) > div.col-12 > div.job-listing__lower-wrapper > div.job-listing__list-row.job-list > div",
+  "fields": {
+    "title": "article.job-listing__job-item h3 a",
+    "location": "article.job-listing__job-item p.job-listing__location"
+  },
+  "url_mode": "href",
+  "url_selector": "article.job-listing__job-item h3 a",
+  "wait_after_click_ms": 2000,
+  "pre_actions": [
+    {
+      "action": "wait_for_content",
+      "timeout_ms": 15000
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "domain": "jobs.apple.com",
+  "name": "Apple 招聘",
+  "card_selector": "#search-job-list > li",
+  "fields": {
+    "title": ".job-title-link h3 a",
+    "department": ".team-name",
+    "location": ".job-title-location span:not(.a11y)",
+    "date": ".job-posted-date"
+  },
+  "url_mode": "href",
+  "url_selector": ".job-title-link h3 a",
+  "wait_after_click_ms": 2000,
+  "pre_actions": [
+    {
+      "action": "wait_for_content",
+      "timeout_ms": 15000
+    }
+  ]
+}
