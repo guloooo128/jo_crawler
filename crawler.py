@@ -19,8 +19,15 @@ def _build_fields_js(fields: dict) -> str:
     parts = []
     for name, selector in fields.items():
         escaped = selector.replace("'", "\\'")
+        # 克隆节点并移除 <script>/<style> 再取文本，避免抓到内联 JS 代码
         parts.append(
-            f"    {name}: card.querySelector('{escaped}')?.textContent?.trim() || ''"
+            f"    {name}: (() => {{"
+            f" const el = card.querySelector('{escaped}');"
+            f" if (!el) return '';"
+            f" const clone = el.cloneNode(true);"
+            f" clone.querySelectorAll('script,style').forEach(s => s.remove());"
+            f" return clone.textContent.trim();"
+            f" }})()"
         )
     return ",\n".join(parts)
 
