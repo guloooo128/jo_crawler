@@ -1,0 +1,20 @@
+{
+  "domain": "recrutement.natixis.com",
+  "name": "Natixis 招聘",
+  "card_selector": "#site-content > div.main__content:nth-of-type(2) > div.container > div.main__contentFlex > div.main__content-primary:nth-of-type(1) > div.offers:nth-of-type(1) > div",
+  "fields": {
+    "title": ".c-offer-title",
+    "department": ".c-offer-brand",
+    "location": ".c-offer-infos li:nth-of-type(2)",
+    "category": ".c-offer-infos li:nth-of-type(1)"
+  },
+  "url_mode": "href",
+  "url_selector": "a.c-offerLink",
+  "wait_after_click_ms": 2000,
+  "pre_actions": [
+    {
+      "action": "wait_for_content",
+      "timeout_ms": 15000
+    }
+  ]
+}

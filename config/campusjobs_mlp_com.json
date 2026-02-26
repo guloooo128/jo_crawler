@@ -1,0 +1,18 @@
+{
+  "domain": "campusjobs.mlp.com",
+  "name": "MLP 校园招聘",
+  "card_selector": "#pcs-body-container > div:nth-of-type(2) > div.search-results-main-container:nth-of-type(2) > div.flexbox.map-enabled > div.inline-block.position-cards-container:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div",
+  "fields": {
+    "title": ".position-title",
+    "location": ".position-location"
+  },
+  "url_mode": "click_newtab",
+  "url_selector": "",
+  "wait_after_click_ms": 2000,
+  "pre_actions": [
+    {
+      "action": "wait_for_content",
+      "timeout_ms": 15000
+    }
+  ]
+}

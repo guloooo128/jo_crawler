@@ -1,0 +1,19 @@
+{
+  "domain": "apply.careers.microsoft.com",
+  "name": "微软招聘",
+  "card_selector": "#main-content > div.appshell-3eukr > div.stack-module_stack__LqslD.searchPageContainer-2bmqU > div.stack-module_stack__LqslD.undefined:nth-of-type(2) > div.stack-module_stack__LqslD.jobListSection-3ExzH:nth-of-type(1) > div.stack-module_stack__LqslD.cardlist-8kM5_:nth-of-type(3) > div",
+  "fields": {
+    "title": "[class*='title-']",
+    "location": "[class*='fieldValue-']",
+    "date": "[class*='subData-']"
+  },
+  "url_mode": "href",
+  "url_selector": "a",
+  "wait_after_click_ms": 2000,
+  "pre_actions": [
+    {
+      "action": "wait_for_content",
+      "timeout_ms": 15000
+    }
+  ]
+}

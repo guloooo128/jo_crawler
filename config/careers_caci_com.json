@@ -1,0 +1,20 @@
+{
+  "domain": "careers.caci.com",
+  "name": "CACI 招聘",
+  "card_selector": "div.ph-page:nth-of-type(2) > div.body-wrapper.ph-page-container > div > div.results-state.container > div.row > div.col-md-8.col-sm-7:nth-of-type(2) > section.ph-widget.element-animate:nth-of-type(2) > div.ph-widget-target.au-target > div.ph-search-results-area > div.phs-facet-results-block > div.phs-jobs-list:nth-of-type(2) > div.content-block:nth-of-type(2) > ul.au-target > li",
+  "fields": {
+    "title": "div.job-title > span",
+    "location": "span.job-location",
+    "category": "span.job-category",
+    "description": "p.job-description"
+  },
+  "url_mode": "href",
+  "url_selector": "a[data-ph-at-id='job-link']",
+  "wait_after_click_ms": 2000,
+  "pre_actions": [
+    {
+      "action": "wait_for_content",
+      "timeout_ms": 15000
+    }
+  ]
+}

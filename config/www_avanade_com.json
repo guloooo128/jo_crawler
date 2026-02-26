@@ -1,0 +1,19 @@
+{
+  "domain": "www.avanade.com",
+  "name": "Avanade 招聘",
+  "card_selector": "#content > section.client-search__content:nth-of-type(4) > div.container > div.row.col-12:nth-of-type(2) > div.col-12 > div.jobCardContainer > div",
+  "fields": {
+    "title": ".jobCard .jobCardTitle",
+    "location": ".jobCard .jobCardCountry",
+    "department": ".jobCard .jobCardSubTitle"
+  },
+  "url_mode": "href",
+  "url_selector": ".tertiaryLink > a",
+  "wait_after_click_ms": 2000,
+  "pre_actions": [
+    {
+      "action": "wait_for_content",
+      "timeout_ms": 15000
+    }
+  ]
+}

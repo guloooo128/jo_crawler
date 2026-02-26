@@ -1,0 +1,18 @@
+{
+  "domain": "www.atlassian.com",
+  "name": "Atlassian 招聘",
+  "card_selector": "#imkt-jsx--0406b5ec > div.careers > div:nth-of-type(4) > table > tbody > tr:not(:first-child)",
+  "fields": {
+    "title": "td:nth-child(1) > a",
+    "location": "td:nth-child(2)"
+  },
+  "url_mode": "href",
+  "url_selector": "td:nth-child(1) > a",
+  "wait_after_click_ms": 2000,
+  "pre_actions": [
+    {
+      "action": "wait_for_content",
+      "timeout_ms": 15000
+    }
+  ]
+}

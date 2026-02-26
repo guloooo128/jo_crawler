@@ -1,46 +1,51 @@
 [
   {
+    "index": 1,
     "url": "https://dwzq.zhiye.com/campus/jobs",
+    "status": "fail",
+    "error": "未提取到职位",
     "jobs": []
   },
   {
+    "index": 2,
     "url": "http://career.gjzq.com.cn/campus?r=&p=&c=8100&d=&k=#jlt",
+    "status": "fail",
+    "error": "未提取到职位",
     "jobs": []
   },
   {
+    "index": 3,
     "url": "https://wecruit.hotjob.cn/SU6419745cbef57c635fe10142/pb/school.html?workPlaceCode=0%2F4%2F23000%2F23001%2F133401",
+    "status": "fail",
+    "error": "未提取到职位",
     "jobs": []
   },
   {
-    "url": "https://wecruit.hotjob.cn/SU6013d14e5d83dc11e4a8ae4d/pb/interns.html?workPlaceCode=0%2F4%2F595",
-    "jobs": [
-      {
-        "_index": 0,
-        "title": "研究所可选消费行业研究实习生（家电/商贸零售/社会服务/轻工/纺织服装）",
-        "category": "研究业务",
-        "department": "研究所",
-        "location": "北京市、上海市、深圳市、香港",
-        "url": "https://wecruit.hotjob.cn/SU6013d14e5d83dc11e4a8ae4d/pb/posDetail.html?postId=663ddc541c240e60b695e811&postType=intern"
-      }
-    ]
-  },
-  {
+    "index": 4,
     "url": "https://www.hkma.gov.hk/chi/about-us/join-us/opportunities-for-students-and-graduates-to-join-the-hkma/internship/",
-    "error": "no config",
+    "status": "fail",
+    "error": "配置生成失败",
     "jobs": []
   },
   {
+    "index": 5,
     "url": "https://www.swhyhk.com/en/career-opportunities/",
-    "error": "no config",
+    "status": "fail",
+    "error": "配置生成失败",
     "jobs": []
   },
   {
+    "index": 6,
     "url": "http://www.cindahk.com/jobs?lang=zh_cn",
-    "error": "no config",
+    "status": "fail",
+    "error": "配置生成失败",
     "jobs": []
   },
   {
+    "index": 7,
     "url": "https://cn.chinastock.com.hk/about/job/",
+    "status": "success",
+    "error": "",
     "jobs": [
       {
         "_index": 0,
@@ -53,20 +58,24 @@
     ]
   },
   {
+    "index": 8,
     "url": "https://online.asia.ccb.com/PersonalHKWeb/careeropportunity/webForm/actShowList.do",
+    "status": "fail",
+    "error": "Browser command timed out after 60.0s: open https://online.asia.ccb.com/PersonalHKWeb/careeropportunity/webForm/actShowList.do",
     "jobs": []
   },
   {
+    "index": 9,
     "url": "https://boci.recruitmentplatform.com/index.html?searchCriteria",
-    "error": "no config",
+    "status": "fail",
+    "error": "配置生成失败",
     "jobs": []
   },
   {
-    "url": "https://boci.recruitmentplatform.com/index.html",
-    "jobs": []
-  },
-  {
+    "index": 10,
     "url": "https://aidc-jobs.alibaba.com/en/campus/position-list?campusType=freshman&lang=en",
+    "status": "success",
+    "error": "",
     "jobs": [
       {
         "_index": 0,
@@ -79,7 +88,10 @@
     ]
   },
   {
+    "index": 11,
     "url": "https://careers.allianz.com/global/en/search-results?p=ChIJ38WHZwf9KysRUhNblaFnglM&location=Australia",
+    "status": "success",
+    "error": "",
     "jobs": [
       {
         "_index": 0,
@@ -93,35 +105,10 @@
     ]
   },
   {
-    "url": "https://careers.allianz.com/global/en/search-results?p=ChIJdZOLiiMR2jERxPWrUs9peIg&location=Singapore",
-    "jobs": [
-      {
-        "_index": 0,
-        "title": "Allianz Polytechnic Apprenticeship Programme - Finance",
-        "location": "",
-        "category": "Finance & Accounting",
-        "job_level": "Apprenticeship / Dual Studies",
-        "unit": "Allianz Singapore",
-        "url": "https://careers.allianz.com/global/en/job/85943/Allianz-Polytechnic-Apprenticeship-Programme-Finance"
-      }
-    ]
-  },
-  {
-    "url": "https://careers.allianz.com/global/en/search-results?p=ChIJ2WrMN9MDDUsRpY9Doiq3aJk&location=Canada",
-    "jobs": [
-      {
-        "_index": 0,
-        "title": "Senior Property Engineer - Wildfire Expert",
-        "location": "Available in 4 locations",
-        "category": "Risk Management",
-        "job_level": "Professional",
-        "unit": "Allianz Commercial",
-        "url": "https://careers.allianz.com/global/en/job/88146/Senior-Property-Engineer-Wildfire-Expert"
-      }
-    ]
-  },
-  {
+    "index": 12,
     "url": "https://www.alphasights.com/careers/open-roles/#filter=.new-york%2C.new-york-remote%2C.san-francisco%2C.san-francisco-remote%2C.intern",
+    "status": "success",
+    "error": "",
     "jobs": [
       {
         "_index": 0,
@@ -134,20 +121,10 @@
     ]
   },
   {
-    "url": "https://www.alphasights.com/careers/open-roles/#filter=.hong-kong%2C.hong-kong-remote%2C.london%2C.london-remote%2C.new-york%2C.new-york-remote%2C.san-francisco%2C.san-francisco-remote%2C.full-time%2C.intern",
-    "jobs": [
-      {
-        "_index": 0,
-        "title": "Associate, Client Service",
-        "department": "Client Service",
-        "location": "Multiple",
-        "type": "Full-time",
-        "url": "https://www.alphasights.com/careers/open-roles/client-service/"
-      }
-    ]
-  },
-  {
+    "index": 13,
     "url": "https://amazon.jobs/content/en/career-programs/university/internships-for-students?country%5B%5D=SG",
+    "status": "success",
+    "error": "",
     "jobs": [
       {
         "_index": 0,
@@ -159,12 +136,17 @@
     ]
   },
   {
+    "index": 14,
     "url": "https://careers.amd.com/careers-home/jobs?page=1&sortBy=posted_date&descending=true&country=Singapore&categories=Student%20%2F%20Intern%20%2F%20Temp",
-    "error": "no config",
+    "status": "fail",
+    "error": "配置生成失败",
     "jobs": []
   },
   {
+    "index": 15,
     "url": "https://aexp.eightfold.ai/careers?query=Australia&pid=39166220&domain=aexp.com&sort_by=relevance&hl=zh-CN",
+    "status": "success",
+    "error": "",
     "jobs": [
       {
         "_index": 0,
@@ -175,36 +157,1246 @@
     ]
   },
   {
-    "url": "https://aexp.eightfold.ai/careers?query=Singapore&pid=38469570&domain=aexp.com&sort_by=relevance&hl=zh-CN",
+    "index": 16,
+    "url": "https://jobs.amundi.com/job/list-of-jobs.aspx?LCID=2057",
+    "status": "success",
+    "error": "",
     "jobs": [
       {
         "_index": 0,
-        "title": "Legal Intern",
-        "location": "Singapore,  Singapore,  Singapore",
-        "url": "https://aexp.eightfold.ai/careers?query=Singapore&pid=40136942&domain=aexp.com&sort_by=relevance&hl=zh-CN"
+        "title": "Stage - Java / IA QA Automation H/F",
+        "category": "Internship/Trainee",
+        "department": "Amundi IT Services",
+        "country": "France",
+        "location": "Paris 15ème",
+        "url": "https://jobs.amundi.com/job/job-stage-java-ia-qa-automation-h-f_109216.aspx"
       }
     ]
   },
   {
-    "url": "https://aexp.eightfold.ai/careers?location=Hong+Kong&intlink=us-amex-career-en-us-hong-kong-discover-jobs&hl=zh-CN",
+    "index": 17,
+    "url": "https://jobs.aon.com/jobs?location=United%20States&stretch=10&stretchUnit=MILES&woe=12&regionCode=US&page=1",
+    "status": "fail",
+    "error": "配置生成失败",
+    "jobs": []
+  },
+  {
+    "index": 18,
+    "url": "https://jobs.apple.com/en-us/search?sort=newest&location=canada-CANC&key=intern+2025+2026&team=internships-STDNT-INTRN+corporate-STDNT-CORP+apple-store-STDNT-ASTR+apple-store-leader-program-STDNT-ASLP+apple-retail-partner-store-STDNT-ARPS+apple-support-college-program-STDNT-ACCP+apple-campus-leader-STDNT-ACR",
+    "status": "fail",
+    "error": "未提取到职位",
+    "jobs": []
+  },
+  {
+    "index": 19,
+    "url": "https://www.atlassian.com/company/careers/all-jobs?team=Graduates&location=Australia%2CUnited%20States&search=",
+    "status": "success",
+    "error": "",
     "jobs": [
       {
         "_index": 0,
-        "title": "Manager, Financial Crime APAC",
-        "location": "Hong Kong,  Hong Kong,  Hong Kong",
+        "title": "Associate Product Manager, 2026 Graduate U.S.",
+        "location": "San Francisco or Remote",
+        "url": "https://www.atlassian.com/company/careers/details/20907"
+      }
+    ]
+  },
+  {
+    "index": 20,
+    "url": "https://www.avanade.com/en/career/search-jobs#sortCriteria=%40job_area_of_expertise%20ascending&f-joblocation=Canada",
+    "status": "fail",
+    "error": "未提取到职位",
+    "jobs": []
+  },
+  {
+    "index": 21,
+    "url": "https://app.dover.com/jobs/axle-health",
+    "status": "fail",
+    "error": "配置生成失败",
+    "jobs": []
+  },
+  {
+    "index": 22,
+    "url": "https://www.bain.com/careers/find-a-role/?filters=offices(282,272)|",
+    "status": "fail",
+    "error": "Browser command timed out after 60.0s: scroll up 1800",
+    "jobs": []
+  },
+  {
+    "index": 23,
+    "url": "https://bambusdev.my.site.com/s/",
+    "status": "fail",
+    "error": "未提取到职位",
+    "jobs": []
+  },
+  {
+    "index": 24,
+    "url": "https://careers.bankofamerica.com/en-us/students/job-search?ref=search&start=0&rows=10&search=jobsByLocation&filters=programType%3DFull+time&searchstring=United+States",
+    "status": "fail",
+    "error": "未提取到职位",
+    "jobs": []
+  },
+  {
+    "index": 25,
+    "url": "https://talent.bayer.com/careers?location=any&pid=562949975739217&job%20type=graduate&job%20type=student&domain=bayer.com&sort_by=new&location_distance_km=100&hl=en",
+    "status": "success",
+    "error": "",
+    "jobs": [
+      {
+        "_index": 0,
+        "title": "Enfermeiro (a) Ocupacional Sr / CS / Uberlândia-MG",
+        "location": "Uberlândia, Minas Gerais, Brazil",
+        "department": "Sustainability, Health, Safety, Environment",
+        "url": "https://talent.bayer.com/careers?location=any&pid=562949976032379&job%20type=graduate&job%20type=student&domain=bayer.com&sort_by=new&location_distance_km=100&hl=en"
+      }
+    ]
+  },
+  {
+    "index": 26,
+    "url": "https://ebqb.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/BDOEntryLevelCareers/jobs?location=United+States&locationId=300000000300470&locationLevel=country&mode=job-location",
+    "status": "success",
+    "error": "",
+    "jobs": [
+      {
+        "_index": 0,
+        "title": "Core Tax Associate - Winter 2027 (Ridgeland)",
+        "location": "Ridgeland, MS, United States",
+        "date": "02/24/2026",
         "url": ""
       }
     ]
   },
   {
-    "url": "https://aexp.eightfold.ai/careers?query=USA&pid=39737500&domain=aexp.com&sort_by=relevance&hl=zh-CN&triggerGoButton=false",
+    "index": 27,
+    "url": "https://www.bdapartners.com/careers/students-graduates/",
+    "status": "fail",
+    "error": "配置生成失败",
+    "jobs": []
+  },
+  {
+    "index": 28,
+    "url": "https://eofe.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001/jobs?keyword=%22analyst+program%22&lastSelectedFacet=LOCATIONS&mode=location&selectedCategoriesFacet=300002556277068&selectedLocationsFacet=300000000378644",
+    "status": "success",
+    "error": "",
     "jobs": [
       {
         "_index": 0,
-        "title": "Customer Service Analyst T3-I",
-        "location": "Gurugram,  Haryana,  India",
-        "url": "https://aexp.eightfold.ai/careers?query=USA&pid=40416359&domain=aexp.com&sort_by=relevance&hl=zh-CN"
+        "title": "2026 BNY Analyst Program - Operations (Singapore)",
+        "location": "Singapore",
+        "date": "10/01/2025",
+        "url": "https://eofe.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001/job/70436/?keyword=%2522analyst+program%2522&lastSelectedFacet=LOCATIONS&mode=location&selectedCategoriesFacet=300002556277068&selectedLocationsFacet=300000000378644"
       }
     ]
+  },
+  {
+    "index": 29,
+    "url": "https://group.bnpparibas/en/careers/all-job-offers?country=10%7C43%7C44%7C50%7C54%7C61",
+    "status": "fail",
+    "error": "Browser command timed out after 60.0s: open https://group.bnpparibas/en/careers/all-job-offers?country=10%7C43%7C44%7C50%7C54%7C61",
+    "jobs": []
+  },
+  {
+    "index": 30,
+    "url": "https://bnymellon.eightfold.ai/careers?seniority=Intern&pid=24399677&domain=bnymellon.com&sort_by=relevance&triggerGoButton=false",
+    "status": "fail",
+    "error": "未提取到职位",
+    "jobs": []
+  },
+  {
+    "index": 31,
+    "url": "https://jobs.boeing.com/search-jobs",
+    "status": "fail",
+    "error": "Browser command timed out after 60.0s: open https://jobs.boeing.com/search-jobs",
+    "jobs": []
+  },
+  {
+    "index": 32,
+    "url": "https://careers.bp.com/listing?production_bp_jobs%5BrefinementList%5D%5Blocation_list%5D%5B0%5D=United%20States%20of%20America%2C%20Virginia%2C%20Providence%20Forge&production_bp_jobs%5BrefinementList%5D%5Blocation_list%5D%5B1%5D=United%20States%20of%20America%2C%20Virginia%2C%20Lawrenceville&production_bp_jobs%5BrefinementList%5D%5Blocation_list%5D%5B2%5D=United%20States%20of%20America%2C%20Utah%2C%20North%20Skull%20Valley&production_bp_jobs%5BrefinementList%5D%5Blocation_list%5D%5B3%5D=United%20States%20of%20America%2C%20Texas%2C%20Orla&production_bp_jobs%5BrefinementList%5D%5Blocation_list%5D%5B4%5D=United%20States%20of%20America%2C%20Texas%2C%20Huntington&production_bp_jobs%5BrefinementList%5D%5Blocation_list%5D%5B5%5D=United%20States%20of%20America%2C%20Texas%2C%20Houston&production_bp_jobs%5BrefinementList%5D%5Blocation_list%5D%5B6%5D=United%20States%20of%20America%2C%20Tennessee%2C%20Union%20City&production_bp_jobs%5BrefinementList%5D%5Blocation_list%5D%5B7%5D=United%20States%20of%20America%2C%20Tennessee%2C%20Murfreesboro&production_bp_jobs%5BrefinementList%5D%5Blocation_list%5D%5B8%5D=United%20States%20of%20America%2C%20Remote&production_bp_jobs%5BrefinementList%5D%5Blocation_list%5D%5B9%5D=United%20States%20of%20America%2C%20Pennsylvania%2C%20Throop&production_bp_jobs%5BrefinementList%5D%5Blocation_list%5D%5B10%5D=United%20States%20of%20America%2C%20Pennsylvania%2C%20Hegins&production_bp_jobs%5BrefinementList%5D%5Blocation_list%5D%5B11%5D=United%20States%20of%20America%2C%20Oregon%2C%20Boardman&production_bp_jobs%5BrefinementList%5D%5Blocation_list%5D%5B12%5D=United%20States%20of%20America%2C%20Ohio%2C%20Wellston&production_bp_jobs%5BrefinementList%5D%5Blocation_list%5D%5B13%5D=United%20States%20of%20America%2C%20Ohio%2C%20East%20Sparta&production_bp_jobs%5BrefinementList%5D%5Blocation_list%5D%5B14%5D=United%20States%20of%20America%2C%20New%20York%2C%20Oakfield&production_bp_jobs%5BrefinementList%5D%5Blocation_list%5D%5B15%5D=United%20States%20of%20America%2C%20Louisiana%2C%20Shreveport&production_bp_jobs%5BrefinementList%5D%5Blocation_list%5D%5B16%5D=United%20States%20of%20America%2C%20Louisiana%2C%20Baton%20Rouge&production_bp_jobs%5BrefinementList%5D%5Blocation_list%5D%5B17%5D=United%20States%20of%20America%2C%20Kentucky%2C%20Louisville&production_bp_jobs%5BrefinementList%5D%5Blocation_list%5D%5B18%5D=United%20States%20of%20America%2C%20Kansas%2C%20Shawnee&production_bp_jobs%5BrefinementList%5D%5Blocation_list%5D%5B19%5D=United%20States%20of%20America%2C%20Illinois%2C%20Rochelle&production_bp_jobs%5BrefinementList%5D%5Blocation_list%5D%5B20%5D=United%20States%20of%20America%2C%20Alabama%2C%20Dora&production_bp_jobs%5BrefinementList%5D%5Blocation_list%5D%5B21%5D=United%20States%20of%20America&production_bp_jobs%5BrefinementList%5D%5Blocation_list%5D%5B22%5D=Singapore%2C%20Singapore&production_bp_jobs%5BrefinementList%5D%5Blocation_list%5D%5B23%5D=Singapore&production_bp_jobs%5BrefinementList%5D%5Blocation_list%5D%5B24%5D=China&production_bp_jobs%5BrefinementList%5D%5Bexperience_level%5D%5B0%5D=Entry",
+    "status": "success",
+    "error": "",
+    "jobs": [
+      {
+        "_index": 0,
+        "title": "Level 2 Technician",
+        "location": "United States of America, Louisiana, Baton Rouge",
+        "date": "2 days ago",
+        "type": "Full time",
+        "url": "https://careers.bp.com/job-description/RQ106282"
+      }
+    ]
+  },
+  {
+    "index": 33,
+    "url": "https://www.brattle.com/careers/current-openings/",
+    "status": "fail",
+    "error": "配置生成失败",
+    "jobs": []
+  },
+  {
+    "index": 34,
+    "url": "https://careers.caci.com/global/en/search-results?keywords=&p=ChIJCzYy5IS16lQRQrfeQ5K5Oxw&location=USA",
+    "status": "success",
+    "error": "",
+    "jobs": [
+      {
+        "_index": 0,
+        "title": "Space Systems Chief Cyber Security Manager",
+        "location": "Location\n                \n                \n                Colorado Springs, Colorado, United States of America",
+        "category": "Category\n                \n                \n                IT",
+        "description": "Join our team as Chief Cyber Security Manager, Space Systems, and lead the cybersecurity strategy for mission-critical space missions. Drive security-by-design, risk mitigation, and innovation in a high-impact environment. Mentor engineers, manage vulnerabilities, and ensure the integrity of advanced satellite control networks. Shape the future of space security with CACI.",
+        "url": "https://careers.caci.com/global/en/job/322286/Space-Systems-Chief-Cyber-Security-Manager"
+      }
+    ]
+  },
+  {
+    "index": 35,
+    "url": "https://hdow.fa.us6.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1003/jobs?location=Hong+Kong&locationId=300000000228756&locationLevel=country&mode=location",
+    "status": "success",
+    "error": "",
+    "jobs": [
+      {
+        "_index": 0,
+        "title": "Developer",
+        "location": "Hong Kong",
+        "date": "10/23/2025",
+        "url": ""
+      }
+    ]
+  },
+  {
+    "index": 36,
+    "url": "https://www.lifeatcanva.com/en/jobs/?search=&country=Australia&country=China&country=Singapore&country=United+Kingdom&country=United+States&pagesize=20#results",
+    "status": "fail",
+    "error": "配置生成失败",
+    "jobs": []
+  },
+  {
+    "index": 37,
+    "url": "https://www.capgemini.com/careers/join-capgemini/job-search/?size=15",
+    "status": "fail",
+    "error": "Browser command timed out after 60.0s: open https://www.capgemini.com/careers/join-capgemini/job-search/?size=15",
+    "jobs": []
+  },
+  {
+    "index": 38,
+    "url": "https://capitalone.eightfold.ai/events/open?domain=capitalone.com",
+    "status": "fail",
+    "error": "未提取到职位",
+    "jobs": []
+  },
+  {
+    "index": 39,
+    "url": "https://careers.cargill.com/en/search-jobs/Canada/23251/2/6251999/60x10867/-113x64258/50/2",
+    "status": "fail",
+    "error": "Browser command timed out after 60.0s: open https://careers.cargill.com/en/search-jobs/Canada/23251/2/6251999/60x10867/-113x64258/50/2",
+    "jobs": []
+  },
+  {
+    "index": 40,
+    "url": "https://careers.cbre.com/en_US/careers/SearchJobs/?9577=%5B17134%5D&9577_format=10224&listFilterMode=1&jobSort=relevancy&jobRecordsPerPage=25&",
+    "status": "fail",
+    "error": "Browser command timed out after 60.0s: open https://careers.cbre.com/en_US/careers/SearchJobs/?9577=%5B17134%5D&9577_format=10224&listFilterMode=1&jobSort=relevancy&jobRecordsPerPage=25&",
+    "jobs": []
+  },
+  {
+    "index": 41,
+    "url": "https://cibc.wd3.myworkdayjobs.com/en-US/campus",
+    "status": "fail",
+    "error": "Browser command timed out after 60.0s: eval \n        (() => {\n            const cards = document.querySelectorAll('ul[role=\"list\"] > li');\n            return JSON.stringify(Array.from(cards).map(card => {\n                const el = card.querySelector('[data-automation-id=\"jobTitle\"]');\n                return el ? (el.href || el.getAttribute('href') || '') : '';\n            }));\n        })()\n        ",
+    "jobs": []
+  },
+  {
+    "index": 42,
+    "url": "https://careers.cigp.com/",
+    "status": "success",
+    "error": "",
+    "jobs": [
+      {
+        "_index": 0,
+        "title": "Receptionist",
+        "location": "Hong Kong",
+        "department": "Administration",
+        "date": "Deadline: Rolling Basis",
+        "type": "Full Time",
+        "url": "https://careers.cigp.com/positions/details/48"
+      }
+    ]
+  },
+  {
+    "index": 43,
+    "url": "https://www.citadel.com/careers/open-opportunities?experience-filter=new-graduates&location-filter=americas,chicago,greenwich,houston,miami,new-york&selected-job-sections=388,389,387,390&current_page=1&sort_order=DESC&per_page=10&action=careers_listing_filter",
+    "status": "success",
+    "error": "",
+    "jobs": [
+      {
+        "_index": 0,
+        "title": "Quantitative Researcher – PhD Graduate (US)",
+        "location": "Miami, New York",
+        "url": "https://www.citadel.com/careers/details/quantitative-researcher-phd-graduate-us/"
+      }
+    ]
+  },
+  {
+    "index": 44,
+    "url": "https://www.citadelsecurities.com/careers/open-opportunities?experience-filter=internships&selected-job-sections=323,325,324,326&current_page=1&sort_order=DESC&per_page=10&action=careers_listing_filter",
+    "status": "success",
+    "error": "",
+    "jobs": [
+      {
+        "_index": 0,
+        "title": "Software Engineer – Intern (Australia)",
+        "location": "Sydney",
+        "url": "https://www.citadelsecurities.com/careers/details/software-engineer-intern-australia/"
+      }
+    ]
+  },
+  {
+    "index": 45,
+    "url": "https://jobs.citi.com/search-jobs",
+    "status": "fail",
+    "error": "Browser command timed out after 60.0s: eval \n(() => {\n    const MAX_CANDIDATES = 5;\n    const MAX_SAMPLE_CHILDREN = 3;\n    const candidates = [];\n    const allElements = document.querySelectorAll('body *');\n\n    for (const el of allElements) {\n        // 排除导航、页头页脚区域\n        if (el.closest('nav, footer, header, [role=\"navigation\"], [role=\"banner\"], [role=\"contentinfo\"]')) continue;\n        // 排除不可见元素\n        if (el.offsetHeight === 0 || el.offsetWidth === 0) continue;\n        // 排除脚本/样式\n        if (el.tagName === 'SCRIPT' || el.tagName === 'STYLE') continue;\n\n        const children = Array.from(el.children);\n        if (children.length < 1) continue;\n\n        // 按标签名分组子元素\n        const signatures = {};\n        for (const child of children) {\n            const sig = child.tagName;\n            signatures[sig] = (signatures[sig] || 0) + 1;\n        }\n\n        // 找到最多的同类子元素\n        const [dominantTag, count] = Object.entries(signatures)\n            .sort((a, b) => b[1] - a[1])[0];\n\n        // ── 评分 ──\n        let score = 0;\n\n        // 重复子元素数量（最高 60 分）\n        // 职位列表最显著的特征就是有大量重复卡片\n        // 1 个: 0, 2 个: 5, 3 个: 10, 5 个: 25, 10 个: 40, 20+: 60\n        if (count >= 2) {\n            if (count <= 3) score += count * 5;         // 2-3: 低分，可能是布局容器\n            else if (count <= 5) score += 15 + (count - 3) * 5;  // 4-5: 中等\n            else score += Math.min(25 + count * 2, 60); // 6+: 高分，很可能是列表\n        }\n\n        // 子元素含 <a> 链接的比例（最高 15 分）\n        const dominantChildren = children.filter(c => c.tagName === dominantTag);\n        const childrenWithLinks = dominantChildren.filter(c =>\n            c.querySelector('a[href]') || (c.tagName === 'A' && c.href)\n        ).length;\n        score += (childrenWithLinks / dominantChildren.length) * 15;\n\n        // 子元素文字丰富度（最高 25 分）\n        const avgTextLen = dominantChildren.reduce((sum, c) =>\n            sum + c.textContent.trim().length, 0) / dominantChildren.length;\n        if (avgTextLen > 20) score += 15;\n        if (avgTextLen > 50) score += 10;\n\n        // 文字太短 → 可能是导航菜单（扣分）\n        if (avgTextLen < 15) score -= 20;\n\n        // 容器或子元素的 class/id 含 job 相关关键词（+15 分）\n        const attrText = (\n            (typeof el.className === 'string' ? el.className : '') + ' ' +\n            (el.id || '') + ' ' +\n            dominantChildren.map(c =>\n                (typeof c.className === 'string' ? c.className : '') + ' ' + (c.id || '')\n            ).join(' ')\n        ).toLowerCase();\n        const jobPatterns = ['job', 'position', 'career', 'vacancy', 'opening', 'posting', 'role', 'listing', 'result', 'item', 'list'];\n        for (const pattern of jobPatterns) {\n            if (attrText.includes(pattern)) { score += 15; break; }\n        }\n\n        // DOM 深度惩罚\n        let depth = 0;\n        let p = el;\n        while (p.parentElement) { depth++; p = p.parentElement; }\n        if (depth > 15) score -= 10;\n\n        // 只收集有一定分数的候选\n        if (score > 0) {\n            candidates.push({\n                element: el,\n                score: score,\n                childCount: count,\n                dominantTag: dominantTag,\n                avgTextLen: Math.round(avgTextLen),\n            });\n        }\n    }\n\n    if (candidates.length === 0) return JSON.stringify(null);\n\n    // 按评分排序，取 top N\n    candidates.sort((a, b) => b.score - a.score);\n    const topN = candidates.slice(0, MAX_CANDIDATES);\n\n    // ── 生成 CSS 选择器 ──\n    function buildSelector(node) {\n        if (node.id) return '#' + CSS.escape(node.id);\n        let path = '';\n        let current = node;\n        while (current && current !== document.body) {\n            let segment = current.tagName.toLowerCase();\n            if (current.id) {\n                segment = '#' + CSS.escape(current.id);\n                path = segment + (path ? ' > ' + path : '');\n                break;\n            }\n            if (current.className && typeof current.className === 'string') {\n                const classes = current.className.trim().split(/\\s+/)\n                    .filter(c => c.length > 0 && c.length < 30 && !/^[a-f0-9]{8}/i.test(c));\n                if (classes.length > 0) {\n                    segment += '.' + classes.slice(0, 2).map(c => CSS.escape(c)).join('.');\n                }\n            }\n            const parent = current.parentElement;\n            if (parent) {\n                const siblings = Array.from(parent.children).filter(c => c.tagName === current.tagName);\n                if (siblings.length > 1) {\n                    const index = siblings.indexOf(current) + 1;\n                    segment += ':nth-of-type(' + index + ')';\n                }\n            }\n            path = segment + (path ? ' > ' + path : '');\n            current = current.parentElement;\n        }\n        return path;\n    }\n\n    // ── 提取每个候选的精简 HTML ──\n    const results = topN.map((cand, idx) => {\n        const el = cand.element;\n        const clone = el.cloneNode(false);\n        const dominantChildren = Array.from(el.children)\n            .filter(c => c.tagName === cand.dominantTag);\n        for (let i = 0; i < Math.min(MAX_SAMPLE_CHILDREN, dominantChildren.length); i++) {\n            clone.appendChild(dominantChildren[i].cloneNode(true));\n        }\n        // 推荐的 card_selector = 容器选择器 + ' > ' + 子元素标签\n        const containerSel = buildSelector(el);\n        const childTag = cand.dominantTag.toLowerCase();\n        const cardSelector = containerSel + ' > ' + childTag;\n\n        return {\n            index: idx,\n            selector: containerSel,\n            card_selector: cardSelector,\n            child_count: cand.childCount,\n            child_tag: childTag,\n            score: Math.round(cand.score * 10) / 10,\n            avg_text_len: cand.avgTextLen,\n            sample_html: clone.outerHTML,\n        };\n    });\n\n    return JSON.stringify(results);\n})()\n",
+    "jobs": []
+  },
+  {
+    "index": 46,
+    "url": "https://citi.wd5.myworkdayjobs.com/Citi_Early_Careers_Events_Site/",
+    "status": "success",
+    "error": "",
+    "jobs": [
+      {
+        "_index": 0,
+        "title": "2027年卒向け　沖縄オペレーション部門 説明会・座談会",
+        "location": "Naha-shi Tokyo Japan",
+        "remote_type": "",
+        "date": "Posted Yesterday",
+        "department": "",
+        "url": "https://citi.wd5.myworkdayjobs.com/en-US/Citi_Early_Careers_Events_Site/job/Naha-shi-Tokyo-Japan/XMLNAME-2027---_26940669"
+      }
+    ]
+  },
+  {
+    "index": 47,
+    "url": "https://careers.coca-colacompany.com/?store_id=Canada",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://careers.coca-colacompany.com/?store_id=Canada\nCall log:\n\u001b[2m  - navigating to \"https://careers.coca-colacompany.com/?store_id=Canada\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 48,
+    "url": "https://collabera.com/globaltalentcenter/careers/",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://collabera.com/globaltalentcenter/careers/\nCall log:\n\u001b[2m  - navigating to \"https://collabera.com/globaltalentcenter/careers/\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 49,
+    "url": "https://careers.crowe.com/search-results",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://careers.crowe.com/search-results\nCall log:\n\u001b[2m  - navigating to \"https://careers.crowe.com/search-results\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 50,
+    "url": "https://careers.cushmanwakefield.com/en/jobs/?search=&country=Singapore&type=Full+time&pagesize=20#results",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://careers.cushmanwakefield.com/en/jobs/?search=&country=Singapore&type=Full+time&pagesize=20#results\nCall log:\n\u001b[2m  - navigating to \"https://careers.cushmanwakefield.com/en/jobs/?search=&country=Singapore&type=Full+time&pagesize=20#results\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 51,
+    "url": "https://www.databricks.com/company/careers/open-positions?department=all&location=Singapore",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://www.databricks.com/company/careers/open-positions?department=all&location=Singapore\nCall log:\n\u001b[2m  - navigating to \"https://www.databricks.com/company/careers/open-positions?department=all&location=Singapore\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 52,
+    "url": "https://recruiting.ultipro.com/DCA1000DCV/JobBoard/14d25b5f-98b9-46da-846e-1447f13e2cda/?q=&o=postedDateDesc",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://recruiting.ultipro.com/DCA1000DCV/JobBoard/14d25b5f-98b9-46da-846e-1447f13e2cda/?q=&o=postedDateDesc\nCall log:\n\u001b[2m  - navigating to \"https://recruiting.ultipro.com/DCA1000DCV/JobBoard/14d25b5f-98b9-46da-846e-1447f13e2cda/?q=&o=postedDateDesc\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 53,
+    "url": "https://www.dbs.com/careers/jobs.page?market=United%20Kingdom",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://www.dbs.com/careers/jobs.page?market=United%20Kingdom\nCall log:\n\u001b[2m  - navigating to \"https://www.dbs.com/careers/jobs.page?market=United%20Kingdom\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 54,
+    "url": "https://careers.db.com/students-graduates/search-programmes/index?language_id=1#/graduate/results/?location=71",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://careers.db.com/students-graduates/search-programmes/index?language_id=1#/graduate/results/?location=71\nCall log:\n\u001b[2m  - navigating to \"https://careers.db.com/students-graduates/search-programmes/index?language_id=1#/graduate/results/?location=71\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 55,
+    "url": "https://discord.com/careers#all-jobs",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://discord.com/careers#all-jobs\nCall log:\n\u001b[2m  - navigating to \"https://discord.com/careers#all-jobs\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 56,
+    "url": "https://careersatdoordash.com/job-search/?department=&function=&job_ids=&location=United%20States&keyword=&spage=1",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://careersatdoordash.com/job-search/?department=&function=&job_ids=&location=United%20States&keyword=&spage=1\nCall log:\n\u001b[2m  - navigating to \"https://careersatdoordash.com/job-search/?department=&function=&job_ids=&location=United%20States&keyword=&spage=1\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 57,
+    "url": "https://www.drw.com/work-at-drw/listings?filterType=campus&value=Campus",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://www.drw.com/work-at-drw/listings?filterType=campus&value=Campus\nCall log:\n\u001b[2m  - navigating to \"https://www.drw.com/work-at-drw/listings?filterType=campus&value=Campus\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 58,
+    "url": "https://careers.dyson.com/en-gb/search-results/?q=&page=1&minpage=1&maxpage=1&sort=NewestPosted&countries=1443",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://careers.dyson.com/en-gb/search-results/?q=&page=1&minpage=1&maxpage=1&sort=NewestPosted&countries=1443\nCall log:\n\u001b[2m  - navigating to \"https://careers.dyson.com/en-gb/search-results/?q=&page=1&minpage=1&maxpage=1&sort=NewestPosted&countries=1443\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 59,
+    "url": "https://eaton.eightfold.ai/careers?domain=eaton.com&triggerGoButton=false&query=FULL++TIME&start=0&location=CA&pid=687234389426&sort_by=timestamp&filter_include_remote=1",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://eaton.eightfold.ai/careers?domain=eaton.com&triggerGoButton=false&query=FULL++TIME&start=0&location=CA&pid=687234389426&sort_by=timestamp&filter_include_remote=1\nCall log:\n\u001b[2m  - navigating to \"https://eaton.eightfold.ai/careers?domain=eaton.com&triggerGoButton=false&query=FULL++TIME&start=0&location=CA&pid=687234389426&sort_by=timestamp&filter_include_remote=1\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 60,
+    "url": "https://www.equalexperts.com/current-opportunities/",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://www.equalexperts.com/current-opportunities/\nCall log:\n\u001b[2m  - navigating to \"https://www.equalexperts.com/current-opportunities/\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 61,
+    "url": "https://careers.ey.com/search/?createNewAlert=false&q=&optionsFacetsDD_customfield1=&optionsFacetsDD_country=SG&optionsFacetsDD_city=",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://careers.ey.com/search/?createNewAlert=false&q=&optionsFacetsDD_customfield1=&optionsFacetsDD_country=SG&optionsFacetsDD_city=\nCall log:\n\u001b[2m  - navigating to \"https://careers.ey.com/search/?createNewAlert=false&q=&optionsFacetsDD_customfield1=&optionsFacetsDD_country=SG&optionsFacetsDD_city=\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 62,
+    "url": "https://jobs.ericsson.com/careers?query=internship&start=0&location=United+Kingdom&sort_by=timestamp&filter_include_remote=1",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_TIMED_OUT at https://jobs.ericsson.com/careers?query=internship&start=0&location=United+Kingdom&sort_by=timestamp&filter_include_remote=1\nCall log:\n\u001b[2m  - navigating to \"https://jobs.ericsson.com/careers?query=internship&start=0&location=United+Kingdom&sort_by=timestamp&filter_include_remote=1\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 63,
+    "url": "https://careers.expediagroup.com/jobs/?&filter[country]=United+Kingdom",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://careers.expediagroup.com/jobs/?&filter[country]=United+Kingdom\nCall log:\n\u001b[2m  - navigating to \"https://careers.expediagroup.com/jobs/?&filter[country]=United+Kingdom\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 64,
+    "url": "https://ukstudents.ey.com/#TechnologyDiscoverEYWomeninBusinessTechnologyApril2026intakeLondon?openRoles=1&paged=1",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://ukstudents.ey.com/#TechnologyDiscoverEYWomeninBusinessTechnologyApril2026intakeLondon?openRoles=1&paged=1\nCall log:\n\u001b[2m  - navigating to \"https://ukstudents.ey.com/#TechnologyDiscoverEYWomeninBusinessTechnologyApril2026intakeLondon?openRoles=1&paged=1\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 65,
+    "url": "https://fidelityinternational.tal.net/vx/lang-en-GB/mobile-0/brand-5/candidate/jobboard/vacancy/1/adv/",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://fidelityinternational.tal.net/vx/lang-en-GB/mobile-0/brand-5/candidate/jobboard/vacancy/1/adv/\nCall log:\n\u001b[2m  - navigating to \"https://fidelityinternational.tal.net/vx/lang-en-GB/mobile-0/brand-5/candidate/jobboard/vacancy/1/adv/\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 66,
+    "url": "https://fca.wd3.myworkdayjobs.com/FCA_Careers",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://fca.wd3.myworkdayjobs.com/FCA_Careers\nCall log:\n\u001b[2m  - navigating to \"https://fca.wd3.myworkdayjobs.com/FCA_Careers\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 67,
+    "url": "https://careers.fitch.group/search/?createNewAlert=false&q=&locationsearch=United+States&optionsFacetsDD_customfield2=&optionsFacetsDD_department=&optionsFacetsDD_customfield4=",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://careers.fitch.group/search/?createNewAlert=false&q=&locationsearch=United+States&optionsFacetsDD_customfield2=&optionsFacetsDD_department=&optionsFacetsDD_customfield4=\nCall log:\n\u001b[2m  - navigating to \"https://careers.fitch.group/search/?createNewAlert=false&q=&locationsearch=United+States&optionsFacetsDD_customfield2=&optionsFacetsDD_department=&optionsFacetsDD_customfield4=\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 68,
+    "url": "https://efds.fa.em5.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/jobs?location=United+States&locationId=300000000425727&locationLevel=country&mode=location",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://efds.fa.em5.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/jobs?location=United+States&locationId=300000000425727&locationLevel=country&mode=location\nCall log:\n\u001b[2m  - navigating to \"https://efds.fa.em5.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/jobs?location=United+States&locationId=300000000425727&locationLevel=country&mode=location\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 69,
+    "url": "https://edel.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_2001/jobs?location=Australia&locationId=300000000361214&locationLevel=country&mode=location",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://edel.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_2001/jobs?location=Australia&locationId=300000000361214&locationLevel=country&mode=location\nCall log:\n\u001b[2m  - navigating to \"https://edel.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_2001/jobs?location=Australia&locationId=300000000361214&locationLevel=country&mode=location\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 70,
+    "url": "https://fticonsult.referrals.selectminds.com/ftistudentcareers/jobs/search/9829331",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://fticonsult.referrals.selectminds.com/ftistudentcareers/jobs/search/9829331\nCall log:\n\u001b[2m  - navigating to \"https://fticonsult.referrals.selectminds.com/ftistudentcareers/jobs/search/9829331\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 71,
+    "url": "https://edzt.fa.em4.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX/jobs?location=United+States&locationId=300000000361862&locationLevel=country&mode=location",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://edzt.fa.em4.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX/jobs?location=United+States&locationId=300000000361862&locationLevel=country&mode=location\nCall log:\n\u001b[2m  - navigating to \"https://edzt.fa.em4.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX/jobs?location=United+States&locationId=300000000361862&locationLevel=country&mode=location\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 72,
+    "url": "https://www.gresearch.com/vacancies/",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://www.gresearch.com/vacancies/\nCall log:\n\u001b[2m  - navigating to \"https://www.gresearch.com/vacancies/\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 73,
+    "url": "https://www.glencore.com/careers/jobs",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://www.glencore.com/careers/jobs\nCall log:\n\u001b[2m  - navigating to \"https://www.glencore.com/careers/jobs\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 74,
+    "url": "https://www.globalatlantic.com/careers/jobs",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://www.globalatlantic.com/careers/jobs\nCall log:\n\u001b[2m  - navigating to \"https://www.globalatlantic.com/careers/jobs\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 75,
+    "url": "https://higher.gs.com/campus?LOCATION=Melbourne|Sydney&page=1&sort=POSTED_DATE",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://higher.gs.com/campus?LOCATION=Melbourne|Sydney&page=1&sort=POSTED_DATE\nCall log:\n\u001b[2m  - navigating to \"https://higher.gs.com/campus?LOCATION=Melbourne|Sydney&page=1&sort=POSTED_DATE\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 76,
+    "url": "https://www.google.com/about/careers/applications/jobs/results?target_level=EARLY&location=Singapore&sort_by=date#!t=jo&jid=127025001&",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://www.google.com/about/careers/applications/jobs/results?target_level=EARLY&location=Singapore&sort_by=date#!t=jo&jid=127025001&\nCall log:\n\u001b[2m  - navigating to \"https://www.google.com/about/careers/applications/jobs/results?target_level=EARLY&location=Singapore&sort_by=date#!t=jo&jid=127025001&\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 77,
+    "url": "https://ehzq.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/jobs?location=United+Kingdom&locationId=300000000277538&locationLevel=country&mode=location",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://ehzq.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/jobs?location=United+Kingdom&locationId=300000000277538&locationLevel=country&mode=location\nCall log:\n\u001b[2m  - navigating to \"https://ehzq.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/jobs?location=United+Kingdom&locationId=300000000277538&locationLevel=country&mode=location\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 78,
+    "url": "https://greenhill.freshminds.co.uk/events/",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://greenhill.freshminds.co.uk/events/\nCall log:\n\u001b[2m  - navigating to \"https://greenhill.freshminds.co.uk/events/\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 79,
+    "url": "https://careers.hcltech.com/go/NonTPDemand/9558355/?markerViewed=&carouselIndex=&facetFilters=%7B%22custCountryRegion%22%3A%5B%22United+Kingdom%22%5D%7D&pageNumber=0&sortBy=date",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://careers.hcltech.com/go/NonTPDemand/9558355/?markerViewed=&carouselIndex=&facetFilters=%7B%22custCountryRegion%22%3A%5B%22United+Kingdom%22%5D%7D&pageNumber=0&sortBy=date\nCall log:\n\u001b[2m  - navigating to \"https://careers.hcltech.com/go/NonTPDemand/9558355/?markerViewed=&carouselIndex=&facetFilters=%7B%22custCountryRegion%22%3A%5B%22United+Kingdom%22%5D%7D&pageNumber=0&sortBy=date\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 80,
+    "url": "https://careers.honeywell.com/en/sites/Honeywell/jobs?location=United+States&locationId=300000000469866&locationLevel=country&mode=location",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://careers.honeywell.com/en/sites/Honeywell/jobs?location=United+States&locationId=300000000469866&locationLevel=country&mode=location\nCall log:\n\u001b[2m  - navigating to \"https://careers.honeywell.com/en/sites/Honeywell/jobs?location=United+States&locationId=300000000469866&locationLevel=country&mode=location\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 81,
+    "url": "https://hl.wd1.myworkdayjobs.com/Campus",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://hl.wd1.myworkdayjobs.com/Campus\nCall log:\n\u001b[2m  - navigating to \"https://hl.wd1.myworkdayjobs.com/Campus\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 82,
+    "url": "https://portal.careers.hsbc.com/careers?location=any&pid=563774609303192&domain=hsbc.com&sort_by=relevance&triggerGoButton=false&triggerGoButton=true",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://portal.careers.hsbc.com/careers?location=any&pid=563774609303192&domain=hsbc.com&sort_by=relevance&triggerGoButton=false&triggerGoButton=true\nCall log:\n\u001b[2m  - navigating to \"https://portal.careers.hsbc.com/careers?location=any&pid=563774609303192&domain=hsbc.com&sort_by=relevance&triggerGoButton=false&triggerGoButton=true\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 83,
+    "url": "https://www.hudsonrivertrading.com/careers/?locations=austin%2Cbellevue%2Cboulder%2Cchicago%2Cnew-york%2Cseattle%2C&job-type=full-time-new-grad%2Cparent_full-time-experienced%2C",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://www.hudsonrivertrading.com/careers/?locations=austin%2Cbellevue%2Cboulder%2Cchicago%2Cnew-york%2Cseattle%2C&job-type=full-time-new-grad%2Cparent_full-time-experienced%2C\nCall log:\n\u001b[2m  - navigating to \"https://www.hudsonrivertrading.com/careers/?locations=austin%2Cbellevue%2Cboulder%2Cchicago%2Cnew-york%2Cseattle%2C&job-type=full-time-new-grad%2Cparent_full-time-experienced%2C\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 84,
+    "url": "https://www.ibm.com/careers/search?field_keyword_18[0]=Professional&field_keyword_18[1]=Entry%20Level&field_keyword_05[0]=United%20Kingdom&sort=dcdate_desc",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_TIMED_OUT at https://www.ibm.com/careers/search?field_keyword_18[0]=Professional&field_keyword_18[1]=Entry%20Level&field_keyword_05[0]=United%20Kingdom&sort=dcdate_desc\nCall log:\n\u001b[2m  - navigating to \"https://www.ibm.com/careers/search?field_keyword_18[0]=Professional&field_keyword_18[1]=Entry%20Level&field_keyword_05[0]=United%20Kingdom&sort=dcdate_desc\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 85,
+    "url": "https://www.indeed.com/cmp/Indeed/jobs",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://www.indeed.com/cmp/Indeed/jobs\nCall log:\n\u001b[2m  - navigating to \"https://www.indeed.com/cmp/Indeed/jobs\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 86,
+    "url": "https://www.insightpartners.com/events/",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://www.insightpartners.com/events/\nCall log:\n\u001b[2m  - navigating to \"https://www.insightpartners.com/events/\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 87,
+    "url": "https://jobs.intuit.com/search-jobs/full%20time/United%20States/27595/1/2/6252001/39x76/-98x5/0/2?cid=directBookmarked_directBookmarked",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://jobs.intuit.com/search-jobs/full%20time/United%20States/27595/1/2/6252001/39x76/-98x5/0/2?cid=directBookmarked_directBookmarked\nCall log:\n\u001b[2m  - navigating to \"https://jobs.intuit.com/search-jobs/full%20time/United%20States/27595/1/2/6252001/39x76/-98x5/0/2?cid=directBookmarked_directBookmarked\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 88,
+    "url": "https://www.ixl.com/company/careers",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://www.ixl.com/company/careers\nCall log:\n\u001b[2m  - navigating to \"https://www.ixl.com/company/careers\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 89,
+    "url": "https://jpmc.fa.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001/jobs?keyword=intern&lastSelectedFacet=POSTING_DATES&location=United+Kingdom&locationId=300000000289276&locationLevel=country&mode=location&selectedPostingDatesFacet=7",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://jpmc.fa.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001/jobs?keyword=intern&lastSelectedFacet=POSTING_DATES&location=United+Kingdom&locationId=300000000289276&locationLevel=country&mode=location&selectedPostingDatesFacet=7\nCall log:\n\u001b[2m  - navigating to \"https://jpmc.fa.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001/jobs?keyword=intern&lastSelectedFacet=POSTING_DATES&location=United+Kingdom&locationId=300000000289276&locationLevel=country&mode=location&selectedPostingDatesFacet=7\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 90,
+    "url": "https://www.jpmorganchase.com/careers/explore-opportunities/programs",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://www.jpmorganchase.com/careers/explore-opportunities/programs\nCall log:\n\u001b[2m  - navigating to \"https://www.jpmorganchase.com/careers/explore-opportunities/programs\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 91,
+    "url": "https://www.janestreet.com/join-jane-street/programs-and-events/?location=all-locations&program-type=all-programs&event-type=all-events&show-programs=true&show-events=true",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://www.janestreet.com/join-jane-street/programs-and-events/?location=all-locations&program-type=all-programs&event-type=all-events&show-programs=true&show-events=true\nCall log:\n\u001b[2m  - navigating to \"https://www.janestreet.com/join-jane-street/programs-and-events/?location=all-locations&program-type=all-programs&event-type=all-events&show-programs=true&show-events=true\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 92,
+    "url": "https://www.careers.jnj.com/en/jobs/?search=&team=Career+Programs&country=Canada&type=Full+time&pagesize=20#results",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://www.careers.jnj.com/en/jobs/?search=&team=Career+Programs&country=Canada&type=Full+time&pagesize=20#results\nCall log:\n\u001b[2m  - navigating to \"https://www.careers.jnj.com/en/jobs/?search=&team=Career+Programs&country=Canada&type=Full+time&pagesize=20#results\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 93,
+    "url": "https://kearney.recsolu.com/job_boards/1",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://kearney.recsolu.com/job_boards/1\nCall log:\n\u001b[2m  - navigating to \"https://kearney.recsolu.com/job_boards/1\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 94,
+    "url": "https://koch.avature.net/zh_CN/careers/SearchJobs/intern?953=%5B329267%5D&953_format=6152&listFilterMode=1&jobRecordsPerPage=6&",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://koch.avature.net/zh_CN/careers/SearchJobs/intern?953=%5B329267%5D&953_format=6152&listFilterMode=1&jobRecordsPerPage=6&\nCall log:\n\u001b[2m  - navigating to \"https://koch.avature.net/zh_CN/careers/SearchJobs/intern?953=%5B329267%5D&953_format=6152&listFilterMode=1&jobRecordsPerPage=6&\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 95,
+    "url": "https://www.kpmgcareers.co.uk/search/vacancies/?employmentTypes[0]=Full%20Time&experienceLevels[0]=Graduate&experienceLevels[1]=Insight%20Penultimate%20Year&experienceLevels[2]=Insight%20Graduate&experienceLevels[3]=Vacation&intakeType=Student",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://www.kpmgcareers.co.uk/search/vacancies/?employmentTypes[0]=Full%20Time&experienceLevels[0]=Graduate&experienceLevels[1]=Insight%20Penultimate%20Year&experienceLevels[2]=Insight%20Graduate&experienceLevels[3]=Vacation&intakeType=Student\nCall log:\n\u001b[2m  - navigating to \"https://www.kpmgcareers.co.uk/search/vacancies/?employmentTypes[0]=Full%20Time&experienceLevels[0]=Graduate&experienceLevels[1]=Insight%20Penultimate%20Year&experienceLevels[2]=Insight%20Graduate&experienceLevels[3]=Vacation&intakeType=Student\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 96,
+    "url": "https://careers.kpmg.com.sg/search/?q=&shifttype=Permanent&sortColumn=referencedate&sortDirection=desc#hdrDateButton",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://careers.kpmg.com.sg/search/?q=&shifttype=Permanent&sortColumn=referencedate&sortDirection=desc#hdrDateButton\nCall log:\n\u001b[2m  - navigating to \"https://careers.kpmg.com.sg/search/?q=&shifttype=Permanent&sortColumn=referencedate&sortDirection=desc#hdrDateButton\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 97,
+    "url": "https://careers.kpmg.ca/students/jobs?limit=25&page=1&sortBy=posted_date&descending=true",
+    "status": "fail",
+    "error": "配置生成失败",
+    "jobs": []
+  },
+  {
+    "index": 98,
+    "url": "https://kpmg.com/sg/en/events.html",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://kpmg.com/sg/en/events.html\nCall log:\n\u001b[2m  - navigating to \"https://kpmg.com/sg/en/events.html\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 99,
+    "url": "https://www.kpmguscareers.com/job-search/?career-level-parents=&career-level=Internship%7C&order=posted&spage=1",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://www.kpmguscareers.com/job-search/?career-level-parents=&career-level=Internship%7C&order=posted&spage=1\nCall log:\n\u001b[2m  - navigating to \"https://www.kpmguscareers.com/job-search/?career-level-parents=&career-level=Internship%7C&order=posted&spage=1\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 100,
+    "url": "https://globalcareers.lge.com/jobs",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_TIMED_OUT at https://globalcareers.lge.com/jobs\nCall log:\n\u001b[2m  - navigating to \"https://globalcareers.lge.com/jobs\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 101,
+    "url": "https://www.lockheedmartinjobs.com/search-jobs/internship%20jobs/United%20States/694/1/2/6252001/39x76/-98x5/50/2",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_CONNECTION_CLOSED at https://www.lockheedmartinjobs.com/search-jobs/internship%20jobs/United%20States/694/1/2/6252001/39x76/-98x5/50/2\nCall log:\n\u001b[2m  - navigating to \"https://www.lockheedmartinjobs.com/search-jobs/internship%20jobs/United%20States/694/1/2/6252001/39x76/-98x5/50/2\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 102,
+    "url": "https://careers.loreal.com/en_US/jobs/SearchJobs?3_110_3=161554&3_34_3=17970",
+    "status": "success",
+    "error": "",
+    "jobs": [
+      {
+        "_index": 0,
+        "title": "[L'Oréal HK]  美容顧問 - CeraVe & La Roche Posay",
+        "location": "",
+        "date": "Posted 02-Jan-2026",
+        "url": "https://careers.loreal.com/en_US/jobs/JobDetail/L-Or-al-HK-CeraVe-La-Roche-Posay/229434"
+      }
+    ]
+  },
+  {
+    "index": 103,
+    "url": "https://careers.mastercard.com/us/en/search-results?keywords=intern",
+    "status": "fail",
+    "error": "Browser command timed out after 60.0s: eval \n        (() => {\n            const cards = document.querySelectorAll('#acc-skip-content > div.body-wrapper.ph-page-container:nth-of-type(2) > div > div.results-state.container > div.row > div.col-md-8.col-sm-7:nth-of-type(2) > section.ph-widget.element-animate:nth-of-type(2) > div.ph-widget-target.au-target > div.ph-search-results-area > div.phs-facet-results-block > div.phs-jobs-list:nth-of-type(2) > div.content-block:nth-of-type(2) > ul.au-target > li');\n            return JSON.stringify(Array.from(cards).map(card => {\n                const el = card.querySelector('.information a[data-ph-at-id=\"job-link\"]');\n                return el ? (el.href || el.getAttribute('href') || '') : '';\n            }));\n        })()\n        ",
+    "jobs": []
+  },
+  {
+    "index": 104,
+    "url": "https://careers-asia.forvismazars.com/apply/job-offers/",
+    "status": "fail",
+    "error": "Browser command timed out after 60.0s: open https://careers-asia.forvismazars.com/apply/job-offers/",
+    "jobs": []
+  },
+  {
+    "index": 105,
+    "url": "https://www.mckinsey.com/careers/search-jobs?cities=London&query=internship",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_HTTP2_PROTOCOL_ERROR at https://www.mckinsey.com/careers/search-jobs?cities=London&query=internship\nCall log:\n\u001b[2m  - navigating to \"https://www.mckinsey.com/careers/search-jobs?cities=London&query=internship\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 106,
+    "url": "https://www.metlifecareers.com/en_US/ml/SearchJobs/?12310=%5B116520%2C116458%2C116573%2C116535%2C116627%5D&12310_format=9873&listFilterMode=1&jobRecordsPerPage=6&",
+    "status": "fail",
+    "error": "Browser command timed out after 60.0s: scroll down 600",
+    "jobs": []
+  },
+  {
+    "index": 107,
+    "url": "https://www.microsoft.com/en-us/research/search/?facet%5Bdate%5D%5Bfixed%5D=custom-range&facet%5Bdate%5D%5Brange%5D%5Bfrom%5D=2026-02-24&facet%5Bdate%5D%5Brange%5D%5Bto%5D=2027-04-01&facet%5Btax%5D%5Bmsr-content-type%5D[]=msr-event&pg=1&sort_by=most-recent",
+    "status": "fail",
+    "error": "配置生成失败",
+    "jobs": []
+  },
+  {
+    "index": 108,
+    "url": "https://apply.careers.microsoft.com/careers?query=internship&start=0&location=united+kingdom&pid=1970393556626895&sort_by=timestamp&filter_include_remote=1",
+    "status": "success",
+    "error": "",
+    "jobs": [
+      {
+        "_index": 0,
+        "title": "Applied Sciences PhD Intern",
+        "location": "United Kingdom, London, London",
+        "date": "Posted 5 days ago",
+        "url": "https://apply.careers.microsoft.com/careers/job/1970393556628229"
+      }
+    ]
+  },
+  {
+    "index": 109,
+    "url": "https://campusjobs.mlp.com/careers",
+    "status": "fail",
+    "error": "Browser command timed out after 60.0s: open https://campusjobs.mlp.com/careers",
+    "jobs": []
+  },
+  {
+    "index": 110,
+    "url": "https://mizuhobank.recruitmentplatform.com/FO/careers/components/index.html?searchCriteria[0][key]=keywords&searchCriteria[0][values][]=full%20time",
+    "status": "success",
+    "error": "",
+    "jobs": [
+      {
+        "_index": 0,
+        "title": "Assistant Vice President, System Security Control Team, System Planning & Development Section",
+        "location": "Hong Kong",
+        "department": "Information Technology",
+        "date": "25-Feb-2026",
+        "url": "https://mizuhobank.recruitmentplatform.com/FO/careers/components/details.html?jobId=3185&jobTitle=Assistant%20Vice%20President,%20System%20Security%20Control%20Team,%20System%20Planning%20&%20Development%20Section"
+      }
+    ]
+  },
+  {
+    "index": 111,
+    "url": "https://moelis-careers.tal.net/vx/lang-en-GB/mobile-0/appcentre-ext/brand-4/user-7/xf-5cdc85793a01/wid-2/candidate/jobboard/vacancy/2/adv/?f_Item_Opportunity_141313_lk=1823&f_Item_Opportunity_60427_lk=523808",
+    "status": "fail",
+    "error": "配置生成失败",
+    "jobs": []
+  },
+  {
+    "index": 112,
+    "url": "https://careers.moodys.com/early-careers?keyword=Intern&filter%5Bcountry%5D%5B0%5D=United%20Kingdom&sort_by=update_date",
+    "status": "fail",
+    "error": "Browser command timed out after 60.0s: open https://careers.moodys.com/early-careers?keyword=Intern&filter%5Bcountry%5D%5B0%5D=United%20Kingdom&sort_by=update_date",
+    "jobs": []
+  },
+  {
+    "index": 113,
+    "url": "bs.com/US_External_Career_Site?q=Australia",
+    "status": "fail",
+    "error": "Browser command timed out after 60.0s: open bs.com/US_External_Career_Site?q=Australia",
+    "jobs": []
+  },
+  {
+    "index": 114,
+    "url": "https://recrutement.natixis.com/en/our-job-offers?tax_contract=permanent&tax_place=united-states-en-en&tax_country=international-en-en&external=false",
+    "status": "success",
+    "error": "",
+    "jobs": [
+      {
+        "_index": 0,
+        "title": "Collateral Management and Treasury Operations Analyst",
+        "department": "Natixis CIB North America",
+        "location": "New York",
+        "category": "Permanent",
+        "url": "https://recrutement.natixis.com/en/job/collateral-management-and-treasury-operations-analyst"
+      }
+    ]
+  },
+  {
+    "index": 115,
+    "url": "https://jobs.natwestgroup.com/pages/early-talent-events#upcoming",
+    "status": "fail",
+    "error": "配置生成失败",
+    "jobs": []
+  },
+  {
+    "index": 116,
+    "url": "https://explore.jobs.netflix.net/careers?location=NSW%2C%20Australia&pid=790313542702&domain=netflix.com&sort_by=new&triggerGoButton=false",
+    "status": "success",
+    "error": "",
+    "jobs": [
+      {
+        "_index": 0,
+        "title": "Sales Solutions Lead (Technology Integrations)",
+        "location": "Tokyo, Japan and 2 more",
+        "department": "Advertising",
+        "url": "https://explore.jobs.netflix.net/careers?location=NSW%2C%20Australia&pid=790314085087&domain=netflix.com&sort_by=new"
+      }
+    ]
+  },
+  {
+    "index": 117,
+    "url": "https://fa-evmr-saasfaprod1.fa.ocs.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/jobs?lastSelectedFacet=LOCATIONS&mode=location&selectedLocationsFacet=300000000471544",
+    "status": "fail",
+    "error": "未提取到职位",
+    "jobs": []
+  },
+  {
+    "index": 118,
+    "url": "https://www.nvidia.com/en-us/about-nvidia/careers/university-recruiting/events-calendar/",
+    "status": "fail",
+    "error": "配置生成失败",
+    "jobs": []
+  },
+  {
+    "index": 119,
+    "url": "https://careers.occstrategy.com/vacancies/vacancy-search-results.aspx?",
+    "status": "success",
+    "error": "",
+    "jobs": [
+      {
+        "_index": 0,
+        "title": "2026 Black Talent in Consulting Insight Day UK",
+        "location": "London",
+        "date": "15 Mar 2026",
+        "url": "https://careers.occstrategy.com/vacancies/359/2026-black-talent-in-consulting-insight-day-uk.html"
+      }
+    ]
+  },
+  {
+    "index": 120,
+    "url": "https://www.occstrategy.com/en/careers/recruitment-events/",
+    "status": "fail",
+    "error": "Browser command timed out after 60.0s: open https://www.occstrategy.com/en/careers/recruitment-events/",
+    "jobs": []
+  },
+  {
+    "index": 121,
+    "url": "https://opco.hrmdirect.com/employment/job-openings.php?search=true&city=-1&state=-1&cust_sort1=-1&cust_sort2=-4",
+    "status": "fail",
+    "error": "未提取到职位",
+    "jobs": []
+  },
+  {
+    "index": 122,
+    "url": "https://optiver.com/working-at-optiver/graduate-and-student/?numberposts=6&paged=1&search_target=title,excerpt&taxonomy_relation=AND&search_relation=AND&show_load_more=0&show_pagination=1&show_sort=0&orderby=date&order=DESC&layout_style=default&posts_per_page=6&show_levels=1&show_departments=1&show_offices=1&show_search=1&level=student-and-graduate",
+    "status": "fail",
+    "error": "HTTPSConnectionPool(host='ark.cn-beijing.volces.com', port=443): Read timed out. (read timeout=300)",
+    "jobs": []
+  },
+  {
+    "index": 123,
+    "url": "https://careers.oracle.com/en/sites/jobsearch/jobs?lastSelectedFacet=LOCATIONS&mode=location&selectedLocationsFacet=300000000106863",
+    "status": "success",
+    "error": "",
+    "jobs": [
+      {
+        "_index": 0,
+        "title": "Program Manager, Legal Financial Services",
+        "location": "LONDON, United Kingdom\n\n\n    \n        \n    \n            \n                \n                    and 3 more",
+        "description": "Oracle’s Financial Services Legal team is a specialist group in the company’s Legal Department that delivers strategic legal advice relating to financial services regulatory matters that affect Oracle and its customers.",
+        "url": "https://careers.oracle.com/en/sites/jobsearch/job/319054/?lastSelectedFacet=LOCATIONS&mode=location&selectedLocationsFacet=300000000106863"
+      }
+    ]
+  },
+  {
+    "index": 124,
+    "url": "https://www.pepsicojobs.com/internshipsprograms/jobs?page=1&sortBy=posted_date&descending=true",
+    "status": "fail",
+    "error": "配置生成失败",
+    "jobs": []
+  },
+  {
+    "index": 125,
+    "url": "https://phh.tbe.taleo.net/phh04/ats/careers/v2/jobSearch?org=PIPER_SANDLER&cws=53",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_TOO_MANY_REDIRECTS at https://phh.tbe.taleo.net/phh04/ats/careers/v2/jobSearch?org=PIPER_SANDLER&cws=53\nCall log:\n\u001b[2m  - navigating to \"https://phh.tbe.taleo.net/phh04/ats/careers/v2/jobSearch?org=PIPER_SANDLER&cws=53\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 126,
+    "url": "https://pipersandler.wd501.myworkdayjobs.com/Piper_Sandler_Careers",
+    "status": "success",
+    "error": "",
+    "jobs": [
+      {
+        "_index": 0,
+        "title": "2026 London Analyst Class - Investment Banking - MedTech",
+        "location": "London",
+        "remote_type": "",
+        "date": "Posted Yesterday",
+        "department": "",
+        "url": "https://pipersandler.wd501.myworkdayjobs.com/en-US/Piper_Sandler_Careers/job/London/XMLNAME-2026-London-Analyst-Class---Investment-Banking---MedTech_R-100382"
+      }
+    ]
+  },
+  {
+    "index": 127,
+    "url": "https://pjtpartners.wd1.myworkdayjobs.com/Studentevents",
+    "status": "fail",
+    "error": "未提取到职位",
+    "jobs": []
+  },
+  {
+    "index": 128,
+    "url": "https://careers.point72.com/?location=london",
+    "status": "fail",
+    "error": "Browser command timed out after 60.0s: open https://careers.point72.com/?location=london",
+    "jobs": []
+  },
+  {
+    "index": 129,
+    "url": "https://www.pwchk.com/en/careers/contact-us.html",
+    "status": "fail",
+    "error": "配置生成失败",
+    "jobs": []
+  },
+  {
+    "index": 130,
+    "url": "https://jobs.pwc.co.uk/student/uk/en/search-results?keywords=",
+    "status": "fail",
+    "error": "Browser command timed out after 60.0s: open https://jobs.pwc.co.uk/student/uk/en/search-results?keywords=",
+    "jobs": []
+  },
+  {
+    "index": 131,
+    "url": "https://www.qube-rt.com/careers/",
+    "status": "success",
+    "error": "",
+    "jobs": [
+      {
+        "_index": 0,
+        "title": "2026 Graduate - FPGA Engineering",
+        "location": "London",
+        "url": "https://www.qube-rt.com/careers/job?gh_jid=8095410002"
+      }
+    ]
+  },
+  {
+    "index": 132,
+    "url": "https://www.quamplus.com/en/career",
+    "status": "fail",
+    "error": "Browser command timed out after 60.0s: open https://www.quamplus.com/en/career",
+    "jobs": []
+  },
+  {
+    "index": 133,
+    "url": "https://raymondjames.taleo.net/careersection/raymond+james+external+career+section+uk2fgermany/jobsearch.ftl?lang=en&portal=64200010414",
+    "status": "fail",
+    "error": "Browser command timed out after 60.0s: open https://raymondjames.taleo.net/careersection/raymond+james+external+career+section+uk2fgermany/jobsearch.ftl?lang=en&portal=64200010414",
+    "jobs": []
+  },
+  {
+    "index": 134,
+    "url": "https://careers.robinhood.com/",
+    "status": "success",
+    "error": "",
+    "jobs": [
+      {
+        "_index": 0,
+        "title": "Communications Compliance Senior Specialist",
+        "location": "Menlo Park, CA; New York, NY; Washington, DC",
+        "url": "https://boards.greenhouse.io/robinhood/jobs/7612146?gh_src=NaN&gh_jid=7612146"
+      }
+    ]
+  },
+  {
+    "index": 135,
+    "url": "https://www.rothschildandco.com/en/careers/students-and-graduates/opportunities/?taxonomy_1156=735&taxonomy_1168=&taxonomy_1155=725",
+    "status": "fail",
+    "error": "配置生成失败",
+    "jobs": []
+  },
+  {
+    "index": 136,
+    "url": "https://jobs.sap.com/search/?createNewAlert=false&q=&locationsearch=&optionsFacetsDD_department=&optionsFacetsDD_customfield3=Student&optionsFacetsDD_country=US",
+    "status": "success",
+    "error": "",
+    "jobs": [
+      {
+        "_index": 0,
+        "title": "SAP iXp Intern - Associate Developer",
+        "location": "Newtown Square, PA, US, 19073",
+        "url": "https://jobs.sap.com/job/Newtown-Square-SAP-iXp-Intern-Associate-Developer-PA-19073/1367398633/"
+      }
+    ]
+  },
+  {
+    "index": 137,
+    "url": "https://careers.se.com/jobs?lang=en-US&page=1&country=United%20States&tags1=Intern",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_HTTP2_PROTOCOL_ERROR at https://careers.se.com/jobs?lang=en-US&page=1&country=United%20States&tags1=Intern\nCall log:\n\u001b[2m  - navigating to \"https://careers.se.com/jobs?lang=en-US&page=1&country=United%20States&tags1=Intern\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 138,
+    "url": "https://ekbq.fa.em2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_2/jobs?location=United+Kingdom&locationId=300000000304260&locationLevel=country&mode=job-location",
+    "status": "success",
+    "error": "",
+    "jobs": [
+      {
+        "_index": 0,
+        "title": "Software Engineer - AI and Innovation",
+        "location": "London, United Kingdom",
+        "date": "02/24/2026",
+        "url": ""
+      }
+    ]
+  },
+  {
+    "index": 139,
+    "url": "https://careers.shopee.sg/jobs?region_id=25&level=4,1&name=&limit=50&offset=0",
+    "status": "success",
+    "error": "",
+    "jobs": [
+      {
+        "_index": 0,
+        "title": "Regional AI Strategy Product Manager",
+        "department": "Operations",
+        "level": "Entry Level",
+        "location": "Singapore",
+        "url": "https://careers.shopee.sg/job-detail/J02111382/1?channel=10001"
+      }
+    ]
+  },
+  {
+    "index": 140,
+    "url": "https://www.silverlakeaxis.com/careers",
+    "status": "fail",
+    "error": "Browser command timed out after 60.0s: open https://www.silverlakeaxis.com/careers",
+    "jobs": []
+  },
+  {
+    "index": 141,
+    "url": "https://careers.snowflake.com/us/en/search-results?keywords=Australia",
+    "status": "fail",
+    "error": "Browser command timed out after 60.0s: eval \n        (() => {\n            const cards = document.querySelectorAll('div.ph-page:nth-of-type(2) > div.body-wrapper.ph-page-container:nth-of-type(2) > div > div.results-state.container > div.row > div.col-md-8.col-sm-7:nth-of-type(2) > section.ph-widget:nth-of-type(2) > div.ph-widget-target.au-target > div.ph-search-results-area > div.phs-facet-results-block > div:nth-of-type(1) > div.phs-jobs-list:nth-of-type(2) > div.content-block:nth-of-type(2) > ul.au-target > li');\n            return JSON.stringify(Array.from(cards).map(card => {\n                const el = card.querySelector('a[data-ph-at-id=\"job-link\"]');\n                return el ? (el.href || el.getAttribute('href') || '') : '';\n            }));\n        })()\n        ",
+    "jobs": []
+  },
+  {
+    "index": 142,
+    "url": "https://careers.societegenerale.com/en/search?refinementList[jobLocation][0]=GBR",
+    "status": "fail",
+    "error": "Browser command timed out after 60.0s: open https://careers.societegenerale.com/en/search?refinementList[jobLocation][0]=GBR",
+    "jobs": []
+  },
+  {
+    "index": 143,
+    "url": "https://www.lifeatspotify.com/jobs?l=london&j=internship",
+    "status": "fail",
+    "error": "未提取到职位",
+    "jobs": []
+  },
+  {
+    "index": 144,
+    "url": "https://jobs.standardchartered.com/search/?q=&locationsearch=&skillsSearch=false&markerViewed=&carouselIndex=&facetFilters=%7B%22cust_csb_employmentType%22%3A%5B%22Intern%22%5D%2C%22cust_region%22%3A%5B%22Europe+%26+Americas%22%5D%2C%22jobLocationCountry%22%3A%5B%22United+Kingdom%22%5D%7D&pageNumber=0",
+    "status": "fail",
+    "error": "配置生成失败",
+    "jobs": []
+  },
+  {
+    "index": 145,
+    "url": "https://recruiting2.ultipro.com/STE1004/JobBoard/fbeef081-b55b-0ae3-a2ac-7b4fb3db6826/?q=&o=postedDateDesc&f4=NUTsYUkjpV6vseb5btcQyQ",
+    "status": "fail",
+    "error": "配置生成失败",
+    "jobs": []
+  },
+  {
+    "index": 146,
+    "url": "https://www.stepstonegroup.com/current-opportunities/",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: Timeout 60000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"https://www.stepstonegroup.com/current-opportunities/\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 147,
+    "url": "https://careers.sig.com/discovery-programs",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: Timeout 60000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"https://careers.sig.com/discovery-programs\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 148,
+    "url": "https://td.wd3.myworkdayjobs.com/en-US/TD_Bank_Careers",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: Timeout 60000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"https://td.wd3.myworkdayjobs.com/en-US/TD_Bank_Careers\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 149,
+    "url": "https://careers.te.com/search/?q=&q2=&alertId=&locationsearch=&title=intern&location=&facility=&department=&searchResultView=LIST&markerViewed=&carouselIndex=&facetFilters=%7B%22filter7%22%3A%5B%22Hong+Kong%22%5D%7D&pageNumber=0&sortBy=dateesultView=LIST&markerViewed=&carouselIndex=&facetFilters=%7B%22filter7%22%3A%5B%22Hong+Kong%22%5D%7D&pageNumber=0",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_INTERNET_DISCONNECTED at https://careers.te.com/search/?q=&q2=&alertId=&locationsearch=&title=intern&location=&facility=&department=&searchResultView=LIST&markerViewed=&carouselIndex=&facetFilters=%7B%22filter7%22%3A%5B%22Hong+Kong%22%5D%7D&pageNumber=0&sortBy=dateesultView=LIST&markerViewed=&carouselIndex=&facetFilters=%7B%22filter7%22%3A%5B%22Hong+Kong%22%5D%7D&pageNumber=0\nCall log:\n\u001b[2m  - navigating to \"https://careers.te.com/search/?q=&q2=&alertId=&locationsearch=&title=intern&location=&facility=&department=&searchResultView=LIST&markerViewed=&carouselIndex=&facetFilters=%7B%22filter7%22%3A%5B%22Hong+Kong%22%5D%7D&pageNumber=0&sortBy=dateesultView=LIST&markerViewed=&carouselIndex=&facetFilters=%7B%22filter7%22%3A%5B%22Hong+Kong%22%5D%7D&pageNumber=0\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 150,
+    "url": "https://jobs.temasek.com.sg/search/?createNewAlert=false&q=&locationsearch=HK&optionsFacetsDD_customfield1=&optionsFacetsDD_customfield2=&optionsFacetsDD_customfield5=Intern",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_INTERNET_DISCONNECTED at https://jobs.temasek.com.sg/search/?createNewAlert=false&q=&locationsearch=HK&optionsFacetsDD_customfield1=&optionsFacetsDD_customfield2=&optionsFacetsDD_customfield5=Intern\nCall log:\n\u001b[2m  - navigating to \"https://jobs.temasek.com.sg/search/?createNewAlert=false&q=&locationsearch=HK&optionsFacetsDD_customfield1=&optionsFacetsDD_customfield2=&optionsFacetsDD_customfield5=Intern\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 151,
+    "url": "https://jobs.teradyne.com/go/Internships-&-Co-Ops/8459800/?q=&q2=&alertId=&title=&location=UK&department=&facility=#searchresults",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_INTERNET_DISCONNECTED at https://jobs.teradyne.com/go/Internships-&-Co-Ops/8459800/?q=&q2=&alertId=&title=&location=UK&department=&facility=#searchresults\nCall log:\n\u001b[2m  - navigating to \"https://jobs.teradyne.com/go/Internships-&-Co-Ops/8459800/?q=&q2=&alertId=&title=&location=UK&department=&facility=#searchresults\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 152,
+    "url": "https://www.tesla.com/careers/search/?type=fulltime&site=GB",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_INTERNET_DISCONNECTED at https://www.tesla.com/careers/search/?type=fulltime&site=GB\nCall log:\n\u001b[2m  - navigating to \"https://www.tesla.com/careers/search/?type=fulltime&site=GB\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 153,
+    "url": "https://hire-r1.mokahr.com/social-recruitment/tesla/100004141#/jobs?page=1&anchorName=jobsList&commitment%5B0%5D=%E5%85%A8%E8%81%8C",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_INTERNET_DISCONNECTED at https://hire-r1.mokahr.com/social-recruitment/tesla/100004141#/jobs?page=1&anchorName=jobsList&commitment%5B0%5D=%E5%85%A8%E8%81%8C\nCall log:\n\u001b[2m  - navigating to \"https://hire-r1.mokahr.com/social-recruitment/tesla/100004141#/jobs?page=1&anchorName=jobsList&commitment%5B0%5D=%E5%85%A8%E8%81%8C\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 154,
+    "url": "https://jobs.thermofisher.com/global/en/search-results?m=3&location=Remote%2C%20United%20Kingdom",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_INTERNET_DISCONNECTED at https://jobs.thermofisher.com/global/en/search-results?m=3&location=Remote%2C%20United%20Kingdom\nCall log:\n\u001b[2m  - navigating to \"https://jobs.thermofisher.com/global/en/search-results?m=3&location=Remote%2C%20United%20Kingdom\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 155,
+    "url": "https://thomsonreuters.wd5.myworkdayjobs.com/en-US/External_Career_Site/details/Proposition-and-Commercial-Strategy-Manager---Reuters-Agency_JREQ197847?Location_Country=bc33aa3152ec42d4995f4791a106ed09&Location_Country=a30a87ed25634629aa6c3958aa2b91ea&Location_Country=29247e57dbaf46fb855b224e03170bc7&Location_Country=d903bb3fedad45039383f6de334ad4db&Location_Country=80938777cac5440fab50d729f9634969&Location_Country=d4afdeb461d446e4babd204bd102dba8",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_NETWORK_CHANGED at https://thomsonreuters.wd5.myworkdayjobs.com/en-US/External_Career_Site/details/Proposition-and-Commercial-Strategy-Manager---Reuters-Agency_JREQ197847?Location_Country=bc33aa3152ec42d4995f4791a106ed09&Location_Country=a30a87ed25634629aa6c3958aa2b91ea&Location_Country=29247e57dbaf46fb855b224e03170bc7&Location_Country=d903bb3fedad45039383f6de334ad4db&Location_Country=80938777cac5440fab50d729f9634969&Location_Country=d4afdeb461d446e4babd204bd102dba8\nCall log:\n\u001b[2m  - navigating to \"https://thomsonreuters.wd5.myworkdayjobs.com/en-US/External_Career_Site/details/Proposition-and-Commercial-Strategy-Manager---Reuters-Agency_JREQ197847?Location_Country=bc33aa3152ec42d4995f4791a106ed09&Location_Country=a30a87ed25634629aa6c3958aa2b91ea&Location_Country=29247e57dbaf46fb855b224e03170bc7&Location_Country=d903bb3fedad45039383f6de334ad4db&Location_Country=80938777cac5440fab50d729f9634969&Location_Country=d4afdeb461d446e4babd204bd102dba8\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 156,
+    "url": "https://lifeattiktok.com/search?keyword=&recruitment_id_list=201&job_category_id_list=&subject_id_list=&location_code_list=&limit=12&offset=0",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_NETWORK_CHANGED at https://lifeattiktok.com/search?keyword=&recruitment_id_list=201&job_category_id_list=&subject_id_list=&location_code_list=&limit=12&offset=0\nCall log:\n\u001b[2m  - navigating to \"https://lifeattiktok.com/search?keyword=&recruitment_id_list=201&job_category_id_list=&subject_id_list=&location_code_list=&limit=12&offset=0\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 157,
+    "url": "https://trexquant.com/careers?work-types=Full-time",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_NETWORK_CHANGED at https://trexquant.com/careers?work-types=Full-time\nCall log:\n\u001b[2m  - navigating to \"https://trexquant.com/careers?work-types=Full-time\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 158,
+    "url": "https://careers.veeva.com/job-search-results/?search=&remote=false&ts=&regions=United+States%2CCanada%2CAsia+Pacific&office_locations=",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_INTERNET_DISCONNECTED at https://careers.veeva.com/job-search-results/?search=&remote=false&ts=&regions=United+States%2CCanada%2CAsia+Pacific&office_locations=\nCall log:\n\u001b[2m  - navigating to \"https://careers.veeva.com/job-search-results/?search=&remote=false&ts=&regions=United+States%2CCanada%2CAsia+Pacific&office_locations=\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 159,
+    "url": "https://www.westpac.com.au/about-westpac/careers/",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_INTERNET_DISCONNECTED at https://www.westpac.com.au/about-westpac/careers/\nCall log:\n\u001b[2m  - navigating to \"https://www.westpac.com.au/about-westpac/careers/\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 160,
+    "url": "https://www.williamblair.com/Careers/Job-Search",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_INTERNET_DISCONNECTED at https://www.williamblair.com/Careers/Job-Search\nCall log:\n\u001b[2m  - navigating to \"https://www.williamblair.com/Careers/Job-Search\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 161,
+    "url": "https://www.worldquant.com/career-listing/?location=hong-kong&department=",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_INTERNET_DISCONNECTED at https://www.worldquant.com/career-listing/?location=hong-kong&department=\nCall log:\n\u001b[2m  - navigating to \"https://www.worldquant.com/career-listing/?location=hong-kong&department=\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 162,
+    "url": "https://careers.wtwco.com/jobs/search?page=1&country_codes%5B%5D=US&query=",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_INTERNET_DISCONNECTED at https://careers.wtwco.com/jobs/search?page=1&country_codes%5B%5D=US&query=\nCall log:\n\u001b[2m  - navigating to \"https://careers.wtwco.com/jobs/search?page=1&country_codes%5B%5D=US&query=\", waiting until \"load\"\u001b[22m",
+    "jobs": []
+  },
+  {
+    "index": 163,
+    "url": "https://www.workatastartup.com/companies?demographic=any&hasEquity=any&hasSalary=any&industry=any&interviewProcess=any&jobType=intern&layout=list-compact&role=eng&sortBy=created_desc&tab=any&usVisaNotRequired=any",
+    "status": "fail",
+    "error": "agent-browser error: \u001b[31m✗\u001b[0m page.goto: net::ERR_INTERNET_DISCONNECTED at https://www.workatastartup.com/companies?demographic=any&hasEquity=any&hasSalary=any&industry=any&interviewProcess=any&jobType=intern&layout=list-compact&role=eng&sortBy=created_desc&tab=any&usVisaNotRequired=any\nCall log:\n\u001b[2m  - navigating to \"https://www.workatastartup.com/companies?demographic=any&hasEquity=any&hasSalary=any&industry=any&interviewProcess=any&jobType=intern&layout=list-compact&role=eng&sortBy=created_desc&tab=any&usVisaNotRequired=any\", waiting until \"load\"\u001b[22m",
+    "jobs": []
   }
 ]

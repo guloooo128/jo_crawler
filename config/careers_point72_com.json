@@ -1,0 +1,19 @@
+{
+  "domain": "careers.point72.com",
+  "name": "Point72 招聘",
+  "card_selector": "#itemContainer > div",
+  "fields": {
+    "title": ".o-listing--table__left h4 a",
+    "department": ".o-listing--table__middle p",
+    "location": ".o-listing--table__right p"
+  },
+  "url_mode": "href",
+  "url_selector": ".o-listing--table__left h4 a",
+  "wait_after_click_ms": 2000,
+  "pre_actions": [
+    {
+      "action": "wait_for_content",
+      "timeout_ms": 15000
+    }
+  ]
+}
