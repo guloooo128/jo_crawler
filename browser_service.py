@@ -1,20 +1,23 @@
-"""Agent-Browser CLI bridge service."""
+"""Playwright-based browser service for browser automation."""
 
 from __future__ import annotations
 
 import asyncio
 import json
 import logging
+import re
 from typing import Any, Optional
+
+from playwright.async_api import async_playwright, Browser, BrowserContext, Page, Playwright
 
 logger = logging.getLogger(__name__)
 
 
 class BrowserService:
-    """Wraps agent-browser CLI for browser automation.
+    """Wraps Playwright for browser automation.
 
-    Each instance manages a named session. All browser operations are
-    executed by spawning `npx agent-browser <command>` subprocesses.
+    All browser operations are executed through Playwright's async API.
+    The browser is lazily initialized on first use.
     """
 
     def __init__(
@@ -24,61 +27,54 @@ class BrowserService:
         cdp_url: Optional[str] = None,
         timeout: int = 60000,
     ):
-        self.session = session
         self.headless = headless
         self.cdp_url = cdp_url
         self.timeout = timeout
+        self._playwright: Optional[Playwright] = None
+        self._browser: Optional[Browser] = None
+        self._context: Optional[BrowserContext] = None
+        self._page: Optional[Page] = None
+        # Cache for @ref click support: ref_id -> {role, name}
+        self._refs_cache: dict[str, dict] = {}
 
-    # ── Core execution ──────────────────────────────────────────────
+    async def _ensure_browser(self) -> Page:
+        """Lazily initialize Playwright browser and return the active page."""
+        if self._page and not self._page.is_closed():
+            return self._page
 
-    async def _run(self, *args: str, timeout: Optional[int] = None) -> str:
-        """Execute an agent-browser CLI command and return stdout."""
-        cmd = ["npx", "agent-browser"]
+        if not self._playwright:
+            self._playwright = await async_playwright().start()
 
-        # Global options
-        cmd.extend(["--session", self.session])
-        if not self.headless:
-            cmd.append("--headed")
-        if self.cdp_url:
-            cmd.extend(["--cdp", self.cdp_url])
+        if not self._browser or not self._browser.is_connected():
+            if self.cdp_url:
+                self._browser = await self._playwright.chromium.connect_over_cdp(self.cdp_url)
+            else:
+                self._browser = await self._playwright.chromium.launch(
+                    headless=self.headless,
+                )
 
-        # Command-specific args
-        cmd.extend(args)
+        if not self._context:
+            if self._browser.contexts:
+                self._context = self._browser.contexts[0]
+            else:
+                self._context = await self._browser.new_context(
+                    viewport={"width": 1280, "height": 800},
+                )
 
-        effective_timeout = (timeout or self.timeout) / 1000  # ms → seconds
+        if not self._context.pages:
+            self._page = await self._context.new_page()
+        else:
+            self._page = self._context.pages[-1]
 
-        logger.debug(f"Running: {' '.join(cmd)}")
-
-        proc = await asyncio.create_subprocess_exec(
-            *cmd,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
-
-        try:
-            stdout, stderr = await asyncio.wait_for(
-                proc.communicate(),
-                timeout=effective_timeout,
-            )
-        except asyncio.TimeoutError:
-            proc.kill()
-            await proc.communicate()
-            raise TimeoutError(f"Browser command timed out after {effective_timeout}s: {' '.join(args)}")
-
-        stdout_str = stdout.decode("utf-8", errors="replace").strip()
-        stderr_str = stderr.decode("utf-8", errors="replace").strip()
-
-        if proc.returncode != 0:
-            logger.warning(f"Browser command failed (rc={proc.returncode}): {stderr_str}")
-            raise RuntimeError(f"agent-browser error: {stderr_str or stdout_str}")
-
-        return stdout_str
+        self._page.set_default_timeout(self.timeout)
+        return self._page
 
     # ── Navigation ──────────────────────────────────────────────────
 
     async def navigate(self, url: str) -> None:
         """Navigate to a URL."""
-        await self._run("open", url)
+        page = await self._ensure_browser()
+        await page.goto(url, wait_until="domcontentloaded")
 
     async def navigate_with_retry(self, url: str, max_retries: int = 2) -> None:
         """Navigate with retry on failure."""
@@ -95,10 +91,12 @@ class BrowserService:
         raise last_error  # type: ignore
 
     async def go_back(self) -> None:
-        await self._run("back")
+        page = await self._ensure_browser()
+        await page.go_back()
 
     async def reload(self) -> None:
-        await self._run("reload")
+        page = await self._ensure_browser()
+        await page.reload()
 
     # ── Snapshot & Info ─────────────────────────────────────────────
 
@@ -108,33 +106,40 @@ class BrowserService:
         max_depth: Optional[int] = 5,
         compact: bool = False,
     ) -> dict[str, Any]:
-        """Get accessibility tree snapshot as JSON.
+        """Get accessibility tree snapshot.
 
         Returns:
             {"tree": str, "refs": dict} where refs maps ref IDs to element info.
         """
-        args = ["snapshot", "--json"]
-        if interactive:
-            args.append("-i")
-        if compact:
-            args.append("-c")
-        if max_depth is not None:
-            args.extend(["-d", str(max_depth)])
+        page = await self._ensure_browser()
+        snapshot = await page.accessibility.snapshot(interesting_only=interactive)
 
-        raw = await self._run(*args)
-        result = json.loads(raw)
+        refs: dict[str, dict] = {}
+        tree_lines: list[str] = []
+        ref_counter = [0]
 
-        # agent-browser wraps output: {"success": bool, "data": {"snapshot": ..., "refs": ...}, "error": ...}
-        # Normalize to {"tree": str, "refs": dict} for internal use.
-        if "data" in result and isinstance(result["data"], dict):
-            data = result["data"]
-            return {
-                "tree": data.get("snapshot", ""),
-                "refs": data.get("refs", {}),
-            }
+        def _walk(node: dict, depth: int = 0):
+            if max_depth is not None and depth > max_depth:
+                return
+            role = node.get("role", "")
+            name = node.get("name", "")
+            ref_id = str(ref_counter[0])
+            ref_counter[0] += 1
 
-        # Fallback: already in expected format or unknown structure
-        return result
+            refs[ref_id] = {"role": role, "name": name}
+            indent = "  " * depth
+            tree_lines.append(f"{indent}[{ref_id}] {role}: {name}")
+
+            for child in node.get("children", []):
+                _walk(child, depth + 1)
+
+        if snapshot:
+            _walk(snapshot)
+
+        self._refs_cache = refs
+
+        tree_str = "\n".join(tree_lines)
+        return {"tree": tree_str, "refs": refs}
 
     async def get_snapshot_with_retry(
         self,
@@ -147,13 +152,13 @@ class BrowserService:
         """Get snapshot with stability-check retries.
 
         Polls snapshots until ref count stabilizes for `stable_threshold`
-        consecutive attempts. This matches the original TypeScript behavior.
+        consecutive attempts.
         """
-        last_snapshot = None
         last_ref_count = 0
         stable_count = 0
         best_snapshot = None
         best_ref_count = 0
+        last_snapshot = None
 
         logger.info(f"Getting snapshot with retry (max={max_retries}, interval={interval_ms}ms)...")
 
@@ -165,12 +170,10 @@ class BrowserService:
 
                 logger.info(f"  snapshot #{attempt + 1}: {ref_count} refs, tree={tree_len} chars")
 
-                # Track best snapshot
                 if ref_count > best_ref_count:
                     best_snapshot = snapshot
                     best_ref_count = ref_count
 
-                # Check stability
                 if ref_count > 0 and ref_count <= last_ref_count:
                     stable_count += 1
                 else:
@@ -194,88 +197,116 @@ class BrowserService:
 
     async def get_url(self) -> str:
         """Get current page URL."""
-        return await self._run("get", "url")
+        page = await self._ensure_browser()
+        return page.url
 
     async def get_title(self) -> str:
         """Get current page title."""
-        return await self._run("get", "title")
+        page = await self._ensure_browser()
+        return await page.title()
 
     async def get_text(self, selector: str = "") -> str:
         """Get text content of an element or the whole page."""
+        page = await self._ensure_browser()
         if selector:
-            return await self._run("get", "text", selector)
-        return await self._run("get", "text")
+            return await page.text_content(selector) or ""
+        return await page.evaluate("document.body.innerText")
 
     async def get_html(self, selector: str = "") -> str:
         """Get HTML content of an element."""
+        page = await self._ensure_browser()
         if selector:
-            return await self._run("get", "html", selector)
-        return await self._run("get", "html")
+            return await page.inner_html(selector)
+        return await page.content()
 
     async def get_attribute(self, selector: str, attr_name: str) -> str:
         """Get an element's attribute value."""
-        return await self._run("get", "attr", attr_name, selector)
+        page = await self._ensure_browser()
+        return await page.get_attribute(selector, attr_name) or ""
 
     # ── Interaction ─────────────────────────────────────────────────
 
     async def click(self, selector: str) -> None:
-        """Click an element (supports @ref notation)."""
-        await self._run("click", selector)
+        """Click an element (supports @ref notation and CSS selectors)."""
+        page = await self._ensure_browser()
+
+        if selector.startswith("@"):
+            ref_id = selector[1:]
+            ref_info = self._refs_cache.get(ref_id)
+            if ref_info:
+                role = ref_info.get("role", "")
+                name = ref_info.get("name", "")
+                if role and name:
+                    locator = page.get_by_role(role, name=name)
+                    await locator.first.click(timeout=10000)
+                    return
+            logger.warning(f"Ref {ref_id} not found in cache, falling back to page click")
+            return
+
+        await page.click(selector, timeout=10000)
 
     async def fill(self, selector: str, text: str) -> None:
         """Clear and fill an input field."""
-        await self._run("fill", selector, text)
+        page = await self._ensure_browser()
+        await page.fill(selector, text)
 
     async def type_text(self, selector: str, text: str) -> None:
         """Type into an element."""
-        await self._run("type", selector, text)
+        page = await self._ensure_browser()
+        await page.type(selector, text)
 
     async def press(self, key: str) -> None:
         """Press a keyboard key."""
-        await self._run("press", key)
+        page = await self._ensure_browser()
+        await page.keyboard.press(key)
 
     async def hover(self, selector: str) -> None:
         """Hover over an element."""
-        await self._run("hover", selector)
+        page = await self._ensure_browser()
+        await page.hover(selector)
 
     async def select(self, selector: str, value: str) -> None:
         """Select a dropdown option."""
-        await self._run("select", selector, value)
+        page = await self._ensure_browser()
+        await page.select_option(selector, value)
 
     # ── Scrolling & Waiting ─────────────────────────────────────────
 
     async def scroll(self, direction: str = "down", px: Optional[int] = None) -> None:
         """Scroll the page."""
-        args = ["scroll", direction]
-        if px is not None:
-            args.append(str(px))
-        await self._run(*args)
+        page = await self._ensure_browser()
+        amount = px or 600
+        if direction == "up":
+            amount = -amount
+        await page.evaluate(f"window.scrollBy(0, {amount})")
 
     async def scroll_into_view(self, selector: str) -> None:
         """Scroll element into view."""
-        await self._run("scrollintoview", selector)
+        page = await self._ensure_browser()
+        await page.locator(selector).scroll_into_view_if_needed()
 
     async def scroll_page(self, times: int = 3, delay_ms: int = 800) -> None:
-        """Scroll page multiple times to trigger lazy loading.
-
-        Matches the original TypeScript scrollPage() behavior.
-        """
+        """Scroll page multiple times to trigger lazy loading."""
         logger.info(f"Scrolling page {times} times (delay={delay_ms}ms)...")
         for i in range(times):
             await self.scroll("down", 600)
             await asyncio.sleep(delay_ms / 1000)
             logger.debug(f"  scroll {i + 1}/{times} done")
-        # Scroll back to top
         await self.scroll("up", times * 600)
         logger.info("Scroll complete, returned to top")
 
     async def wait(self, target: str) -> None:
         """Wait for an element selector or milliseconds."""
-        await self._run("wait", target)
+        page = await self._ensure_browser()
+        if target.isdigit():
+            await page.wait_for_timeout(int(target))
+        else:
+            await page.wait_for_selector(target)
 
     async def wait_ms(self, ms: int) -> None:
         """Wait for specified milliseconds."""
-        await self._run("wait", str(ms))
+        page = await self._ensure_browser()
+        await page.wait_for_timeout(ms)
 
     async def wait_for_content(
         self,
@@ -284,12 +315,7 @@ class BrowserService:
         poll_interval_ms: int = 1500,
         stable_threshold: int = 2,
     ) -> bool:
-        """Wait until page has enough interactive elements and DOM is stable.
-
-        Uses stability detection: requires `stable_threshold` consecutive polls
-        with the same element count before returning. This matches the original
-        TypeScript BrowserService.waitForContent() behavior.
-        """
+        """Wait until page has enough interactive elements and DOM is stable."""
         elapsed = 0
         last_count = 0
         stable_count = 0
@@ -326,16 +352,18 @@ class BrowserService:
 
     async def screenshot(self, path: str, full_page: bool = False) -> None:
         """Take a screenshot."""
-        args = ["screenshot", path]
-        if full_page:
-            args.append("--full")
-        await self._run(*args)
+        page = await self._ensure_browser()
+        await page.screenshot(path=path, full_page=full_page)
 
     # ── JavaScript ──────────────────────────────────────────────────
 
     async def eval_js(self, code: str) -> str:
-        """Execute JavaScript and return result."""
-        return await self._run("eval", code)
+        """Execute JavaScript and return result as string."""
+        page = await self._ensure_browser()
+        result = await page.evaluate(code)
+        if isinstance(result, str):
+            return result
+        return json.dumps(result)
 
     # ── Cookie & Storage ────────────────────────────────────────────
 
@@ -343,7 +371,6 @@ class BrowserService:
         """Try to dismiss common cookie/privacy banners.
 
         Returns True if a banner was found and dismissed.
-        Uses a 10-second timeout to prevent blocking on mismatched clicks.
         """
         try:
             return await asyncio.wait_for(
@@ -361,9 +388,6 @@ class BrowserService:
         snapshot = await self.get_snapshot(interactive=True)
         refs = snapshot.get("refs", {})
 
-        import re
-        # Precise cookie/privacy patterns — avoid generic words like "close", "ok", "continue"
-        # that could match navigation buttons and trigger page reloads.
         cookie_patterns = [
             r"accept.*cookie", r"accept all", r"agree.*cookie",
             r"allow.*cookie", r"cookie.*accept", r"cookie.*agree",
@@ -387,11 +411,6 @@ class BrowserService:
     async def dismiss_popup(self) -> bool:
         """尝试关闭页面上的弹窗/遮罩层（通用版）
 
-        检测顺序：
-        1. Cookie banner（英文，已有逻辑）
-        2. Modal/Dialog/Popup 容器中的关闭按钮
-        3. 固定定位高 z-index 遮罩层中的关闭按钮
-
         Returns True if a popup was found and dismissed.
         """
         try:
@@ -406,12 +425,10 @@ class BrowserService:
             return False
 
     async def _dismiss_popup_inner(self) -> bool:
-        # 1. 先尝试 cookie banner
         dismissed = await self.dismiss_cookie_banner()
         if dismissed:
             return True
 
-        # 2. 用 JS 检测通用弹窗并关闭
         close_js = """
         (() => {
             function isVisible(el) {
@@ -420,7 +437,6 @@ class BrowserService:
             }
 
             function findCloseBtn(container) {
-                // 策略1：class/aria 含 close 的元素（最精确）
                 const closeBtn = container.querySelector(
                     '[class*="close"], [class*="Close"], ' +
                     '[aria-label*="close"], [aria-label*="关闭"], [aria-label*="Close"], ' +
@@ -428,7 +444,6 @@ class BrowserService:
                 );
                 if (closeBtn && isVisible(closeBtn)) return {el: closeBtn, method: 'close_class'};
 
-                // 策略2：小面积的关闭图标符号（×/✕ 等）
                 const icons = container.querySelectorAll('span, i, svg, button');
                 for (const icon of icons) {
                     const text = (icon.textContent || '').trim();
@@ -438,8 +453,6 @@ class BrowserService:
                     }
                 }
 
-                // 策略3：弹窗内的按钮（不依赖文本匹配）
-                // 收集所有可见的按钮元素
                 const allBtns = [...container.querySelectorAll(
                     'button, [role="button"], ' +
                     '[class*="button"], [class*="Button"], [class*="btn"], [class*="Btn"]'
@@ -449,12 +462,10 @@ class BrowserService:
                     return r.width > 20 && r.height > 10;
                 });
 
-                // 如果弹窗内只有 1 个按钮，直接点它（确认/关闭/知悉 等）
                 if (allBtns.length === 1) {
                     return {el: allBtns[0], method: 'sole_button'};
                 }
 
-                // 如果有多个按钮，取最后一个（通常是 primary/确认按钮，排在右边或下方）
                 if (allBtns.length >= 2) {
                     return {el: allBtns[allBtns.length - 1], method: 'last_button'};
                 }
@@ -462,7 +473,6 @@ class BrowserService:
                 return null;
             }
 
-            // 查找 role="dialog" 或 class 含 modal/popup/dialog 的容器
             const modals = document.querySelectorAll(
                 '[role="dialog"], [class*="modal"], [class*="Modal"], ' +
                 '[class*="popup"], [class*="Popup"], [class*="dialog"], [class*="Dialog"]'
@@ -471,7 +481,6 @@ class BrowserService:
             for (const modal of modals) {
                 if (!isVisible(modal)) continue;
                 const style = window.getComputedStyle(modal);
-                // 真正的弹窗通常有 fixed/absolute 定位或高 z-index
                 const zIndex = parseInt(style.zIndex || '0', 10);
                 if (style.position === 'static' && zIndex < 10) continue;
                 const rect = modal.getBoundingClientRect();
@@ -485,7 +494,6 @@ class BrowserService:
                 }
             }
 
-            // 查找固定定位的高 z-index 遮罩层（仅扫描 body 直接子元素及一层深）
             const candidates = [...document.body.children];
             for (const child of document.body.children) {
                 if (child.children) candidates.push(...child.children);
@@ -530,31 +538,44 @@ class BrowserService:
     async def get_tabs(self) -> list[str]:
         """获取所有标签页列表"""
         try:
-            tabs_raw = await self._run("tab")
-            tab_lines = [l.strip() for l in tabs_raw.strip().splitlines() if l.strip()]
-            return tab_lines
+            await self._ensure_browser()
+            if not self._context:
+                return []
+            pages = self._context.pages
+            result = []
+            for i, p in enumerate(pages):
+                try:
+                    title = await p.title()
+                    result.append(f"{i}: {p.url} - {title}")
+                except Exception:
+                    result.append(f"{i}: {p.url}")
+            return result
         except Exception as e:
             logger.warning(f"Failed to get tabs: {e}")
             return []
 
     async def switch_tab(self, index: int) -> None:
         """切换到指定索引的标签页"""
-        await self._run("tab", str(index))
+        await self._ensure_browser()
+        if not self._context:
+            return
+        pages = self._context.pages
+        if 0 <= index < len(pages):
+            self._page = pages[index]
+            await self._page.bring_to_front()
 
     async def close_tab(self) -> None:
         """关闭当前标签页"""
-        await self._run("tab", "close")
+        if self._page and not self._page.is_closed():
+            await self._page.close()
+            # Switch to last remaining page
+            if self._context and self._context.pages:
+                self._page = self._context.pages[-1]
+            else:
+                self._page = None
 
     async def click_with_mouseevents(self, selector: str, index: int = 0) -> str:
-        """使用完整鼠标事件序列点击元素（mousedown → mouseup → click）
-
-        Args:
-            selector: CSS选择器
-            index: 如果有多个匹配元素，使用第几个（从0开始）
-
-        Returns:
-            'dispatched' 或 'not_found'
-        """
+        """使用完整鼠标事件序列点击元素（mousedown → mouseup → click）"""
         click_js = f"""
         (() => {{
             const el = document.querySelectorAll("{selector}")[{index}];
@@ -577,6 +598,26 @@ class BrowserService:
     async def close(self) -> None:
         """Close the browser session."""
         try:
-            await self._run("close")
+            if self._page and not self._page.is_closed():
+                await self._page.close()
         except Exception:
-            pass  # Best effort
+            pass
+        try:
+            if self._context:
+                await self._context.close()
+        except Exception:
+            pass
+        try:
+            if self._browser:
+                await self._browser.close()
+        except Exception:
+            pass
+        try:
+            if self._playwright:
+                await self._playwright.stop()
+        except Exception:
+            pass
+        self._page = None
+        self._context = None
+        self._browser = None
+        self._playwright = None
