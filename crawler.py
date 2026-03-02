@@ -1,6 +1,7 @@
 """配置驱动的职位爬虫核心模块"""
 
 import json
+from urllib.parse import urljoin, urlparse
 from browser_service import BrowserService
 
 
@@ -95,9 +96,8 @@ class JobCrawler:
         # 5. 判断是否需要翻页
         if limit > 0 and len(jobs) >= limit:
             print(f"  已满足 limit={limit}，无需翻页")
-            return jobs[:limit]
-
-        if limit == 0 or len(jobs) < limit:
+            jobs = jobs[:limit]
+        elif limit == 0 or len(jobs) < limit:
             pagination = config.get("pagination")
             if not pagination:
                 pagination = await self._detect_pagination()
@@ -107,6 +107,11 @@ class JobCrawler:
         # 截断到 limit
         if limit > 0 and len(jobs) > limit:
             jobs = jobs[:limit]
+
+        # 6. 如果配置了 fetch_detail，获取详情页内容
+        if config.get("fetch_detail", False):
+            print(f"  开始获取详情页内容...")
+            jobs = await self._fetch_all_details(jobs, config)
 
         return jobs
 
@@ -861,5 +866,69 @@ class JobCrawler:
             else:
                 job["url"] = ""
                 print(f"      (未跳转)")
+
+        return jobs
+
+    # ── Detail page fetching ──────────────────────────────────────
+
+    async def _fetch_detail_content(self, job: dict, config: dict, base_url: str) -> None:
+        """导航到详情页并提取内容，结果写入 job['detail_content']"""
+        raw_url = job.get("url", "")
+
+        # 过滤无效 URL
+        if not raw_url or raw_url in ("#", "javascript:void(0)", "javascript:;"):
+            return
+
+        # 处理相对 URL
+        if not raw_url.startswith(("http://", "https://")):
+            raw_url = urljoin(base_url, raw_url)
+
+        # 过滤掉与列表页相同的 URL
+        if raw_url == base_url:
+            return
+
+        detail_selector = config.get("detail_selector", "body")
+        detail_format = config.get("detail_format", "text")
+        detail_wait_ms = config.get("detail_wait_ms", 2000)
+
+        try:
+            await self.browser.navigate(raw_url)
+            await self.browser.wait_ms(detail_wait_ms)
+
+            escaped_selector = detail_selector.replace("'", "\\'")
+            if detail_format == "html":
+                extract_expr = "clone.innerHTML"
+            else:
+                extract_expr = "clone.innerText.trim()"
+
+            js = f"""
+            (() => {{
+                let el = document.querySelector('{escaped_selector}') || document.body;
+                const clone = el.cloneNode(true);
+                clone.querySelectorAll('script,style,nav,footer,header,iframe,[role="navigation"],[role="banner"],[role="contentinfo"]').forEach(s => s.remove());
+                const content = {extract_expr};
+                return content.length > 50000 ? content.substring(0, 50000) + '...(truncated)' : content;
+            }})()
+            """
+            content = await self.browser.eval_js(js)
+            if isinstance(content, str):
+                job["detail_content"] = content
+            else:
+                job["detail_content"] = str(content)
+        except Exception as e:
+            job["detail_content"] = ""
+            job["detail_error"] = str(e)
+            print(f"      详情获取失败: {e}")
+
+    async def _fetch_all_details(self, jobs: list[dict], config: dict) -> list[dict]:
+        """遍历所有职位，逐个获取详情页内容"""
+        base_url = await self.browser.get_url()
+        valid_jobs = [j for j in jobs if j.get("url", "").strip()]
+        total = len(valid_jobs)
+
+        for i, job in enumerate(valid_jobs):
+            title = job.get("title", "?")[:40]
+            print(f"  获取详情 [{i+1}/{total}] {title}...")
+            await self._fetch_detail_content(job, config, base_url)
 
         return jobs

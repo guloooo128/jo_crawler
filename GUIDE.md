@@ -13,6 +13,9 @@ python run.py "https://example.com/jobs" --config config/my_site.json
 
 # 批量爬取（每行一个 URL）
 python run.py --batch urls.txt --output result.json
+
+# 同时抓取每个职位的详情页内容
+python run.py "https://example.com/jobs" --detail --output result.json
 ```
 
 ## 目录结构
@@ -89,9 +92,64 @@ document.querySelectorAll('你的卡片选择器')[0]
   "wait_after_click_ms": "可选 | 点击后等待毫秒数（默认 2000）",
   "headless":            "可选 | 是否无头模式（默认 true）",
 
-  "pre_actions":         "可选 | 提取前的准备操作列表"
+  "pre_actions":         "可选 | 提取前的准备操作列表",
+
+  "fetch_detail":        "可选 | 是否抓取详情页内容（默认 false）",
+  "detail_selector":     "可选 | 详情页内容区域的 CSS 选择器（默认 body）",
+  "detail_format":       "可选 | text（纯文本，默认）或 html（原始 HTML）",
+  "detail_wait_ms":      "可选 | 进入详情页后等待毫秒数（默认 2000）"
 }
 ```
+
+---
+
+## 详情页抓取（fetch_detail）
+
+启用后，爬虫在收集完所有职位 URL 后，会逐一访问每个职位的详情页，提取页面主体内容并存入 `detail_content` 字段。
+
+### 启用方式
+
+**方式一：命令行参数（不修改配置文件）**
+
+```bash
+python run.py "https://example.com/jobs" --detail -l 10 --output result.json
+```
+
+`--detail` 与 `--limit` 配合使用，`--limit` 同时控制列表爬取数量和详情抓取数量。
+
+**方式二：写入配置文件（永久生效）**
+
+```json
+{
+  "fetch_detail": true,
+  "detail_selector": ".job-description",
+  "detail_format": "text",
+  "detail_wait_ms": 2000
+}
+```
+
+### 配置字段说明
+
+| 字段 | 默认值 | 说明 |
+|------|--------|------|
+| `fetch_detail` | `false` | 开关 |
+| `detail_selector` | `"body"` | 提取内容的 CSS 选择器，建议指定主内容区（如 `.job-content`）避免抓到导航栏 |
+| `detail_format` | `"text"` | `text` 返回纯文本，`html` 返回原始 HTML |
+| `detail_wait_ms` | `2000` | 进入详情页后等待时间，SPA 站点可适当调大 |
+
+### 输出字段
+
+| 字段 | 说明 |
+|------|------|
+| `detail_content` | 详情页提取的文本/HTML 内容，最长 50000 字符 |
+| `detail_error` | 若该职位详情抓取失败，此字段记录错误信息；`detail_content` 为空字符串 |
+
+### 注意事项
+
+- 详情抓取是**逐个串行**进行的，每个职位需额外 2-5 秒
+- 单个职位失败不会中止整体爬取，会记录 `detail_error` 继续下一个
+- 控制台显示截断至 200 字符，完整内容保存在 `--output` 指定的 JSON 文件中
+- 自动过滤无效 URL（空、`#`、`javascript:void(0)` 等）
 
 ---
 
@@ -339,3 +397,12 @@ python run.py "https://careers.acme.com/jobs"
 ```bash
 python run.py "https://..." --output jobs.json
 ```
+
+**Q: 详情页内容为空？**
+- 页面内容可能通过 JS 异步加载，尝试增大 `detail_wait_ms`（如 `5000`）
+- 用 `detail_selector` 指定正确的内容区域选择器
+- 检查 `detail_error` 字段是否有错误信息
+
+**Q: 详情抓取速度太慢？**
+- 适当减小 `detail_wait_ms`（如改为 `1000`）
+- 用 `--limit` 控制抓取数量，不要一次抓太多
