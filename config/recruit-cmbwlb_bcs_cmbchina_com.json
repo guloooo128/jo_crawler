@@ -1,0 +1,18 @@
+{
+  "domain": "recruit-cmbwlb.bcs.cmbchina.com",
+  "name": "招商银行招聘",
+  "card_selector": "div.homepage > div.home-main:nth-of-type(3) > div > div > div.job-cell-out:nth-of-type(1) > div.job-cell > div",
+  "fields": {
+    "title": "div > a",
+    "location": "div > .jobInfo > span"
+  },
+  "url_mode": "href",
+  "url_selector": "div > a",
+  "wait_after_click_ms": 2000,
+  "pre_actions": [
+    {
+      "action": "wait_for_content",
+      "timeout_ms": 15000
+    }
+  ]
+}

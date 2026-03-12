@@ -1,8 +1,18 @@
 """配置驱动的职位爬虫核心模块"""
 
+import re
 import json
+import asyncio
 from urllib.parse import urljoin, urlparse
 from browser_service import BrowserService
+
+
+def _relax_selector(selector: str) -> str:
+    """去掉 CSS 选择器中的 :nth-of-type() / :nth-child() 位置限定。
+
+    例: 'div.foo:nth-of-type(3) > span' -> 'div.foo > span'
+    """
+    return re.sub(r":nth-(?:of-type|child)\(\d+\)", "", selector)
 
 
 def _parse_json(raw: str):
@@ -57,13 +67,17 @@ class JobCrawler:
             职位列表 [{title, url, date?, category?, location?, ...}]
         """
         browser = self.browser
+        card_selector = config["card_selector"]
+        fields = config["fields"]
 
         # 1. 打开页面
         print(f"  打开: {url}")
         await browser.navigate(url)
 
-        # 2. 执行 pre_actions
+        # 2. 执行非等待类 pre_actions（click / scroll 等）
         for action in config.get("pre_actions", []):
+            if action.get("action") == "wait_for_content":
+                continue  # 由 _wait_for_cards 统一承担等待
             await self._run_action(action)
 
         # 2.5 自动尝试关闭弹窗
@@ -71,16 +85,41 @@ class JobCrawler:
             dismissed = await browser.dismiss_popup()
             if dismissed:
                 print("  关闭了弹窗")
-                await browser.wait_ms(500)
         except Exception:
             pass
 
-        # 3. 提取第一页卡片
-        card_selector = config["card_selector"]
-        fields = config["fields"]
+        # 3. 等待目标卡片出现并稳定（替代通用 wait_for_content，更快更准）
+        card_count = await self._wait_for_cards(card_selector)
         print(f"  提取卡片: {card_selector}")
 
+        effective_selector = card_selector
         jobs = await self._extract_fields(card_selector, fields)
+
+        # 选择器匹配失败时，尝试去掉 :nth-of-type / :nth-child 等位置限定
+        if not jobs and card_count == 0:
+            relaxed = _relax_selector(card_selector)
+            if relaxed != card_selector:
+                print(f"  原始选择器未命中，尝试简化: {relaxed}")
+                relaxed_count = await self._wait_for_cards(relaxed, timeout_ms=5000)
+                if relaxed_count > 0:
+                    jobs = await self._extract_fields(relaxed, fields)
+                    if jobs:
+                        print(f"  简化选择器命中 {len(jobs)} 个卡片")
+                        effective_selector = relaxed
+
+        # 检查 fields 是否全为空（说明 card_selector 可能匹配到了错误的元素）
+        if jobs:
+            field_names = list(fields.keys())
+            non_empty = sum(
+                1 for j in jobs
+                if any(str(j.get(f, "")).strip() for f in field_names)
+            )
+            if non_empty == 0:
+                print(
+                    f"  警告: '{card_selector}' 匹配到 {len(jobs)} 个元素但所有 fields 均为空"
+                )
+                jobs = []
+
         if not jobs:
             print("  未找到卡片")
             return []
@@ -90,8 +129,39 @@ class JobCrawler:
         if limit > 0 and len(jobs) > limit:
             jobs = jobs[:limit]
 
+        # 使用实际命中的选择器（可能是简化后的）提取 URL
+        if effective_selector != card_selector:
+            config = {**config, "card_selector": effective_selector}
+
         # 4. 第一页提取 URL
         jobs = await self._extract_urls(config, jobs)
+
+        # 4.5 URL 提取失败时逐级 fallback
+        url_count = sum(1 for j in jobs if j.get("url", "").strip())
+        if url_count == 0 and len(jobs) > 0:
+            url_mode = config.get("url_mode", "href")
+            print(f"  所有 {len(jobs)} 个卡片的 URL 均为空 (url_mode={url_mode}), 尝试 fallback")
+
+            # Fallback 1: 深层搜索 <a> 标签
+            if url_mode == "href":
+                jobs = await self._get_urls_deep_href(effective_selector, jobs)
+                url_count = sum(1 for j in jobs if j.get("url", "").strip())
+                if url_count > 0:
+                    print(f"  深层提取命中 {url_count} 个 URL")
+
+            # Fallback 2: 点击卡片捕获导航 URL
+            if url_count == 0:
+                print("  尝试 click_newtab fallback 提取 URL")
+                url_selector = config.get("url_selector")
+                wait_ms = config.get("wait_after_click_ms", 2000)
+                jobs = await self._get_urls_click_newtab(
+                    effective_selector, jobs, wait_ms, url_selector
+                )
+                url_count = sum(1 for j in jobs if j.get("url", "").strip())
+                if url_count > 0:
+                    print(f"  click_newtab fallback 命中 {url_count} 个 URL")
+                else:
+                    print("  所有 fallback 均未找到 URL")
 
         # 5. 判断是否需要翻页
         if limit > 0 and len(jobs) >= limit:
@@ -418,6 +488,48 @@ class JobCrawler:
 
     # ── Pre-actions ──────────────────────────────────────────────
 
+    async def _wait_for_cards(
+        self,
+        card_selector: str,
+        timeout_ms: int = 20000,
+        stable_rounds: int = 2,
+    ) -> int:
+        """轮询等待 card_selector 匹配的 DOM 元素数量稳定。
+
+        策略：元素未出现时每 500ms 检测；出现后每 300ms 检测稳定性。
+        返回最终检测到的卡片数。超时后返回当前数量（可能为 0）。
+        """
+        escaped = card_selector.replace("\\", "\\\\").replace("'", "\\'")
+        js = f"document.querySelectorAll('{escaped}').length"
+
+        elapsed = 0
+        last_count = 0
+        stable = 0
+
+        while elapsed < timeout_ms:
+            try:
+                page = await self.browser._ensure_browser()
+                count = await page.evaluate(js)
+            except Exception:
+                count = 0
+
+            if count > 0 and count == last_count:
+                stable += 1
+                if stable >= stable_rounds:
+                    print(f"  卡片元素已稳定: {count} 个 ({elapsed}ms)")
+                    return count
+            else:
+                stable = 0
+
+            last_count = count
+            # 未发现元素时间隔长一些，发现后快速确认稳定
+            poll = 300 if count > 0 else 500
+            await asyncio.sleep(poll / 1000)
+            elapsed += poll
+
+        print(f"  等待卡片超时 ({timeout_ms}ms), 当前数量: {last_count}")
+        return last_count
+
     async def _run_action(self, action: dict):
         """执行单个预操作"""
         act = action["action"]
@@ -465,6 +577,41 @@ class JobCrawler:
         return _parse_json(raw)
 
     # ── URL extraction strategies ────────────────────────────────
+
+    async def _get_urls_deep_href(self, card_selector: str, jobs: list[dict]) -> list[dict]:
+        """深层搜索卡片内所有 <a> 标签，取第一个有效 href。"""
+        escaped_card = card_selector.replace("'", "\\'")
+        js = f"""
+        (() => {{
+            const cards = document.querySelectorAll('{escaped_card}');
+            return JSON.stringify(Array.from(cards).map(card => {{
+                // 先检查卡片自身
+                if (card.tagName === 'A' && card.href) return card.href;
+                // 搜索所有后代 <a>
+                const links = card.querySelectorAll('a[href]');
+                for (const a of links) {{
+                    const href = a.href || a.getAttribute('href') || '';
+                    if (href && href !== '#' && !href.startsWith('javascript:'))
+                        return href;
+                }}
+                // 检查 data 属性中的 URL
+                for (const attr of card.attributes) {{
+                    if (attr.value && attr.value.startsWith('/') && attr.value.length > 1)
+                        return new URL(attr.value, window.location.origin).href;
+                }}
+                // 检查父元素是否是 <a>
+                if (card.closest('a')?.href) return card.closest('a').href;
+                return '';
+            }}));
+        }})()
+        """
+        raw = await self.browser.eval_js(js)
+        urls = _parse_json(raw) or []
+
+        for job in jobs:
+            idx = job.get("_index", 0)
+            job["url"] = urls[idx] if idx < len(urls) else ""
+        return jobs
 
     async def _get_urls_href(self, card_selector: str, url_selector: str | None, jobs: list[dict]) -> list[dict]:
         """从 href 属性提取 URL"""
@@ -872,7 +1019,12 @@ class JobCrawler:
     # ── Detail page fetching ──────────────────────────────────────
 
     async def _fetch_detail_content(self, job: dict, config: dict, base_url: str) -> None:
-        """导航到详情页并提取内容，结果写入 job['detail_content']"""
+        """导航到详情页并提取内容
+
+        支持两种模式：
+        1. 结构化模式：config 中有 detail.fields → 按字段提取，写入 job["detail_fields"]
+        2. 整块模式（兼容旧配置）：无 detail.fields → 整块文本，写入 job["detail_content"]
+        """
         raw_url = job.get("url", "")
 
         # 过滤无效 URL
@@ -887,38 +1039,84 @@ class JobCrawler:
         if raw_url == base_url:
             return
 
-        detail_selector = config.get("detail_selector", "body")
-        detail_format = config.get("detail_format", "text")
-        detail_wait_ms = config.get("detail_wait_ms", 2000)
+        detail_config = config.get("detail", {})
+        detail_fields = detail_config.get("fields", {})
+        detail_wait_ms = detail_config.get("wait_ms") or config.get("detail_wait_ms", 2000)
+        container_selector = detail_config.get("container_selector") or config.get("detail_selector", "body")
 
         try:
             await self.browser.navigate(raw_url)
             await self.browser.wait_ms(detail_wait_ms)
 
-            escaped_selector = detail_selector.replace("'", "\\'")
-            if detail_format == "html":
-                extract_expr = "clone.innerHTML"
-            else:
-                extract_expr = "clone.innerText.trim()"
+            # 执行详情页预操作
+            for action in detail_config.get("pre_actions", []):
+                await self._run_action(action)
 
-            js = f"""
-            (() => {{
-                let el = document.querySelector('{escaped_selector}') || document.body;
-                const clone = el.cloneNode(true);
-                clone.querySelectorAll('script,style,nav,footer,header,iframe,[role="navigation"],[role="banner"],[role="contentinfo"]').forEach(s => s.remove());
-                const content = {extract_expr};
-                return content.length > 50000 ? content.substring(0, 50000) + '...(truncated)' : content;
-            }})()
-            """
-            content = await self.browser.eval_js(js)
-            if isinstance(content, str):
-                job["detail_content"] = content
+            if detail_fields:
+                # 结构化字段提取模式
+                job["detail_fields"] = await self._extract_detail_fields(
+                    container_selector, detail_fields
+                )
             else:
-                job["detail_content"] = str(content)
+                # 兼容旧配置：整块文本提取
+                detail_format = config.get("detail_format", "text")
+                escaped_selector = container_selector.replace("'", "\\'")
+                if detail_format == "html":
+                    extract_expr = "clone.innerHTML"
+                else:
+                    extract_expr = "clone.innerText.trim()"
+
+                js = f"""
+                (() => {{
+                    let el = document.querySelector('{escaped_selector}') || document.body;
+                    const clone = el.cloneNode(true);
+                    clone.querySelectorAll('script,style,nav,footer,header,iframe,[role="navigation"],[role="banner"],[role="contentinfo"]').forEach(s => s.remove());
+                    const content = {extract_expr};
+                    return content.length > 50000 ? content.substring(0, 50000) + '...(truncated)' : content;
+                }})()
+                """
+                content = await self.browser.eval_js(js)
+                if isinstance(content, str):
+                    job["detail_content"] = content
+                else:
+                    job["detail_content"] = str(content)
         except Exception as e:
             job["detail_content"] = ""
             job["detail_error"] = str(e)
             print(f"      详情获取失败: {e}")
+
+    async def _extract_detail_fields(self, container_selector: str, fields: dict) -> dict:
+        """从详情页按字段提取结构化数据
+
+        与列表页 _extract_fields 不同：
+        - 不是提取多个卡片，而是从单个容器中提取字段
+        - 移除 script/style 等噪音后取文本
+        """
+        escaped_container = container_selector.replace("'", "\\'")
+        parts = []
+        for name, selector in fields.items():
+            escaped = selector.replace("'", "\\'")
+            parts.append(
+                f"    {name}: (() => {{"
+                f" const el = container.querySelector('{escaped}');"
+                f" if (!el) return '';"
+                f" const clone = el.cloneNode(true);"
+                f" clone.querySelectorAll('script,style').forEach(s => s.remove());"
+                f" return clone.innerText.trim();"
+                f" }})()"
+            )
+        fields_js = ",\n".join(parts)
+
+        js = f"""
+        (() => {{
+            const container = document.querySelector('{escaped_container}') || document.body;
+            return JSON.stringify({{
+{fields_js}
+            }});
+        }})()
+        """
+        raw = await self.browser.eval_js(js)
+        return _parse_json(raw)
 
     async def _fetch_all_details(self, jobs: list[dict], config: dict) -> list[dict]:
         """遍历所有职位，逐个获取详情页内容"""

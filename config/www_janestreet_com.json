@@ -1,0 +1,19 @@
+{
+  "domain": "www.janestreet.com",
+  "name": "Jane Street 招聘活动",
+  "card_selector": "div.site-wrap:nth-of-type(2) > main.page-content > div.container:nth-of-type(2) > div.row:nth-of-type(2) > div.col.col-12 > div.inner-wrapper > div.content-div > div.events-list:nth-of-type(4) > a",
+  "fields": {
+    "title": ".event-card > .title",
+    "date": ".event-card > .date",
+    "location": ".event-card > .time-and-location",
+    "description": ".event-card > p:last-child"
+  },
+  "url_mode": "href",
+  "wait_after_click_ms": 2000,
+  "pre_actions": [
+    {
+      "action": "wait_for_content",
+      "timeout_ms": 15000
+    }
+  ]
+}

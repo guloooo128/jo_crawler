@@ -1,0 +1,17 @@
+{
+  "domain": "www.deloitte.com",
+  "name": "Deloitte Students Early Careers",
+  "card_selector": "div.servicecomponents.cloudservices:nth-of-type(1) > div.cloudservice.generictracker > div.root.responsivegrid:nth-of-type(1) > div.aem-Grid.aem-Grid--12 > div.responsivegrid.aem-GridColumn:nth-of-type(2) > div.aem-Grid.aem-Grid--12:nth-of-type(2) > div",
+  "fields": {
+    "title": "a"
+  },
+  "url_mode": "href",
+  "url_selector": "a",
+  "wait_after_click_ms": 2000,
+  "pre_actions": [
+    {
+      "action": "wait_for_content",
+      "timeout_ms": 15000
+    }
+  ]
+}

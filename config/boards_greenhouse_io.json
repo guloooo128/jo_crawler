@@ -1,0 +1,18 @@
+{
+  "domain": "boards.greenhouse.io",
+  "name": "The Brattle Group",
+  "card_selector": "tr.job-post",
+  "fields": {
+    "title": "td.cell > a > p.body--medium",
+    "location": "td.cell > a > p.body__secondary"
+  },
+  "url_mode": "href",
+  "url_selector": "td.cell > a",
+  "wait_after_click_ms": 2000,
+  "pre_actions": [
+    {
+      "action": "wait_for_content",
+      "timeout_ms": 15000
+    }
+  ]
+}

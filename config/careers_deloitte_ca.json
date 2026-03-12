@@ -1,0 +1,19 @@
+{
+  "domain": "careers.deloitte.ca",
+  "name": "德勤校园招聘",
+  "card_selector": "#searchresults > tbody > tr.data.data-row",
+  "fields": {
+    "title": ".colTitle .jobTitle-link",
+    "location": ".colLocation .jobLocation",
+    "date": ".colTitle .jobDate"
+  },
+  "url_mode": "href",
+  "url_selector": ".colTitle .jobTitle-link",
+  "wait_after_click_ms": 2000,
+  "pre_actions": [
+    {
+      "action": "wait_for_content",
+      "timeout_ms": 15000
+    }
+  ]
+}

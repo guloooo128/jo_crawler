@@ -1,0 +1,21 @@
+{
+  "domain": "ea.gr8people.com",
+  "name": "EA 招聘",
+  "card_selector": "article.article--result",
+  "fields": {
+    "title": ".article__header__text__title",
+    "location": ".list-item-location",
+    "department": ".list-item-department",
+    "id": ".list-item-id",
+    "type": ".list-item-workerType"
+  },
+  "url_mode": "href",
+  "url_selector": ".link_result",
+  "wait_after_click_ms": 2000,
+  "pre_actions": [
+    {
+      "action": "wait_for_content",
+      "timeout_ms": 15000
+    }
+  ]
+}

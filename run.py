@@ -142,6 +142,7 @@ async def main():
     parser.add_argument("--headed", action="store_true", help="强制使用有头浏览器（可视化调试）")
     parser.add_argument("--limit", "-l", type=int, default=50, help="最大爬取职位数（默认 50，0 表示不限制）")
     parser.add_argument("--detail", action="store_true", help="抓取每个职位的详情页内容")
+    parser.add_argument("--gen-detail", action="store_true", help="自动生成详情页配置（配合 --detail 使用）")
     parser.add_argument("--concurrency", "-j", type=int, default=1, help="批量模式并发数（默认 3）")
     args = parser.parse_args()
 
@@ -271,6 +272,32 @@ async def main():
             if not config:
                 return
 
+        # 如果需要详情页配置但当前配置没有，自动生成
+        if args.detail and args.gen_detail and "detail" not in config:
+            print("自动生成详情页配置...")
+            from auto_gen import _generate_detail_config
+            from browser_service import BrowserService
+            domain = urlparse(args.url).netloc.lower()
+            session_name = domain.replace(".", "_")
+            browser = BrowserService(session=session_name, headless=not args.headed)
+            try:
+                await browser.navigate(args.url)
+                await browser.wait_for_content(timeout_ms=15000)
+                detail_config = await _generate_detail_config(browser, config, args.url)
+                if detail_config:
+                    config["detail"] = detail_config
+                    # 保存更新后的配置
+                    config_path = CONFIG_DIR / (domain.replace(".", "_") + ".json")
+                    if config_path.exists():
+                        config_path.write_text(
+                            json.dumps(config, ensure_ascii=False, indent=2), encoding="utf-8"
+                        )
+                        print(f"详情页配置已更新: {config_path}")
+                else:
+                    print("详情页配置生成失败，将使用整块文本模式")
+            finally:
+                await browser.close()
+
         if args.detail:
             config["fetch_detail"] = True
         jobs = await crawl_one(args.url, config, limit=args.limit, headed=args.headed)
@@ -288,6 +315,14 @@ async def main():
                     value = job[key]
                     if key == "detail_content" and isinstance(value, str) and len(value) > 200:
                         value = value[:200] + "...(截断)"
+                    elif key == "detail_fields" and isinstance(value, dict):
+                        print(f"   {key}:")
+                        for dk, dv in value.items():
+                            dv_str = str(dv)
+                            if len(dv_str) > 200:
+                                dv_str = dv_str[:200] + "...(截断)"
+                            print(f"     {dk}: {dv_str}")
+                        continue
                     print(f"   {key}: {value}")
             print()
 

@@ -1,0 +1,19 @@
+{
+  "domain": "www.gresearch.com",
+  "name": "G Research 招聘",
+  "card_selector": "#tns1 > div",
+  "fields": {
+    "title": ".c-team-card .c-team-card__meta span:nth-child(2)",
+    "name": ".c-team-card .c-team-card__meta span:nth-child(1)",
+    "description": ".c-team-card .c-team-card__description"
+  },
+  "url_mode": "href",
+  "url_selector": ".c-team-card .c-team-card__internal-link a",
+  "wait_after_click_ms": 2000,
+  "pre_actions": [
+    {
+      "action": "wait_for_content",
+      "timeout_ms": 15000
+    }
+  ]
+}

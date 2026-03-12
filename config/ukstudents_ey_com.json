@@ -1,0 +1,18 @@
+{
+  "domain": "ukstudents.ey.com",
+  "name": "安永英国校园招聘",
+  "card_selector": "#primary > div.ey-search:nth-of-type(2) > div.container.small-container:nth-of-type(2) > div.ey-search-result.pb-6:nth-of-type(2) > div.row.g-3:nth-of-type(3) > div",
+  "fields": {
+    "title": ".tab-btn .result-title h3",
+    "department": ".tab-btn .result-title p.vacancy-type"
+  },
+  "url_mode": "click_newtab",
+  "url_selector": ".tab-btn",
+  "wait_after_click_ms": 2000,
+  "pre_actions": [
+    {
+      "action": "wait_for_content",
+      "timeout_ms": 15000
+    }
+  ]
+}

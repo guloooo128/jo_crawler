@@ -1,0 +1,17 @@
+{
+  "domain": "jefferies.tal.net",
+  "name": "Jefferies 招聘",
+  "card_selector": "#tile-results-list > li",
+  "fields": {
+    "title": ".candidate-opp-field-2"
+  },
+  "url_mode": "href",
+  "url_selector": "a.subject",
+  "wait_after_click_ms": 2000,
+  "pre_actions": [
+    {
+      "action": "wait_for_content",
+      "timeout_ms": 15000
+    }
+  ]
+}

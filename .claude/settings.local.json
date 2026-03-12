@@ -23,7 +23,14 @@
       "Bash(python /Users/gollum/Projects/jo_crawler/debug_click.py)",
       "Bash(python debug_hotjob.py)",
       "WebFetch(domain:www.swhyhk.com)",
-      "Bash(pip install playwright)"
+      "Bash(pip install playwright)",
+      "Bash(pip3 install openpyxl)",
+      "Bash(pip3 install openpyxl --break-system-packages)",
+      "Bash(git remote:*)",
+      "WebFetch(domain:www.realtor.com)",
+      "Bash(pip list:*)",
+      "Bash(/Users/gollum/miniconda3/bin/python -c \"from playwright.sync_api import sync_playwright; print\\(''OK''\\)\")",
+      "Bash(/Users/gollum/miniconda3/bin/python -c \":*)"
     ]
   }
 }

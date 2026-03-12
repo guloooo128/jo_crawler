@@ -1,0 +1,19 @@
+{
+  "domain": "collabera.com",
+  "name": "Collabera 招聘",
+  "card_selector": "#accordionExample > div",
+  "fields": {
+    "title": "h3",
+    "date": "h6",
+    "location": ".col-md-6:first-of-type > li:first-of-type"
+  },
+  "url_mode": "href",
+  "url_selector": "a.apply_now",
+  "wait_after_click_ms": 2000,
+  "pre_actions": [
+    {
+      "action": "wait_for_content",
+      "timeout_ms": 15000
+    }
+  ]
+}

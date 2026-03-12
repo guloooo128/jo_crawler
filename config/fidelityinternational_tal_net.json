@@ -1,0 +1,17 @@
+{
+  "domain": "fidelityinternational.tal.net",
+  "name": "Fidelity International 招聘",
+  "card_selector": "#results_list > div.table-responsive > table.table.solr_search_list > tbody > tr",
+  "fields": {
+    "title": "a.subject"
+  },
+  "url_mode": "href",
+  "url_selector": "a.subject",
+  "wait_after_click_ms": 2000,
+  "pre_actions": [
+    {
+      "action": "wait_for_content",
+      "timeout_ms": 15000
+    }
+  ]
+}
