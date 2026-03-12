@@ -1,0 +1,18 @@
+{
+  "domain": "www.henkel.com",
+  "name": "汉高招聘",
+  "card_selector": "#main > div.container-box.container-box--no-border:nth-of-type(2) > div.container-box__inner > div.row > div.col-tn-12.col-xs-12 > div > div.bab-filters.bab-filters--stageless > div.bab-filters__content > div.container:nth-of-type(2) > div.bab-filters__results:nth-of-type(2) > div.bab-filters__results-list:nth-of-type(3) > div",
+  "fields": {
+    "title": ".link-title",
+    "location": ".place"
+  },
+  "url_mode": "href",
+  "url_selector": "a",
+  "wait_after_click_ms": 2000,
+  "pre_actions": [
+    {
+      "action": "wait_for_content",
+      "timeout_ms": 15000
+    }
+  ]
+}

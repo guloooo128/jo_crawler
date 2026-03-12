@@ -1,0 +1,15 @@
+{
+  "domain": "careers.fisglobal.com",
+  "name": "FIS Global Careers",
+  "card_selector": "div.ph-page:nth-of-type(2) > div.body-wrapper.ph-page-container:nth-of-type(2) > div > div.results-state.container > div.row > div.col-md-4.col-sm-5:nth-of-type(1) > section.ph-widget > div.ph-facets-v1-view3-theme5.ph-widget-target > div.phs-facets-area > div.phs-refine-block > div.phs-filter-panels:nth-of-type(3) > div",
+  "fields": {
+    "title": ".panel-title > button"
+  },
+  "url_mode": "none",
+  "pre_actions": [
+    {
+      "action": "wait_for_content",
+      "timeout_ms": 15000
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "domain": "fiverings.com",
+  "name": "Five Rings 招聘",
+  "card_selector": "div.page-wrap > div.gh-section > div.gh-container.container-fluid > div.gh-list:nth-of-type(2) > div",
+  "fields": {
+    "title": ".gh-item_heading a",
+    "location": ".gh-item_subheading span:nth-of-type(1)",
+    "department": ".gh-item_subheading span:nth-of-type(2)",
+    "level": ".gh-item_subheading span:nth-of-type(3)",
+    "date": ".gh-item_subheading span:nth-of-type(4)"
+  },
+  "url_mode": "href",
+  "url_selector": ".gh-item_heading a",
+  "wait_after_click_ms": 2000,
+  "pre_actions": [
+    {
+      "action": "wait_for_content",
+      "timeout_ms": 15000
+    }
+  ]
+}

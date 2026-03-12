@@ -1,0 +1,17 @@
+{
+  "domain": "careers.dyson.com",
+  "name": "Dyson招聘",
+  "card_selector": "div.l-page:nth-of-type(1) > section.m-block.m-block--center > div.m-block__content.m-block__content--tight:nth-of-type(2) > div.c-logo-wrapper > div.c-logo-wrapper__inner > div",
+  "fields": {
+    "title": ".c-logo__copy p strong",
+    "department": ".c-logo__copy p:nth-of-type(2)"
+  },
+  "url_mode": "click_newtab",
+  "wait_after_click_ms": 2000,
+  "pre_actions": [
+    {
+      "action": "wait_for_content",
+      "timeout_ms": 15000
+    }
+  ]
+}

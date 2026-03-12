@@ -1,0 +1,14 @@
+{
+  "domain": "www.ftpartners.com",
+  "name": "FT Partners 招聘",
+  "card_selector": "#content > section:nth-of-type(7) > div.panel > ul.ft-list.ft-list--lead:nth-of-type(2) > li",
+  "fields": {
+    "title": "strong"
+  },
+  "pre_actions": [
+    {
+      "action": "wait_for_content",
+      "timeout_ms": 15000
+    }
+  ]
+}

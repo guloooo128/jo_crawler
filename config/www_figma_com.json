@@ -1,0 +1,17 @@
+{
+  "domain": "www.figma.com",
+  "name": "Figma 招聘",
+  "card_selector": "#job-openings > div.fig-2qv4k > div.fig-qzyf42:nth-of-type(2) > div.fig-yqk2e9:nth-of-type(1) > div:nth-of-type(5) > ul.fig-kgs24z > li",
+  "fields": {
+    "title": "a > span.fig-hojtq7"
+  },
+  "url_mode": "href",
+  "url_selector": "a",
+  "wait_after_click_ms": 2000,
+  "pre_actions": [
+    {
+      "action": "wait_for_content",
+      "timeout_ms": 15000
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "domain": "higher.gs.com",
+  "name": "高盛校园招聘",
+  "card_selector": "#__next > main.gs-uitk-c-75gxt2--main.content > div > div.rounded.gs-layout-container:nth-of-type(2) > div.gs-uitk-mx-5 > div.gs-uitk-c-zyxv65--card-root.d-block > div.gs-uitk-card-inner > div:nth-of-type(2) > div > div:nth-of-type(2) > div > div > div.gs-uitk-mb-2:nth-of-type(2) > div",
+  "fields": {
+    "title": "span.gs-uitk-c-nv7fiq--text-root",
+    "location": "span.gs-uitk-c-d1sssb--text-root"
+  },
+  "url_mode": "href",
+  "url_selector": "a",
+  "wait_after_click_ms": 2000,
+  "pre_actions": [
+    {
+      "action": "wait_for_content",
+      "timeout_ms": 15000
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "domain": "jobs.dell.com",
+  "name": "戴尔招聘",
+  "card_selector": "#search-results-list > ul > li",
+  "fields": {
+    "title": "a > h2",
+    "department": "a > .job-category",
+    "location": "a > .job-location"
+  },
+  "url_mode": "href",
+  "url_selector": "a",
+  "wait_after_click_ms": 2000,
+  "pre_actions": [
+    {
+      "action": "wait_for_content",
+      "timeout_ms": 15000
+    }
+  ]
+}
