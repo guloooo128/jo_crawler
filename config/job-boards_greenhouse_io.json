@@ -1,10 +1,10 @@
 {
   "domain": "job-boards.greenhouse.io",
-  "name": "Anthropic 招聘",
-  "card_selector": "main.main.font-secondary > div.index--content > div.index__main:nth-of-type(4) > div.padding:nth-of-type(2) > div.job-posts:nth-of-type(1) > div.job-posts--table--department > div.job-posts--table > table > tbody > tr",
+  "name": "The Brattle Group",
+  "card_selector": "tr.job-post",
   "fields": {
     "title": "td.cell > a > p.body--medium",
-    "location": "td.cell > a > p.body__secondary"
+    "location": "td.cell > a > p.body__secondary.body--metadata"
   },
   "url_mode": "href",
   "url_selector": "td.cell > a",

@@ -34,7 +34,8 @@
       "Bash(python auto_gen.py --help)",
       "Bash(/Users/gollum/miniconda3/bin/python auto_gen.py --url 'https://www.workatastartup.com/companies?demographic=any&hasEquity=any&hasSalary=any&industry=any&interviewProcess=any&jobType=intern&layout=list-compact&role=eng&sortBy=created_desc&tab=any&usVisaNotRequired=any' --with-detail)",
       "Bash(/Users/gollum/miniconda3/bin/python auto_gen.py 'https://careers.amd.com/careers-home/jobs?page=1&tags1=Yes&country=Australia&sortBy=posted_date&descending=true' --detail)",
-      "Bash(/Users/gollum/miniconda3/bin/python /Users/gollum/Projects/jo_crawler/_check_cookie.py)"
+      "Bash(/Users/gollum/miniconda3/bin/python /Users/gollum/Projects/jo_crawler/_check_cookie.py)",
+      "Bash(/Users/gollum/miniconda3/bin/python /Users/gollum/Projects/jo_crawler/_check_brattle.py)"
     ]
   }
 }

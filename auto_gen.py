@@ -180,17 +180,40 @@ async def generate_config(url: str, headed: bool = False, with_detail: bool = Fa
         logger.info(f"[自动生成] 分析页面结构...")
         candidates = await find_job_containers(browser)
 
-        if not candidates:
-            logger.error("[自动生成] 未能检测到职位列表容器")
-            return None
+        chosen = None
+        if candidates:
+            logger.info(f"[自动生成] 检测到 {len(candidates)} 个候选容器:")
+            for c in candidates:
+                logger.info(f"  [{c['index']}] {c['selector'][:60]}  "
+                            f"({c['child_count']} 个 <{c['child_tag']}>, "
+                            f"评分 {c['score']})")
+            chosen = _pick_best_candidate(candidates, url)
 
-        logger.info(f"[自动生成] 检测到 {len(candidates)} 个候选容器:")
-        for c in candidates:
-            logger.info(f"  [{c['index']}] {c['selector'][:60]}  "
-                        f"({c['child_count']} 个 <{c['child_tag']}>, "
-                        f"评分 {c['score']})")
+        # 主页面未找到 → 检查是否有 ATS iframe
+        if not chosen:
+            ats_url = await browser.detect_ats_iframe()
+            if ats_url:
+                logger.info(f"[自动生成] 主页面无职位列表，切换到 ATS 页面: {ats_url}")
+                url = ats_url  # 后续保存配置时用新 URL 的 domain
+                domain = urlparse(url).netloc.lower()
+                await browser.navigate(url)
+                content_ready = await browser.wait_for_content(timeout_ms=20000)
+                if not content_ready:
+                    logger.warning("[自动生成] ATS 页面内容加载可能不完整")
+                await browser.dismiss_popup()
+                await browser.scroll_page(times=3)
+                await asyncio.sleep(1)
 
-        chosen = _pick_best_candidate(candidates, url)
+                logger.info(f"[自动生成] 重新分析 ATS 页面结构...")
+                candidates = await find_job_containers(browser)
+                if candidates:
+                    logger.info(f"[自动生成] 检测到 {len(candidates)} 个候选容器:")
+                    for c in candidates:
+                        logger.info(f"  [{c['index']}] {c['selector'][:60]}  "
+                                    f"({c['child_count']} 个 <{c['child_tag']}>, "
+                                    f"评分 {c['score']})")
+                    chosen = _pick_best_candidate(candidates, url)
+
         if not chosen:
             logger.error("[自动生成] 未找到有效的职位列表容器")
             return None
@@ -347,7 +370,12 @@ async def auto_generate_config(url: str, headed: bool = False, output: str | Non
         print(f"配置已另存: {output}")
 
     print(f"\n{json.dumps(config, ensure_ascii=False, indent=2)}")
-    print(f'\n验证: python run.py "{url}"')
+    # 如果 ATS iframe 导致 domain 变更，用实际 domain 提示验证命令
+    actual_domain = config.get("domain", "")
+    if actual_domain and actual_domain not in url:
+        print(f'\n验证: python run.py "https://{actual_domain}"')
+    else:
+        print(f'\n验证: python run.py "{url}"')
 
 
 async def batch_generate_configs(urls: list[str], headed: bool = False):

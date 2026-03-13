@@ -1,10 +1,10 @@
 {
   "domain": "boards.greenhouse.io",
-  "name": "The Brattle Group",
+  "name": "The Brattle Group 招聘",
   "card_selector": "tr.job-post",
   "fields": {
-    "title": "td.cell > a > p.body--medium",
-    "location": "td.cell > a > p.body__secondary"
+    "title": "td.cell > a > p.body.body--medium",
+    "location": "td.cell > a > p.body.body__secondary.body--metadata"
   },
   "url_mode": "href",
   "url_selector": "td.cell > a",
