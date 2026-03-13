@@ -7,6 +7,14 @@ from urllib.parse import urljoin, urlparse
 from browser_service import BrowserService
 
 
+def _escape_for_js(selector: str) -> str:
+    """转义 CSS 选择器以安全嵌入 JS 单引号字符串。
+
+    先转义反斜杠（CSS.escape 生成的 \\/ 等），再转义单引号。
+    """
+    return selector.replace("\\", "\\\\").replace("'", "\\'")
+
+
 def _relax_selector(selector: str) -> str:
     """去掉 CSS 选择器中的 :nth-of-type() / :nth-child() 位置限定。
 
@@ -29,7 +37,7 @@ def _build_fields_js(fields: dict) -> str:
     """根据 field_map 生成 JS 字段提取代码片段"""
     parts = []
     for name, selector in fields.items():
-        escaped = selector.replace("'", "\\'")
+        escaped = _escape_for_js(selector)
         # 克隆节点并移除 <script>/<style> 再取文本，避免抓到内联 JS 代码
         parts.append(
             f"    {name}: (() => {{"
@@ -394,7 +402,7 @@ class JobCrawler:
     ) -> list[dict]:
         """click_next 翻页：点击下一页按钮，提取新页面的卡片+URL"""
         # 检查下一页按钮是否存在且可用
-        escaped = next_selector.replace("'", "\\'")
+        escaped = _escape_for_js(next_selector)
         check_js = f"""
         (() => {{
             const el = document.querySelector('{escaped}');
@@ -435,7 +443,7 @@ class JobCrawler:
         card_selector: str, fields: dict, seen_titles: set
     ) -> list[dict]:
         """load_more 翻页：点击加载更多，提取新增的卡片"""
-        escaped = next_selector.replace("'", "\\'")
+        escaped = _escape_for_js(next_selector)
         check_js = f"""
         (() => {{
             const el = document.querySelector('{escaped}');
@@ -499,7 +507,7 @@ class JobCrawler:
         策略：元素未出现时每 500ms 检测；出现后每 300ms 检测稳定性。
         返回最终检测到的卡片数。超时后返回当前数量（可能为 0）。
         """
-        escaped = card_selector.replace("\\", "\\\\").replace("'", "\\'")
+        escaped = _escape_for_js(card_selector)
         js = f"document.querySelectorAll('{escaped}').length"
 
         elapsed = 0
@@ -562,7 +570,7 @@ class JobCrawler:
     async def _extract_fields(self, card_selector: str, fields: dict) -> list[dict]:
         """用一次 JS 调用提取所有卡片的字段数据"""
         fields_js = _build_fields_js(fields)
-        escaped_selector = card_selector.replace("'", "\\'")
+        escaped_selector = _escape_for_js(card_selector)
 
         js = f"""
         (() => {{
@@ -580,7 +588,7 @@ class JobCrawler:
 
     async def _get_urls_deep_href(self, card_selector: str, jobs: list[dict]) -> list[dict]:
         """深层搜索卡片内所有 <a> 标签，取第一个有效 href。"""
-        escaped_card = card_selector.replace("'", "\\'")
+        escaped_card = _escape_for_js(card_selector)
         js = f"""
         (() => {{
             const cards = document.querySelectorAll('{escaped_card}');
@@ -615,9 +623,9 @@ class JobCrawler:
 
     async def _get_urls_href(self, card_selector: str, url_selector: str | None, jobs: list[dict]) -> list[dict]:
         """从 href 属性提取 URL"""
-        escaped_card = card_selector.replace("'", "\\'")
+        escaped_card = _escape_for_js(card_selector)
         if url_selector:
-            escaped_url = url_selector.replace("'", "\\'")
+            escaped_url = _escape_for_js(url_selector)
             sub_query = f"card.querySelector('{escaped_url}')"
         else:
             sub_query = "card.querySelector('a') || card"
@@ -641,10 +649,10 @@ class JobCrawler:
 
     async def _get_urls_attr(self, card_selector: str, attr_name: str, url_selector: str | None, jobs: list[dict]) -> list[dict]:
         """从指定属性提取 URL"""
-        escaped_card = card_selector.replace("'", "\\'")
-        escaped_attr = attr_name.replace("'", "\\'")
+        escaped_card = _escape_for_js(card_selector)
+        escaped_attr = _escape_for_js(attr_name)
         if url_selector:
-            escaped_url = url_selector.replace("'", "\\'")
+            escaped_url = _escape_for_js(url_selector)
             sub_query = f"card.querySelector('{escaped_url}')"
         else:
             sub_query = "card"
@@ -672,7 +680,7 @@ class JobCrawler:
         url_js 中可用变量: card (当前卡片元素), index (卡片索引)
         表达式应返回一个 URL 字符串。
         """
-        escaped_card = card_selector.replace("'", "\\'")
+        escaped_card = _escape_for_js(card_selector)
         js = f"""
         (() => {{
             const cards = document.querySelectorAll('{escaped_card}');
@@ -964,7 +972,7 @@ class JobCrawler:
         Returns:
             True 如果找到，False 如果超时
         """
-        escaped = selector.replace("'", "\\'")
+        escaped = _escape_for_js(selector)
         poll_interval = 500
         elapsed = 0
         while elapsed < timeout_ms:
@@ -1060,7 +1068,7 @@ class JobCrawler:
             else:
                 # 兼容旧配置：整块文本提取
                 detail_format = config.get("detail_format", "text")
-                escaped_selector = container_selector.replace("'", "\\'")
+                escaped_selector = _escape_for_js(container_selector)
                 if detail_format == "html":
                     extract_expr = "clone.innerHTML"
                 else:
@@ -1092,10 +1100,10 @@ class JobCrawler:
         - 不是提取多个卡片，而是从单个容器中提取字段
         - 移除 script/style 等噪音后取文本
         """
-        escaped_container = container_selector.replace("'", "\\'")
+        escaped_container = _escape_for_js(container_selector)
         parts = []
         for name, selector in fields.items():
-            escaped = selector.replace("'", "\\'")
+            escaped = _escape_for_js(selector)
             parts.append(
                 f"    {name}: (() => {{"
                 f" const el = container.querySelector('{escaped}');"

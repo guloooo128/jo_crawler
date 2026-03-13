@@ -1,10 +1,10 @@
 {
   "domain": "job-boards.greenhouse.io",
   "name": "Anthropic 招聘",
-  "card_selector": "main.main.font-secondary > div.index--content > div.index__main:nth-of-type(4) > div.padding:nth-of-type(2) > div.job-posts > div.job-posts--table--department > div.job-posts--table > table > tbody > tr",
+  "card_selector": "main.main.font-secondary > div.index--content > div.index__main:nth-of-type(4) > div.padding:nth-of-type(2) > div.job-posts:nth-of-type(1) > div.job-posts--table--department > div.job-posts--table > table > tbody > tr",
   "fields": {
-    "title": "td.cell > a > p.body.body--medium",
-    "location": "td.cell > a > p.body.body__secondary.body--metadata"
+    "title": "td.cell > a > p.body--medium",
+    "location": "td.cell > a > p.body__secondary"
   },
   "url_mode": "href",
   "url_selector": "td.cell > a",
@@ -14,5 +14,12 @@
       "action": "wait_for_content",
       "timeout_ms": 15000
     }
-  ]
+  ],
+  "detail": {
+    "container_selector": "main.main.font-secondary > div.job-post-container > div:nth-of-type(2) > div.job__description.body:nth-of-type(3)",
+    "fields": {
+      "description": "div"
+    },
+    "wait_ms": 2000
+  }
 }

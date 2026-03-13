@@ -1,12 +1,12 @@
 {
   "domain": "careers.amd.com",
   "name": "AMD 招聘",
-  "card_selector": "#all-content > search-app > search-base-search-holder.ng-star-inserted > search-results > div.search-results.jibe-container > div.search-results__list.ng-star-inserted > div.job-results-container:nth-of-type(3) > search-job-cards > mat-accordion.mat-accordion.cards > mat-expansion-panel",
+  "card_selector": "#all-content > search-app > search-base-search-holder.ng-star-inserted > search-results > div.search-results.jibe-container > div.search-results__list.ng-star-inserted > div.job-results-container:nth-of-type(2) > search-job-cards > mat-accordion.mat-accordion.cards > mat-expansion-panel",
   "fields": {
-    "title": "mat-panel-title p.job-title a.job-title-link span[itemprop='title']",
+    "title": "mat-panel-title p.job-title a.job-title-link span",
     "location": "mat-panel-description .job-result__location .label-value.location",
-    "department": "mat-panel-description .job-result__categories .categories.label-value",
-    "req_id": "mat-panel-title p.req-id"
+    "category": "mat-panel-description .job-result__categories .categories.label-value",
+    "id": "mat-panel-title p.req-id span"
   },
   "url_mode": "href",
   "url_selector": "mat-panel-title p.job-title a.job-title-link",
@@ -16,5 +16,16 @@
       "action": "wait_for_content",
       "timeout_ms": 15000
     }
-  ]
+  ],
+  "detail": {
+    "container_selector": "#all-content > descriptions-app > div.job-description-container",
+    "fields": {
+      "description": "article.main-description-body",
+      "location": "#header-locations .job-data-span",
+      "department": "#header-categories .job-data-span",
+      "salary": "#header-tags5 .job-data-span",
+      "job_id": "#header-req_id .job-data-span"
+    },
+    "wait_ms": 2000
+  }
 }

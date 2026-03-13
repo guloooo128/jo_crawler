@@ -15,6 +15,7 @@ import asyncio
 import builtins
 import io
 import json
+import logging
 from collections import defaultdict
 from contextvars import ContextVar
 from pathlib import Path
@@ -144,7 +145,11 @@ async def main():
     parser.add_argument("--detail", action="store_true", help="抓取每个职位的详情页内容")
     parser.add_argument("--gen-detail", action="store_true", help="自动生成详情页配置（配合 --detail 使用）")
     parser.add_argument("--concurrency", "-j", type=int, default=1, help="批量模式并发数（默认 3）")
+    parser.add_argument("--verbose", "-v", action="store_true", help="显示详细日志（DEBUG 级别）")
     args = parser.parse_args()
+
+    log_level = logging.DEBUG if args.verbose else logging.INFO
+    logging.basicConfig(level=log_level, format="  %(message)s")
 
     if args.batch:
         # 批量模式 — 并发时用缓冲 print 避免日志交错

@@ -9,6 +9,7 @@
 import argparse
 import asyncio
 import json
+import logging
 import sys
 from pathlib import Path
 from urllib.parse import urlparse
@@ -16,6 +17,8 @@ from urllib.parse import urlparse
 from browser_service import BrowserService
 from dom_extractor import find_job_containers, find_detail_containers
 from gen_config import call_doubao, call_doubao_detail, call_doubao_raw, fix_url_mode, domain_to_filename, CONFIG_DIR
+
+logger = logging.getLogger(__name__)
 
 
 # LLM 逐个判断候选是否为职位列表的 system prompt
@@ -86,7 +89,7 @@ def _quick_reject_all(candidates: list[dict]) -> bool:
     best_child_count = max(c["child_count"] for c in candidates)
 
     if best_score < 65 and best_child_count < 6:
-        print(f"  快速跳过: 最高评分 {best_score}, 最多子元素 {best_child_count} (阈值: 评分≥65 或 子元素≥6)")
+        logger.info(f"快速跳过: 最高评分 {best_score}, 最多子元素 {best_child_count} (阈值: 评分≥65 或 子元素≥6)")
         return True
     return False
 
@@ -106,38 +109,38 @@ def _pick_best_candidate(candidates: list[dict], url: str, max_llm_calls: int = 
     valid = []
     for cand in candidates:
         if _is_nav_candidate(cand):
-            print(f"  跳过候选 {cand['index']}: 导航元素 ({cand['selector'][:50]})")
+            logger.info(f"跳过候选 {cand['index']}: 导航元素 ({cand['selector'][:50]})")
         else:
             valid.append(cand)
 
     if not valid:
-        print(f"  所有候选均为导航元素")
+        logger.warning(f"所有候选均为导航元素")
         return None
 
     # 高置信度：评分 ≥ 80 且子元素 ≥ 6 → 直接采用
     top = valid[0]
     if top["score"] >= 80 and top["child_count"] >= 6:
-        print(f"  高置信度直接采用候选 {top['index']}: "
-              f"评分 {top['score']}, {top['child_count']} 个子元素")
+        logger.info(f"高置信度直接采用候选 {top['index']}: "
+                    f"评分 {top['score']}, {top['child_count']} 个子元素")
         return top
 
     # 低置信度：最多验证 max_llm_calls 个候选
     llm_calls = 0
     for cand in valid:
         if llm_calls >= max_llm_calls:
-            print(f"  已达 LLM 验证上限 ({max_llm_calls} 次)，停止验证")
+            logger.info(f"已达 LLM 验证上限 ({max_llm_calls} 次)，停止验证")
             break
 
-        print(f"  验证候选 {cand['index']}: {cand['selector'][:50]}...")
+        logger.info(f"验证候选 {cand['index']}: {cand['selector'][:50]}...")
         llm_calls += 1
         if _llm_verify(cand, url):
-            print(f"  ✓ 确认为职位列表")
+            logger.info(f"✓ 确认为职位列表")
             return cand
         else:
-            print(f"  ✗ 不是职位列表，跳过")
+            logger.info(f"✗ 不是职位列表，跳过")
 
     # 全部验证失败
-    print(f"  所有候选均未通过验证")
+    logger.warning(f"所有候选均未通过验证")
     return None
 
 
@@ -158,49 +161,49 @@ async def generate_config(url: str, headed: bool = False, with_detail: bool = Fa
 
     try:
         # Step 1: 打开页面
-        print(f"  [自动生成] 打开页面: {url}")
+        logger.info(f"[自动生成] 打开页面: {url}")
         await browser.navigate(url)
 
-        # Step 2: 处理弹窗 + 等待加载
-        print(f"  [自动生成] 等待页面加载...")
-        await browser.dismiss_cookie_banner()
+        # Step 2: 等待加载 + 处理弹窗
+        logger.info(f"[自动生成] 等待页面加载...")
         content_ready = await browser.wait_for_content(timeout_ms=20000)
         if not content_ready:
-            print("  [自动生成] 警告: 页面内容加载可能不完整")
+            logger.warning("[自动生成] 页面内容加载可能不完整")
+        await browser.dismiss_popup()
 
         # Step 3: 滚动触发懒加载
-        print(f"  [自动生成] 滚动触发懒加载...")
+        logger.info(f"[自动生成] 滚动触发懒加载...")
         await browser.scroll_page(times=3)
         await asyncio.sleep(1)
 
         # Step 4: 检测职位容器
-        print(f"  [自动生成] 分析页面结构...")
+        logger.info(f"[自动生成] 分析页面结构...")
         candidates = await find_job_containers(browser)
 
         if not candidates:
-            print("  [自动生成] 错误: 未能检测到职位列表容器")
+            logger.error("[自动生成] 未能检测到职位列表容器")
             return None
 
-        print(f"  [自动生成] 检测到 {len(candidates)} 个候选容器:")
+        logger.info(f"[自动生成] 检测到 {len(candidates)} 个候选容器:")
         for c in candidates:
-            print(f"    [{c['index']}] {c['selector'][:60]}  "
-                  f"({c['child_count']} 个 <{c['child_tag']}>, "
-                  f"评分 {c['score']})")
+            logger.info(f"  [{c['index']}] {c['selector'][:60]}  "
+                        f"({c['child_count']} 个 <{c['child_tag']}>, "
+                        f"评分 {c['score']})")
 
         chosen = _pick_best_candidate(candidates, url)
         if not chosen:
-            print("  [自动生成] 错误: 未找到有效的职位列表容器")
+            logger.error("[自动生成] 未找到有效的职位列表容器")
             return None
-        print(f"  [自动生成] 选中候选 {chosen['index']}: {chosen['selector'][:60]}")
+        logger.info(f"[自动生成] 选中候选 {chosen['index']}: {chosen['selector'][:60]}")
 
         # Step 5: 调用 LLM 生成配置
-        print(f"  [自动生成] 调用 LLM 生成配置...")
+        logger.info(f"[自动生成] 调用 LLM 生成配置...")
         raw_config = call_doubao(chosen["sample_html"], url, card_selector=chosen.get("card_selector", ""))
 
         try:
             config = json.loads(raw_config)
         except json.JSONDecodeError as e:
-            print(f"  [自动生成] LLM 返回无法解析为 JSON: {e}")
+            logger.error(f"[自动生成] LLM 返回无法解析为 JSON: {e}")
             return None
 
         # 校验和修正
@@ -220,7 +223,7 @@ async def generate_config(url: str, headed: bool = False, with_detail: bool = Fa
         output_path.write_text(
             json.dumps(config, ensure_ascii=False, indent=2), encoding="utf-8"
         )
-        print(f"  [自动生成] 配置已保存: {output_path}")
+        logger.info(f"[自动生成] 配置已保存: {output_path}")
 
         return config
 
@@ -243,7 +246,7 @@ async def generate_detail_config_standalone(detail_url: str, headed: bool = Fals
     browser = BrowserService(session=session_name, headless=not headed)
 
     try:
-        print(f"  [详情配置] 打开详情页: {detail_url}")
+        logger.info(f"[详情配置] 打开详情页: {detail_url}")
         await browser.navigate(detail_url)
         await browser.wait_for_content(timeout_ms=15000)
 
@@ -257,7 +260,7 @@ async def _generate_detail_config(browser: BrowserService, config: dict, list_ur
     """从列表页出发，取第一个 job URL 导航到详情页，生成 detail 配置"""
     from crawler import JobCrawler
 
-    print(f"  [详情配置] 从列表提取一个详情页 URL...")
+    logger.info(f"[详情配置] 从列表提取一个详情页 URL...")
     crawler = JobCrawler(browser)
 
     # 提取第一页的卡片和 URL
@@ -265,7 +268,7 @@ async def _generate_detail_config(browser: BrowserService, config: dict, list_ur
     fields = config["fields"]
     jobs = await crawler._extract_fields(card_selector, fields)
     if not jobs:
-        print(f"  [详情配置] 未找到卡片，跳过详情配置生成")
+        logger.warning(f"[详情配置] 未找到卡片，跳过详情配置生成")
         return None
 
     jobs = jobs[:1]  # 只取第一个
@@ -273,7 +276,7 @@ async def _generate_detail_config(browser: BrowserService, config: dict, list_ur
     first_url = jobs[0].get("url", "").strip() if jobs else ""
 
     if not first_url or first_url.startswith(("javascript:", "#")):
-        print(f"  [详情配置] 未获取到有效的详情页 URL，跳过")
+        logger.warning(f"[详情配置] 未获取到有效的详情页 URL，跳过")
         return None
 
     # 处理相对 URL
@@ -281,7 +284,7 @@ async def _generate_detail_config(browser: BrowserService, config: dict, list_ur
         from urllib.parse import urljoin
         first_url = urljoin(list_url, first_url)
 
-    print(f"  [详情配置] 导航到详情页: {first_url}")
+    logger.info(f"[详情配置] 导航到详情页: {first_url}")
     await browser.navigate(first_url)
     await browser.wait_for_content(timeout_ms=15000)
 
@@ -290,23 +293,23 @@ async def _generate_detail_config(browser: BrowserService, config: dict, list_ur
 
 async def _generate_detail_config_from_page(browser: BrowserService, page_url: str) -> dict | None:
     """在当前已打开的详情页上，检测容器并调用 LLM 生成配置"""
-    print(f"  [详情配置] 分析详情页结构...")
+    logger.info(f"[详情配置] 分析详情页结构...")
     candidates = await find_detail_containers(browser)
 
     if not candidates:
-        print(f"  [详情配置] 未检测到详情页内容容器")
+        logger.warning(f"[详情配置] 未检测到详情页内容容器")
         return None
 
-    print(f"  [详情配置] 检测到 {len(candidates)} 个候选:")
+    logger.info(f"[详情配置] 检测到 {len(candidates)} 个候选:")
     for c in candidates:
-        print(f"    [{c['index']}] {c['selector'][:60]}  "
-              f"(文本 {c['text_len']} 字符, 评分 {c['score']})")
+        logger.info(f"  [{c['index']}] {c['selector'][:60]}  "
+                    f"(文本 {c['text_len']} 字符, 评分 {c['score']})")
 
     # 详情页选最高分的即可
     chosen = candidates[0]
-    print(f"  [详情配置] 选中候选 {chosen['index']}: {chosen['selector'][:60]}")
+    logger.info(f"[详情配置] 选中候选 {chosen['index']}: {chosen['selector'][:60]}")
 
-    print(f"  [详情配置] 调用 LLM 生成详情页配置...")
+    logger.info(f"[详情配置] 调用 LLM 生成详情页配置...")
     raw_config = call_doubao_detail(
         chosen["sample_html"], page_url,
         container_selector=chosen.get("selector", "")
@@ -315,14 +318,14 @@ async def _generate_detail_config_from_page(browser: BrowserService, page_url: s
     try:
         detail_config = json.loads(raw_config)
     except json.JSONDecodeError as e:
-        print(f"  [详情配置] LLM 返回无法解析为 JSON: {e}")
+        logger.error(f"[详情配置] LLM 返回无法解析为 JSON: {e}")
         return None
 
     # 确保必填字段
     if "fields" not in detail_config or "description" not in detail_config.get("fields", {}):
-        print(f"  [详情配置] 警告: 配置缺少 fields.description")
+        logger.warning(f"[详情配置] 配置缺少 fields.description")
 
-    print(f"  [详情配置] 生成成功: {list(detail_config.get('fields', {}).keys())}")
+    logger.info(f"[详情配置] 生成成功: {list(detail_config.get('fields', {}).keys())}")
     return detail_config
 
 
@@ -366,11 +369,11 @@ async def batch_generate_configs(urls: list[str], headed: bool = False):
         filename_stem = domain_to_filename(domain).replace(".json", "")
 
         if filename_stem in existing:
-            print(f"[{i}/{total}] 跳过 (已有配置): {domain}")
+            logger.info(f"[{i}/{total}] 跳过 (已有配置): {domain}")
             skip += 1
             continue
 
-        print(f"\n[{i}/{total}] 生成配置: {url}")
+        logger.info(f"[{i}/{total}] 生成配置: {url}")
         try:
             config = await generate_config(url, headed=headed)
             if config:
@@ -378,13 +381,13 @@ async def batch_generate_configs(urls: list[str], headed: bool = False):
                 existing.add(filename_stem)
             else:
                 fail += 1
-                print(f"  生成失败")
+                logger.error(f"  生成失败")
         except Exception as e:
             fail += 1
-            print(f"  异常: {e}")
+            logger.error(f"  异常: {e}")
 
-    print(f"\n{'=' * 40}")
-    print(f"批量生成完成: 成功 {success}, 失败 {fail}, 跳过 {skip}, 共 {total}")
+    logger.info(f"{'=' * 40}")
+    logger.info(f"批量生成完成: 成功 {success}, 失败 {fail}, 跳过 {skip}, 共 {total}")
 
 
 def main():
@@ -393,9 +396,16 @@ def main():
     parser.add_argument("--batch", "-b", help="批量 URL 文件路径（每行一个 URL）")
     parser.add_argument("--headed", action="store_true", help="使用有头浏览器（可视化调试）")
     parser.add_argument("--output", "-o", help="输出文件路径（默认自动命名到 config/ 目录）")
-    parser.add_argument("--with-detail", action="store_true", help="同时生成详情页配置")
+    parser.add_argument("--detail", action="store_true", help="同时生成详情页配置")
     parser.add_argument("--detail-url", help="单独为指定详情页 URL 生成 detail 配置")
+    parser.add_argument("--verbose", "-v", action="store_true", help="显示详细日志（DEBUG 级别）")
     args = parser.parse_args()
+
+    log_level = logging.DEBUG if args.verbose else logging.INFO
+    logging.basicConfig(
+        level=log_level,
+        format="  %(message)s",
+    )
 
     if args.detail_url:
         # 独立生成详情页配置
@@ -423,7 +433,7 @@ def main():
         print(f"读取到 {len(urls)} 个 URL")
         asyncio.run(batch_generate_configs(urls, headed=args.headed))
     elif args.url:
-        asyncio.run(auto_generate_config(args.url, headed=args.headed, output=args.output, with_detail=args.with_detail))
+        asyncio.run(auto_generate_config(args.url, headed=args.headed, output=args.output, with_detail=args.detail))
     else:
         parser.print_help()
         sys.exit(1)
