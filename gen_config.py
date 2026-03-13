@@ -260,11 +260,86 @@ def domain_to_filename(domain: str) -> str:
     return domain.replace(".", "_").replace("-", "-") + ".json"
 
 
+def _resolve_output_path(url: str, output: str | None) -> Path:
+    """根据 URL 和 --output 参数确定配置文件输出路径"""
+    if output:
+        return Path(output)
+    CONFIG_DIR.mkdir(exist_ok=True)
+    domain = urlparse(url).netloc.lower()
+    return CONFIG_DIR / domain_to_filename(domain)
+
+
+def _save_config(config: dict, output_path: Path, merge_key: str | None = None):
+    """保存配置到文件。
+
+    Args:
+        config: 要保存的配置
+        output_path: 输出路径
+        merge_key: 如果指定（如 "detail"），且文件已存在，则只更新该字段而非全量覆盖
+    """
+    if merge_key and output_path.exists():
+        existing = json.loads(output_path.read_text(encoding="utf-8"))
+        existing[merge_key] = config
+        final = existing
+        print(f"\n已合并 '{merge_key}' 到现有配置: {output_path}")
+    else:
+        final = config
+
+    output_path.write_text(
+        json.dumps(final, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    return final
+
+
+def _gen_list_config(dom: str, url: str):
+    """生成列表页配置"""
+    raw_config = call_doubao(dom, url)
+
+    try:
+        config = json.loads(raw_config)
+    except json.JSONDecodeError as e:
+        print(f"LLM 返回的内容无法解析为 JSON: {e}")
+        print(f"原始返回:\n{raw_config}")
+        sys.exit(1)
+
+    # 验证必填字段
+    required = ["domain", "card_selector", "fields", "url_mode"]
+    missing = [k for k in required if k not in config]
+    if missing:
+        print(f"警告: 配置缺少必填字段: {missing}")
+    if "fields" in config and "title" not in config["fields"]:
+        print("警告: fields 中缺少 title 字段")
+
+    config = fix_url_mode(config, dom)
+    config["domain"] = urlparse(url).netloc.lower()
+    return config
+
+
+def _gen_detail_config(dom: str, url: str):
+    """生成详情页配置"""
+    raw_config = call_doubao_detail(dom, url)
+
+    try:
+        config = json.loads(raw_config)
+    except json.JSONDecodeError as e:
+        print(f"LLM 返回的内容无法解析为 JSON: {e}")
+        print(f"原始返回:\n{raw_config}")
+        sys.exit(1)
+
+    # 验证必填字段
+    if "fields" not in config or "description" not in config.get("fields", {}):
+        print("警告: 配置缺少 fields.description")
+
+    return config
+
+
 def main():
     parser = argparse.ArgumentParser(description="用 LLM 分析 DOM 生成爬虫配置")
-    parser.add_argument("--url", "-u", required=True, help="招聘页面的 URL")
+    parser.add_argument("--url", "-u", required=True, help="页面 URL")
     parser.add_argument("--file", "-f", help="DOM HTML 文件路径（不指定则从 stdin 读取）")
     parser.add_argument("--output", "-o", help="输出文件路径（默认自动命名到 config/ 目录）")
+    parser.add_argument("--detail", action="store_true",
+                        help="生成详情页配置（而非列表页配置）。如果对应配置文件已存在，会合并 detail 字段")
     args = parser.parse_args()
 
     # 读取 DOM
@@ -282,51 +357,26 @@ def main():
 
     print(f"DOM 长度: {len(dom)} 字符")
 
-    # 调用 LLM
-    raw_config = call_doubao(dom, args.url)
+    output_path = _resolve_output_path(args.url, args.output)
 
-    # 解析并验证 JSON
-    try:
-        config = json.loads(raw_config)
-    except json.JSONDecodeError as e:
-        print(f"LLM 返回的内容无法解析为 JSON: {e}")
-        print(f"原始返回:\n{raw_config}")
-        sys.exit(1)
-
-    # 验证必填字段
-    required = ["domain", "card_selector", "fields", "url_mode"]
-    missing = [k for k in required if k not in config]
-    if missing:
-        print(f"警告: 配置缺少必填字段: {missing}")
-
-    if "fields" in config and "title" not in config["fields"]:
-        print("警告: fields 中缺少 title 字段")
-
-    # 校验 url_mode
-    config = fix_url_mode(config, dom)
-
-    # 确保 domain 正确（以 URL 为准）
-    parsed = urlparse(args.url)
-    config["domain"] = parsed.netloc.lower()
-
-    # 输出路径
-    if args.output:
-        output_path = Path(args.output)
+    if args.detail:
+        # 详情页配置
+        config = _gen_detail_config(dom, args.url)
+        final = _save_config(config, output_path, merge_key="detail")
     else:
-        CONFIG_DIR.mkdir(exist_ok=True)
-        filename = domain_to_filename(config["domain"])
-        output_path = CONFIG_DIR / filename
+        # 列表页配置
+        config = _gen_list_config(dom, args.url)
+        final = _save_config(config, output_path)
 
-    # 写入文件
-    with open(output_path, "w", encoding="utf-8") as f:
-        json.dump(config, f, ensure_ascii=False, indent=2)
-
-    print(f"\n配置文件已生成: {output_path}")
+    print(f"\n配置文件已保存: {output_path}")
     print(f"\n{'='*60}")
-    print(json.dumps(config, ensure_ascii=False, indent=2))
+    print(json.dumps(final, ensure_ascii=False, indent=2))
     print(f"{'='*60}")
     print(f"\n验证命令:")
-    print(f"  python run.py \"{args.url}\"")
+    if args.detail:
+        print(f'  python run.py "{args.url}" --detail -l 5')
+    else:
+        print(f'  python run.py "{args.url}"')
 
 
 if __name__ == "__main__":

@@ -164,18 +164,27 @@ python run.py --batch urls.txt --output results.json
 ### 1. 从文件读取 DOM
 
 ```bash
-# 将复制的 HTML 保存为 dom.html，然后运行：
+# 生成列表页配置
 python gen_config.py --url "https://careers.example.com/jobs" --file dom.html
+
+# 生成详情页配置（加 --detail）
+# 先复制详情页的 DOM，保存为 detail_dom.html
+python gen_config.py --url "https://careers.example.com/jobs/123" --file detail_dom.html --detail
 
 # 指定输出路径
 python gen_config.py --url "https://careers.example.com/jobs" --file dom.html --output config/my_site.json
 ```
 
+> **合并机制**：使用 `--detail` 时，如果对应站点的配置文件已存在，会自动将 `detail` 字段合并到现有配置中，不会覆盖列表页配置。
+
 ### 2. 从剪贴板读取 DOM（macOS）
 
 ```bash
-# 复制 HTML 后直接运行（macOS 使用 pbpaste）
+# 列表页配置
 pbpaste | python gen_config.py --url "https://careers.example.com/jobs"
+
+# 详情页配置
+pbpaste | python gen_config.py --url "https://careers.example.com/jobs/123" --detail
 ```
 
 ### 3. 通过脚本测试生成
@@ -416,6 +425,34 @@ document.querySelectorAll('你的卡片选择器')[0]
 | 禁用自动化特征 | Chromium 启动参数 `--disable-blink-features=AutomationControlled` |
 | 伪装浏览器属性 | 注入 `window.chrome`、`navigator.plugins` 等常见属性 |
 | 自动关闭 Cookie 弹窗 | 支持 OneTrust、TrustArc、CookieBot 等主流框架，自动点击"Accept" |
+| ATS iframe 自动识别 | 检测 Greenhouse、Lever、iCIMS、Workable 等 ATS 嵌入 iframe，自动切换到 ATS 页面分析 |
+
+### ATS iframe 自动识别
+
+部分公司招聘页面通过 iframe 嵌入第三方 ATS（招聘管理系统）的职位列表。由于跨域 iframe 内容无法直接访问，爬虫会自动检测并切换到 ATS 的原始页面：
+
+```
+[自动生成] 检测到 4 个候选容器:
+  [0] div.topbar  (1 个 <div>, 评分 40)
+快速跳过: 最高评分 40 (阈值: 评分≥65)
+[ATS] 检测到 Greenhouse iframe: https://job-boards.greenhouse.io/embed/...
+[自动生成] 主页面无职位列表，切换到 ATS 页面: https://boards.greenhouse.io/thebrattlegroup
+```
+
+支持的 ATS 平台：
+
+| ATS | 域名特征 |
+|-----|---------|
+| Greenhouse | `greenhouse.io` |
+| Lever | `lever.co` |
+| iCIMS | `icims.com` |
+| Workable | `workable.com` |
+| Workday | `myworkdayjobs.com` |
+| BambooHR | `bamboohr.com` |
+| SmartRecruiters | `smartrecruiters.com` |
+| Ashby | `ashbyhq.com` |
+| JazzHR | `jazzhr.com` |
+| Recruitee | `recruitee.com` |
 
 **如果无头模式仍被拦截**，在配置中强制使用有头模式：
 
@@ -671,7 +708,8 @@ python run.py "https://aidc-jobs.alibaba.com/en/campus/position-list" -l 5
 | 全自动生成（含详情页） | `python auto_gen.py "URL" --detail` |
 | 全自动批量生成 | `python auto_gen.py --batch urls.txt` |
 | 单独生成详情页配置 | `python auto_gen.py --detail-url "详情页URL"` |
-| 半自动（DOM 文件） | `python gen_config.py --url "URL" --file dom.html` |
+| 半自动列表配置 | `python gen_config.py --url "URL" --file dom.html` |
+| 半自动详情配置 | `python gen_config.py --url "详情页URL" --file detail.html --detail` |
 | 半自动（剪贴板） | `pbpaste \| python gen_config.py --url "URL"` |
 | 脚本测试生成 | 编辑 `test_gen.py` 后运行 `python test_gen.py` |
 | 爬取（自动匹配/生成配置） | `python run.py "URL"` |
@@ -681,3 +719,4 @@ python run.py "https://aidc-jobs.alibaba.com/en/campus/position-list" -l 5
 | 批量爬取 | `python run.py --batch urls.txt --output results.json` |
 | 并发批量爬取 | `python run.py --batch urls.txt -j 5 --output results.json` |
 | 有头模式调试 | 任意命令加 `--headed` |
+| 详细日志输出 | 任意命令加 `-v` 或 `--verbose` |

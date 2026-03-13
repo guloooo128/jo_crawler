@@ -23,8 +23,10 @@ def _relax_selector(selector: str) -> str:
     return re.sub(r":nth-(?:of-type|child)\(\d+\)", "", selector)
 
 
-def _parse_json(raw: str):
+def _parse_json(raw):
     """解析 eval_js 返回的可能多层编码的 JSON"""
+    if raw is None:
+        return []
     result = raw
     for _ in range(3):
         if isinstance(result, (dict, list)):

@@ -387,6 +387,57 @@ class BrowserService:
             return result
         return json.dumps(result)
 
+    # ── ATS iframe detection ─────────────────────────────────────────
+
+    async def detect_ats_iframe(self) -> str | None:
+        """检测页面中是否嵌入了常见 ATS (Applicant Tracking System) 的 iframe。
+
+        支持: Greenhouse, Lever, iCIMS, Workable, BambooHR, JazzHR, Recruitee, SmartRecruiters
+        Returns: ATS job board 的直接 URL，未检测到返回 None
+        """
+        page = await self._ensure_browser()
+        result = await page.evaluate("""
+        (() => {
+            const iframes = document.querySelectorAll("iframe");
+            const atsPatterns = [
+                { pattern: /greenhouse\\.io/i, name: "Greenhouse" },
+                { pattern: /lever\\.co/i, name: "Lever" },
+                { pattern: /icims\\.com/i, name: "iCIMS" },
+                { pattern: /workable\\.com/i, name: "Workable" },
+                { pattern: /bamboohr\\.com/i, name: "BambooHR" },
+                { pattern: /jazzhr\\.com/i, name: "JazzHR" },
+                { pattern: /recruitee\\.com/i, name: "Recruitee" },
+                { pattern: /smartrecruiters\\.com/i, name: "SmartRecruiters" },
+                { pattern: /myworkdayjobs\\.com/i, name: "Workday" },
+                { pattern: /ashbyhq\\.com/i, name: "Ashby" },
+            ];
+            for (const iframe of iframes) {
+                const src = iframe.src || "";
+                if (!src || iframe.offsetHeight < 100) continue;
+                for (const ats of atsPatterns) {
+                    if (ats.pattern.test(src)) {
+                        return JSON.stringify({name: ats.name, src: src});
+                    }
+                }
+            }
+            return null;
+        })()
+        """)
+        if result:
+            info = json.loads(result)
+            logger.info(f"[ATS] 检测到 {info['name']} iframe: {info['src'][:100]}...")
+            # Greenhouse embed URL 转为直接 board URL
+            src = info["src"]
+            if "greenhouse.io/embed/job_board" in src:
+                import re
+                m = re.search(r"for=([^&]+)", src)
+                if m:
+                    src = f"https://boards.greenhouse.io/{m.group(1)}"
+            elif "greenhouse.io/embed/job_app" in src:
+                src = src.replace("/embed/job_app", "/jobs")
+            return src
+        return None
+
     # ── Cookie & Storage ────────────────────────────────────────────
 
     async def dismiss_cookie_banner(self) -> bool:

@@ -4,9 +4,9 @@
   "card_selector": "#all-content > search-app > search-base-search-holder.ng-star-inserted > search-results > div.search-results.jibe-container > div.search-results__list.ng-star-inserted > div.job-results-container:nth-of-type(2) > search-job-cards > mat-accordion.mat-accordion.cards > mat-expansion-panel",
   "fields": {
     "title": "mat-panel-title p.job-title a.job-title-link span",
-    "location": "mat-panel-description .job-result__location .label-value.location",
-    "category": "mat-panel-description .job-result__categories .categories.label-value",
-    "id": "mat-panel-title p.req-id span"
+    "location": "mat-panel-description .label-value.location",
+    "category": "mat-panel-description .categories.label-value",
+    "req_id": "mat-panel-title p.req-id span"
   },
   "url_mode": "href",
   "url_selector": "mat-panel-title p.job-title a.job-title-link",
@@ -20,11 +20,10 @@
   "detail": {
     "container_selector": "#all-content > descriptions-app > div.job-description-container",
     "fields": {
-      "description": "article.main-description-body",
-      "location": "#header-locations .job-data-span",
-      "department": "#header-categories .job-data-span",
-      "salary": "#header-tags5 .job-data-span",
-      "job_id": "#header-req_id .job-data-span"
+      "description": "article#description-body",
+      "location": "li#header-locations",
+      "department": "li#header-categories",
+      "salary": "li#header-tags5"
     },
     "wait_ms": 2000
   }
