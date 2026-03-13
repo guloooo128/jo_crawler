@@ -20,6 +20,7 @@
   - [第 2 步：判断 URL 获取方式](#第-2-步判断-url-获取方式)
   - [第 3 步：编写 JSON 配置文件](#第-3-步编写-json-配置文件)
 - [配置文件字段详解](#配置文件字段详解)
+- [反爬与隐身机制](#反爬与隐身机制)
 - [详情页配置生成](#详情页配置生成)
 - [验证与调试](#验证与调试)
 - [常见问题](#常见问题)
@@ -66,7 +67,7 @@ python auto_gen.py "https://careers.example.com/jobs"
 python auto_gen.py "https://careers.example.com/jobs" --headed
 
 # 同时生成详情页配置（自动取第一个职位 URL 进入详情页分析）
-python auto_gen.py "https://careers.example.com/jobs" --with-detail
+python auto_gen.py "https://careers.example.com/jobs" --detail
 
 # 指定输出路径（额外保存一份到自定义位置）
 python auto_gen.py "https://careers.example.com/jobs" --output my_config.json
@@ -400,7 +401,29 @@ document.querySelectorAll('你的卡片选择器')[0]
 
 | 字段 | 默认值 | 说明 |
 |------|--------|------|
-| `headless` | `true` | 是否使用无头浏览器 |
+| `headless` | `true` | 是否使用无头浏览器。部分反爬严格的站点需设为 `false` |
+
+---
+
+## 反爬与隐身机制
+
+爬虫内置了以下反检测措施，无需手动配置：
+
+| 措施 | 说明 |
+|------|------|
+| 真实 User-Agent | 使用 Chrome 131 的真实 UA 字符串 |
+| 隐藏 webdriver 标志 | 移除 `navigator.webdriver`，避免被 JS 检测 |
+| 禁用自动化特征 | Chromium 启动参数 `--disable-blink-features=AutomationControlled` |
+| 伪装浏览器属性 | 注入 `window.chrome`、`navigator.plugins` 等常见属性 |
+| 自动关闭 Cookie 弹窗 | 支持 OneTrust、TrustArc、CookieBot 等主流框架，自动点击"Accept" |
+
+**如果无头模式仍被拦截**，在配置中强制使用有头模式：
+
+```json
+"headless": false
+```
+
+或在命令行加 `--headed` 参数。
 
 ---
 
@@ -414,7 +437,7 @@ document.querySelectorAll('你的卡片选择器')[0]
 
 ```bash
 # 生成列表配置时同时生成详情页配置
-python auto_gen.py "https://careers.example.com/jobs" --with-detail
+python auto_gen.py "https://careers.example.com/jobs" --detail
 ```
 
 程序会自动：生成列表配置 → 取第一个职位 URL → 导航到详情页 → 分析结构 → 将 `detail` 配置块写入同一个配置文件。
@@ -542,7 +565,7 @@ document.querySelectorAll('你的选择器').length
 |------|---------|
 | 普通招聘页面 | **全自动**（`auto_gen.py` 或 `run.py` 懒人模式） |
 | 自动生成失败 | **半自动**（手动复制 DOM，用 `gen_config.py` 生成） |
-| 页面需要登录/反爬严格 | **手动编写** JSON 配置 |
+| 页面需要登录/反爬严格 | 先试 `--headed`，仍不行则**手动编写** JSON 配置 |
 | 页面结构特殊 | **半自动** 生成后手动微调 |
 | 批量添加站点 | **批量自动**（`auto_gen.py --batch`） |
 
@@ -645,7 +668,7 @@ python run.py "https://aidc-jobs.alibaba.com/en/campus/position-list" -l 5
 | 操作 | 命令 |
 |------|------|
 | 全自动生成单个配置 | `python auto_gen.py "URL"` |
-| 全自动生成（含详情页） | `python auto_gen.py "URL" --with-detail` |
+| 全自动生成（含详情页） | `python auto_gen.py "URL" --detail` |
 | 全自动批量生成 | `python auto_gen.py --batch urls.txt` |
 | 单独生成详情页配置 | `python auto_gen.py --detail-url "详情页URL"` |
 | 半自动（DOM 文件） | `python gen_config.py --url "URL" --file dom.html` |

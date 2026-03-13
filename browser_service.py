@@ -12,6 +12,23 @@ from playwright.async_api import async_playwright, Browser, BrowserContext, Page
 
 logger = logging.getLogger(__name__)
 
+# 真实 Chrome UA，避免被反爬检测
+_DEFAULT_UA = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/131.0.0.0 Safari/537.36"
+)
+
+# 注入脚本：隐藏 webdriver 标志 + 修补常见检测点
+_STEALTH_JS = """
+Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en', 'zh-CN'] });
+Object.defineProperty(navigator, 'plugins', {
+    get: () => [1, 2, 3, 4, 5],
+});
+window.chrome = { runtime: {} };
+"""
+
 
 class BrowserService:
     """Wraps Playwright for browser automation.
@@ -51,6 +68,9 @@ class BrowserService:
             else:
                 self._browser = await self._playwright.chromium.launch(
                     headless=self.headless,
+                    args=[
+                        "--disable-blink-features=AutomationControlled",
+                    ],
                 )
 
         if not self._context:
@@ -59,7 +79,9 @@ class BrowserService:
             else:
                 self._context = await self._browser.new_context(
                     viewport={"width": 1280, "height": 800},
+                    user_agent=_DEFAULT_UA,
                 )
+                await self._context.add_init_script(_STEALTH_JS)
 
         if not self._context.pages:
             self._page = await self._context.new_page()
@@ -385,6 +407,54 @@ class BrowserService:
 
     async def _dismiss_cookie_banner_inner(self) -> bool:
         """Inner implementation for cookie banner dismissal."""
+        # 方式 1: 通过 CSS 选择器直接点击常见 cookie 框架按钮
+        page = await self._ensure_browser()
+        result = await page.evaluate("""
+        (() => {
+            const selectors = [
+                '#onetrust-accept-btn-handler',
+                '#accept-recommended-btn-handler',
+                '.onetrust-close-btn-handler',
+                '#truste-consent-button',
+                '#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll',
+                '#CybotCookiebotDialogBodyButtonAccept',
+                '.cc-btn.cc-allow',
+                '.cc-accept-all',
+                '[data-testid="cookie-accept"]',
+                'button.accept-cookies',
+                'button[data-action="accept"]',
+                '.cookie-consent-accept',
+                '.js-accept-cookies',
+                '#cookie-accept',
+                '#acceptCookies',
+            ];
+            // 检测是否存在 cookie 弹窗
+            const detected = [];
+            for (const sel of selectors) {
+                const btn = document.querySelector(sel);
+                if (btn) detected.push({sel, visible: btn.offsetHeight > 0});
+            }
+            // 点击第一个可见的按钮
+            for (const d of detected) {
+                if (d.visible) {
+                    document.querySelector(d.sel).click();
+                    return {detected, clicked: d.sel};
+                }
+            }
+            return {detected, clicked: null};
+        })()
+        """)
+        detected = result.get("detected", [])
+        clicked = result.get("clicked")
+        if detected:
+            sels = [d["sel"] for d in detected]
+            logger.info(f"[Cookie] 发现 cookie 弹窗: {', '.join(sels)}")
+        if clicked:
+            logger.info(f"[Cookie] 已点击关闭: {clicked}")
+            await asyncio.sleep(1)
+            return True
+
+        # 方式 2: 通过 accessibility snapshot 匹配按钮文本
         snapshot = await self.get_snapshot(interactive=True)
         refs = snapshot.get("refs", {})
 
@@ -400,12 +470,13 @@ class BrowserService:
             if role == "button" and name:
                 for pattern in cookie_patterns:
                     if re.search(pattern, name, re.IGNORECASE):
-                        logger.info(f"Cookie banner: clicking '{name}' (@{ref_id})")
+                        logger.info(f"[Cookie] 发现 cookie 按钮: '{name}'")
                         await self.click(f"@{ref_id}")
                         await asyncio.sleep(1)
+                        logger.info(f"[Cookie] 已点击关闭: '{name}'")
                         return True
 
-        logger.debug(f"No cookie banner found in {len(refs)} refs")
+        logger.info(f"[Cookie] 未发现 cookie 弹窗")
         return False
 
     async def dismiss_popup(self) -> bool:
