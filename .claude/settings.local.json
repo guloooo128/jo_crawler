@@ -36,7 +36,9 @@
       "Bash(/Users/gollum/miniconda3/bin/python auto_gen.py 'https://careers.amd.com/careers-home/jobs?page=1&tags1=Yes&country=Australia&sortBy=posted_date&descending=true' --detail)",
       "Bash(/Users/gollum/miniconda3/bin/python /Users/gollum/Projects/jo_crawler/_check_cookie.py)",
       "Bash(/Users/gollum/miniconda3/bin/python /Users/gollum/Projects/jo_crawler/_check_brattle.py)",
-      "Bash(pip install:*)"
+      "Bash(pip install:*)",
+      "Bash(git -C /Users/gollum/Projects/jo_crawler log --oneline -5)",
+      "Bash(git -C /Users/gollum/Projects/jo_crawler remote -v)"
     ]
   }
 }

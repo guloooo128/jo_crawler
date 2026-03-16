@@ -31,8 +31,18 @@
 
 ```bash
 # 确保已安装依赖
-pip install playwright requests
+pip install playwright requests python-dotenv
 playwright install chromium
+```
+
+**环境变量配置（必须）：**
+
+创建 `.env` 文件（已在 `.gitignore` 中，不会被提交）：
+
+```bash
+DOUBAO_API_KEY=your_api_key_here
+DOUBAO_API_URL=https://ark.cn-beijing.volces.com/api/v3/chat/completions
+DOUBAO_MODEL=your_model_name
 ```
 
 项目目录结构：
@@ -109,22 +119,49 @@ https://jobs.another.com/positions
 # 批量生成（已有配置的 URL 会自动跳过）
 python auto_gen.py --batch urls.txt
 
+# 并发生成（3 路并发，建议 3-5）
+python auto_gen.py --batch urls.txt --workers 3
+
+# 同时生成详情页配置（已有配置但缺少 detail 的会自动补充）
+python auto_gen.py --batch urls.txt --detail --workers 3
+
 # 有头模式批量生成
 python auto_gen.py --batch urls.txt --headed
 ```
 
+**批量模式自动写日志文件：**
+```
+logs/
+├── batch_20260316_151306.log              # 汇总日志（所有任务）
+└── batch_20260316_151306/                 # 每个任务独立日志
+    ├── careers_example_com.log
+    ├── jobs_another_com.log
+    └── ...
+```
+
+**`--detail` 模式下的智能跳过逻辑：**
+
+| 状态 | 行为 |
+|------|------|
+| 无配置 | 完整生成（列表 + detail） |
+| 已有配置 + 缺少 detail | 补充 detail 配置 |
+| 已有配置 + 已有 detail | 跳过 |
+
 **输出示例：**
 ```
-读取到 2 个 URL
+读取到 3 个 URL
+汇总日志: logs/batch_20260316_151306.log
+任务日志目录: logs/batch_20260316_151306/
 
-[1/2] 生成配置: https://careers.example.com/jobs
-  [自动生成] 打开页面...
-  [自动生成] 配置已保存: config/careers_example_com.json
+  [1/3] 开始生成配置: https://careers.example.com/jobs
+  [1/3] 生成成功: careers.example.com (25.3s)
+  [2/3] 补充 detail 配置: jobs.another.com
+  [2/3] 补充 detail 成功: jobs.another.com (18.7s)
+  [3/3] 跳过 (已有配置): hr.skip.com
 
-[2/2] 跳过 (已有配置): jobs.another.com
-
-========================================
-批量生成完成: 成功 1, 失败 0, 跳过 1, 共 2
+==================================================
+批量生成完成 (并发数: 3, 耗时: 25.3s)
+  新建: 1, 补充detail: 1, 失败: 0, 跳过: 1, 共: 3
 ```
 
 ### 3. 运行时自动生成（懒人模式）
@@ -707,6 +744,8 @@ python run.py "https://aidc-jobs.alibaba.com/en/campus/position-list" -l 5
 | 全自动生成单个配置 | `python auto_gen.py "URL"` |
 | 全自动生成（含详情页） | `python auto_gen.py "URL" --detail` |
 | 全自动批量生成 | `python auto_gen.py --batch urls.txt` |
+| 批量并发生成 | `python auto_gen.py --batch urls.txt -w 3` |
+| 批量生成 + 补充 detail | `python auto_gen.py --batch urls.txt --detail -w 3` |
 | 单独生成详情页配置 | `python auto_gen.py --detail-url "详情页URL"` |
 | 半自动列表配置 | `python gen_config.py --url "URL" --file dom.html` |
 | 半自动详情配置 | `python gen_config.py --url "详情页URL" --file detail.html --detail` |
