@@ -14,18 +14,25 @@
 import argparse
 import json
 import logging
+import os
 import sys
 from pathlib import Path
 from urllib.parse import urlparse
 
 import requests
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv(Path(__file__).parent / ".env")
+except ImportError:
+    pass
+
 logger = logging.getLogger(__name__)
 
 # ── Doubao API 配置 ──────────────────────────────────────────────
-DOUBAO_API_KEY = "***REMOVED***"
-DOUBAO_API_URL = "https://ark.cn-beijing.volces.com/api/v3/chat/completions"
-DOUBAO_MODEL = "glm-4-7-251222"
+DOUBAO_API_KEY = os.environ.get("DOUBAO_API_KEY", "")
+DOUBAO_API_URL = os.environ.get("DOUBAO_API_URL", "")
+DOUBAO_MODEL = os.environ.get("DOUBAO_MODEL", "")
 
 CONFIG_DIR = Path(__file__).parent / "config"
 
