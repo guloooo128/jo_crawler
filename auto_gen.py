@@ -510,7 +510,7 @@ async def batch_generate_configs(urls: list[str], headed: bool = False, with_det
 
                 # 已有配置且包含 detail，或不需要 detail → 跳过
                 if not with_detail or cfg is None or "detail" in cfg:
-                    logger.info(f"[{i}/{total}] 跳过 (已有配置): {domain}")
+                    logger.info(f"跳过 (已有配置): {domain}")
                     stats["skip"] += 1
                     stats["done"] += 1
                     return
@@ -518,23 +518,23 @@ async def batch_generate_configs(urls: list[str], headed: bool = False, with_det
                 # 已有配置但缺少 detail → 补充
                 async with semaphore:
                     _fh = _create_task_log(filename_stem)
-                    logger.info(f"[{i}/{total}] 补充 detail 配置: {domain}")
+                    logger.info(f"补充 detail 配置: {domain}")
                     t0 = _time.time()
                     try:
                         ok = await _supplement_detail_config(url, config_path, cfg, headed=headed)
                         elapsed = _time.time() - t0
                         if ok:
                             stats["detail_added"] += 1
-                            logger.info(f"[{i}/{total}] 补充 detail 成功: {domain} ({elapsed:.1f}s)")
+                            logger.info(f"补充 detail 成功: {domain} ({elapsed:.1f}s)")
                         else:
                             stats["fail"] += 1
-                            logger.error(f"[{i}/{total}] 补充 detail 失败: {domain} ({elapsed:.1f}s)")
+                            logger.error(f"补充 detail 失败: {domain} ({elapsed:.1f}s)")
                     except asyncio.CancelledError:
                         raise
                     except Exception as e:
                         elapsed = _time.time() - t0
                         stats["fail"] += 1
-                        logger.error(f"[{i}/{total}] 补充 detail 异常: {domain} ({elapsed:.1f}s) - {e}")
+                        logger.error(f"补充 detail 异常: {domain} ({elapsed:.1f}s) - {e}")
                     finally:
                         stats["done"] += 1
                         done = stats["done"]
@@ -547,7 +547,7 @@ async def batch_generate_configs(urls: list[str], headed: bool = False, with_det
             # 全新生成
             async with semaphore:
                 _fh = _create_task_log(filename_stem)
-                logger.info(f"[{i}/{total}] 开始生成配置: {url}")
+                logger.info(f"开始生成配置: {url}")
                 t0 = _time.time()
                 try:
                     config = await generate_config(url, headed=headed, with_detail=with_detail)
@@ -555,16 +555,16 @@ async def batch_generate_configs(urls: list[str], headed: bool = False, with_det
                     if config:
                         stats["success"] += 1
                         existing_configs[filename_stem] = (CONFIG_DIR / domain_to_filename(domain), config)
-                        logger.info(f"[{i}/{total}] 生成成功: {domain} ({elapsed:.1f}s)")
+                        logger.info(f"生成成功: {domain} ({elapsed:.1f}s)")
                     else:
                         stats["fail"] += 1
-                        logger.error(f"[{i}/{total}] 生成失败: {domain} ({elapsed:.1f}s)")
+                        logger.error(f"生成失败: {domain} ({elapsed:.1f}s)")
                 except asyncio.CancelledError:
                     raise
                 except Exception as e:
                     elapsed = _time.time() - t0
                     stats["fail"] += 1
-                    logger.error(f"[{i}/{total}] 异常: {domain} ({elapsed:.1f}s) - {e}")
+                    logger.error(f"异常: {domain} ({elapsed:.1f}s) - {e}")
                 finally:
                     stats["done"] += 1
                     done = stats["done"]

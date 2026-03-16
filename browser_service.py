@@ -134,7 +134,44 @@ class BrowserService:
             {"tree": str, "refs": dict} where refs maps ref IDs to element info.
         """
         page = await self._ensure_browser()
-        snapshot = await page.accessibility.snapshot(interesting_only=interactive)
+        # page.accessibility 在 Playwright 1.41+ 已废弃，部分版本已移除
+        if hasattr(page, "accessibility"):
+            snapshot = await page.accessibility.snapshot(interesting_only=interactive)
+        else:
+            # 回退：用 JS 构建简化的可交互元素树
+            snapshot = await page.evaluate("""() => {
+                const interactiveRoles = new Set([
+                    'button', 'link', 'textbox', 'checkbox', 'radio',
+                    'combobox', 'tab', 'menuitem', 'option', 'switch'
+                ]);
+                const roleMap = {
+                    'A': 'link', 'BUTTON': 'button', 'INPUT': 'textbox',
+                    'SELECT': 'combobox', 'TEXTAREA': 'textbox',
+                    'H1': 'heading', 'H2': 'heading', 'H3': 'heading',
+                    'H4': 'heading', 'H5': 'heading', 'H6': 'heading',
+                    'IMG': 'img', 'NAV': 'navigation', 'MAIN': 'main',
+                    'LI': 'listitem', 'UL': 'list', 'OL': 'list',
+                };
+                function walk(el) {
+                    const role = el.getAttribute('role') || roleMap[el.tagName] || el.tagName.toLowerCase();
+                    const name = el.getAttribute('aria-label')
+                        || el.getAttribute('title')
+                        || (el.tagName === 'INPUT' ? el.value || el.placeholder : '')
+                        || el.textContent?.trim().substring(0, 80) || '';
+                    const children = [];
+                    for (const child of el.children) {
+                        const c = walk(child);
+                        if (c) children.push(c);
+                    }
+                    if (children.length > 0 || name || interactiveRoles.has(role)) {
+                        const node = {role, name: name.substring(0, 80)};
+                        if (children.length > 0) node.children = children;
+                        return node;
+                    }
+                    return null;
+                }
+                return walk(document.body) || {role: 'document', name: '', children: []};
+            }""")
 
         refs: dict[str, dict] = {}
         tree_lines: list[str] = []
