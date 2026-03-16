@@ -13,11 +13,14 @@
 
 import argparse
 import json
+import logging
 import sys
 from pathlib import Path
 from urllib.parse import urlparse
 
 import requests
+
+logger = logging.getLogger(__name__)
 
 # ── Doubao API 配置 ──────────────────────────────────────────────
 DOUBAO_API_KEY = "***REMOVED***"
@@ -126,13 +129,13 @@ def call_doubao_raw(system_prompt: str, user_message: str, temperature: float = 
     max_retries = 3
     for attempt in range(1, max_retries + 1):
         try:
-            print(f"正在调用 LLM...（第 {attempt} 次）")
+            logger.info(f"正在调用 LLM...（第 {attempt} 次）")
             resp = requests.post(DOUBAO_API_URL, headers=headers, json=payload, timeout=300)
             resp.raise_for_status()
             break
         except requests.exceptions.ReadTimeout:
             if attempt < max_retries:
-                print(f"请求超时，{5 * attempt}秒后重试...")
+                logger.warning(f"请求超时，{5 * attempt}秒后重试...")
                 import time
                 time.sleep(5 * attempt)
             else:
@@ -238,7 +241,7 @@ def fix_url_mode(config: dict, dom: str) -> dict:
     """校验并修正 url_mode 和 url_selector"""
     # 1. 如果 DOM 中 <a> 没有 href 但配置写了 href 模式，改为 click_newtab
     if config.get("url_mode") == "href" and not _has_href_in_dom(dom):
-        print("校正: DOM 中 <a> 无 href，url_mode 从 'href' 改为 'click_newtab'")
+        logger.info("校正: DOM 中 <a> 无 href，url_mode 从 'href' 改为 'click_newtab'")
         config["url_mode"] = "click_newtab"
         config.pop("url_selector", None)
         config.setdefault("wait_after_click_ms", 2000)
@@ -249,7 +252,7 @@ def fix_url_mode(config: dict, dom: str) -> dict:
         if not config.get("url_selector"):
             btn_selector = _find_clickable_button_selector(dom)
             if btn_selector:
-                print(f"校正: 检测到可点击按钮，自动设置 url_selector = '{btn_selector}'")
+                logger.info(f"校正: 检测到可点击按钮，自动设置 url_selector = '{btn_selector}'")
                 config["url_selector"] = btn_selector
 
     return config

@@ -8,6 +8,7 @@
 
 import argparse
 import asyncio
+import contextvars
 import json
 import logging
 import sys
@@ -19,6 +20,39 @@ from dom_extractor import find_job_containers, find_detail_containers
 from gen_config import call_doubao, call_doubao_detail, call_doubao_raw, fix_url_mode, domain_to_filename, CONFIG_DIR
 
 logger = logging.getLogger(__name__)
+
+# 用 contextvars 在并发任务中追踪任务标识，所有模块的日志都会自动带上
+_task_tag: contextvars.ContextVar[str] = contextvars.ContextVar("_task_tag", default="")
+# 每个任务独立的文件 handler，用于将日志分别写入不同文件
+_task_file_handler: contextvars.ContextVar[logging.FileHandler | None] = contextvars.ContextVar(
+    "_task_file_handler", default=None
+)
+
+
+class _TaskTagFilter(logging.Filter):
+    """将当前协程的任务标识注入日志记录"""
+    def filter(self, record):
+        tag = _task_tag.get("")
+        record.task_tag = f"{tag} " if tag else ""
+        return True
+
+
+class _PerTaskFileHandler(logging.Handler):
+    """将日志路由到当前协程绑定的独立文件 handler"""
+    def __init__(self):
+        super().__init__()
+        self._formatter = logging.Formatter(
+            "%(asctime)s [%(levelname)s] %(task_tag)s%(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+        )
+
+    def emit(self, record):
+        handler = _task_file_handler.get(None)
+        if handler is not None:
+            # 确保 task_tag 已注入
+            if not hasattr(record, "task_tag"):
+                tag = _task_tag.get("")
+                record.task_tag = f"{tag} " if tag else ""
+            handler.emit(record)
 
 
 # LLM 逐个判断候选是否为职位列表的 system prompt
@@ -187,7 +221,7 @@ async def generate_config(url: str, headed: bool = False, with_detail: bool = Fa
                 logger.info(f"  [{c['index']}] {c['selector'][:60]}  "
                             f"({c['child_count']} 个 <{c['child_tag']}>, "
                             f"评分 {c['score']})")
-            chosen = _pick_best_candidate(candidates, url)
+            chosen = await asyncio.to_thread(_pick_best_candidate, candidates, url)
 
         # 主页面未找到 → 检查是否有 ATS iframe
         if not chosen:
@@ -212,7 +246,7 @@ async def generate_config(url: str, headed: bool = False, with_detail: bool = Fa
                         logger.info(f"  [{c['index']}] {c['selector'][:60]}  "
                                     f"({c['child_count']} 个 <{c['child_tag']}>, "
                                     f"评分 {c['score']})")
-                    chosen = _pick_best_candidate(candidates, url)
+                    chosen = await asyncio.to_thread(_pick_best_candidate, candidates, url)
 
         if not chosen:
             logger.error("[自动生成] 未找到有效的职位列表容器")
@@ -221,7 +255,9 @@ async def generate_config(url: str, headed: bool = False, with_detail: bool = Fa
 
         # Step 5: 调用 LLM 生成配置
         logger.info(f"[自动生成] 调用 LLM 生成配置...")
-        raw_config = call_doubao(chosen["sample_html"], url, card_selector=chosen.get("card_selector", ""))
+        raw_config = await asyncio.to_thread(
+            call_doubao, chosen["sample_html"], url, card_selector=chosen.get("card_selector", "")
+        )
 
         try:
             config = json.loads(raw_config)
@@ -333,7 +369,8 @@ async def _generate_detail_config_from_page(browser: BrowserService, page_url: s
     logger.info(f"[详情配置] 选中候选 {chosen['index']}: {chosen['selector'][:60]}")
 
     logger.info(f"[详情配置] 调用 LLM 生成详情页配置...")
-    raw_config = call_doubao_detail(
+    raw_config = await asyncio.to_thread(
+        call_doubao_detail,
         chosen["sample_html"], page_url,
         container_selector=chosen.get("selector", "")
     )
@@ -378,44 +415,189 @@ async def auto_generate_config(url: str, headed: bool = False, output: str | Non
         print(f'\n验证: python run.py "{url}"')
 
 
-async def batch_generate_configs(urls: list[str], headed: bool = False):
-    """批量生成配置文件，跳过已有配置的 URL"""
-    from gen_config import CONFIG_DIR
+async def _supplement_detail_config(url: str, config_path: Path, config: dict, headed: bool = False) -> bool:
+    """为已有配置补充 detail 配置
 
-    # 统计已有配置
-    existing = set()
+    打开列表页，从中提取一个职位 URL，导航到详情页，生成 detail 配置并合并写入文件。
+
+    Returns:
+        True 表示补充成功
+    """
+    domain = urlparse(url).netloc.lower()
+    session_name = domain.replace(".", "_")
+    browser = BrowserService(session=session_name, headless=not headed)
+
+    try:
+        logger.info(f"[补充detail] 打开列表页: {url}")
+        await browser.navigate(url)
+        await browser.wait_for_content(timeout_ms=20000)
+        await browser.dismiss_popup()
+        await browser.scroll_page(times=3)
+        await asyncio.sleep(1)
+
+        detail_config = await _generate_detail_config(browser, config, url)
+        if not detail_config:
+            logger.warning(f"[补充detail] 未能生成 detail 配置: {domain}")
+            return False
+
+        # 合并 detail 到现有配置并写入文件
+        config["detail"] = detail_config
+        config_path.write_text(
+            json.dumps(config, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+        logger.info(f"[补充detail] 已写入: {config_path}")
+        return True
+    finally:
+        await browser.close()
+
+
+async def batch_generate_configs(urls: list[str], headed: bool = False, with_detail: bool = False, workers: int = 1, task_log_dir: Path | None = None):
+    """批量生成配置文件，支持并发处理
+
+    Args:
+        urls: URL 列表
+        headed: 是否使用有头浏览器
+        with_detail: 是否同时生成详情页配置（同时会为缺少 detail 的已有配置补充）
+        workers: 并发数量，默认 1（串行）
+        task_log_dir: 每个任务独立日志文件的目录，None 则不写独立日志
+    """
+    from gen_config import CONFIG_DIR
+    import time as _time
+
+    # 加载已有配置：stem -> (config_path, has_detail)
+    existing_configs: dict[str, tuple[Path, dict | None]] = {}
     if CONFIG_DIR.exists():
-        existing = {f.stem for f in CONFIG_DIR.glob("*.json")}
+        for f in CONFIG_DIR.glob("*.json"):
+            try:
+                cfg = json.loads(f.read_text(encoding="utf-8"))
+                existing_configs[f.stem] = (f, cfg)
+            except (json.JSONDecodeError, OSError):
+                existing_configs[f.stem] = (f, None)
 
     total = len(urls)
-    success = 0
-    fail = 0
-    skip = 0
+    # 用 dict 做原子计数（asyncio 单线程，无需锁）
+    stats = {"success": 0, "fail": 0, "skip": 0, "detail_added": 0, "done": 0}
+    semaphore = asyncio.Semaphore(workers)
+    cancelled = False  # Ctrl+C 后设为 True，让后续任务快速跳过
+    start_time = _time.time()
 
-    for i, url in enumerate(urls, 1):
+    def _create_task_log(filename_stem: str) -> logging.FileHandler | None:
+        """为任务创建独立日志文件，返回 handler"""
+        if not task_log_dir:
+            return None
+        fh = logging.FileHandler(
+            task_log_dir / f"{filename_stem}.log", encoding="utf-8"
+        )
+        fh.setLevel(logging.DEBUG)
+        fh.setFormatter(logging.Formatter(
+            "%(asctime)s [%(levelname)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+        ))
+        _task_file_handler.set(fh)
+        return fh
+
+    async def _process_one(i: int, url: str):
+        nonlocal cancelled
+        if cancelled:
+            return
+        _task_tag.set(f"[{i}/{total}]")
         domain = urlparse(url).netloc.lower()
         filename_stem = domain_to_filename(domain).replace(".json", "")
 
-        if filename_stem in existing:
-            logger.info(f"[{i}/{total}] 跳过 (已有配置): {domain}")
-            skip += 1
-            continue
-
-        logger.info(f"[{i}/{total}] 生成配置: {url}")
+        _fh = None
         try:
-            config = await generate_config(url, headed=headed)
-            if config:
-                success += 1
-                existing.add(filename_stem)
-            else:
-                fail += 1
-                logger.error(f"  生成失败")
-        except Exception as e:
-            fail += 1
-            logger.error(f"  异常: {e}")
+            if filename_stem in existing_configs:
+                config_path, cfg = existing_configs[filename_stem]
 
-    logger.info(f"{'=' * 40}")
-    logger.info(f"批量生成完成: 成功 {success}, 失败 {fail}, 跳过 {skip}, 共 {total}")
+                # 已有配置且包含 detail，或不需要 detail → 跳过
+                if not with_detail or cfg is None or "detail" in cfg:
+                    logger.info(f"[{i}/{total}] 跳过 (已有配置): {domain}")
+                    stats["skip"] += 1
+                    stats["done"] += 1
+                    return
+
+                # 已有配置但缺少 detail → 补充
+                async with semaphore:
+                    _fh = _create_task_log(filename_stem)
+                    logger.info(f"[{i}/{total}] 补充 detail 配置: {domain}")
+                    t0 = _time.time()
+                    try:
+                        ok = await _supplement_detail_config(url, config_path, cfg, headed=headed)
+                        elapsed = _time.time() - t0
+                        if ok:
+                            stats["detail_added"] += 1
+                            logger.info(f"[{i}/{total}] 补充 detail 成功: {domain} ({elapsed:.1f}s)")
+                        else:
+                            stats["fail"] += 1
+                            logger.error(f"[{i}/{total}] 补充 detail 失败: {domain} ({elapsed:.1f}s)")
+                    except asyncio.CancelledError:
+                        raise
+                    except Exception as e:
+                        elapsed = _time.time() - t0
+                        stats["fail"] += 1
+                        logger.error(f"[{i}/{total}] 补充 detail 异常: {domain} ({elapsed:.1f}s) - {e}")
+                    finally:
+                        stats["done"] += 1
+                        done = stats["done"]
+                        if done % 10 == 0 or done == total:
+                            logger.info(f"--- 进度: {done}/{total} (新建 {stats['success']}, "
+                                        f"补充detail {stats['detail_added']}, "
+                                        f"失败 {stats['fail']}, 跳过 {stats['skip']}) ---")
+                    return
+
+            # 全新生成
+            async with semaphore:
+                _fh = _create_task_log(filename_stem)
+                logger.info(f"[{i}/{total}] 开始生成配置: {url}")
+                t0 = _time.time()
+                try:
+                    config = await generate_config(url, headed=headed, with_detail=with_detail)
+                    elapsed = _time.time() - t0
+                    if config:
+                        stats["success"] += 1
+                        existing_configs[filename_stem] = (CONFIG_DIR / domain_to_filename(domain), config)
+                        logger.info(f"[{i}/{total}] 生成成功: {domain} ({elapsed:.1f}s)")
+                    else:
+                        stats["fail"] += 1
+                        logger.error(f"[{i}/{total}] 生成失败: {domain} ({elapsed:.1f}s)")
+                except asyncio.CancelledError:
+                    raise
+                except Exception as e:
+                    elapsed = _time.time() - t0
+                    stats["fail"] += 1
+                    logger.error(f"[{i}/{total}] 异常: {domain} ({elapsed:.1f}s) - {e}")
+                finally:
+                    stats["done"] += 1
+                    done = stats["done"]
+                    if done % 10 == 0 or done == total:
+                        logger.info(f"--- 进度: {done}/{total} (新建 {stats['success']}, "
+                                    f"补充detail {stats['detail_added']}, "
+                                    f"失败 {stats['fail']}, 跳过 {stats['skip']}) ---")
+        finally:
+            # 关闭当前任务的独立日志文件
+            if _fh:
+                _fh.close()
+                _task_file_handler.set(None)
+
+    # 并发执行所有任务
+    tasks = [asyncio.create_task(_process_one(i, url)) for i, url in enumerate(urls, 1)]
+    try:
+        await asyncio.gather(*tasks)
+    except (asyncio.CancelledError, KeyboardInterrupt):
+        cancelled = True
+        logger.warning("收到中断信号，正在取消剩余任务...")
+        for t in tasks:
+            if not t.done():
+                t.cancel()
+        # 等待已启动的任务完成清理（如关闭浏览器）
+        await asyncio.gather(*tasks, return_exceptions=True)
+
+    total_time = _time.time() - start_time
+    _task_tag.set("")
+    logger.info(f"{'=' * 50}")
+    status = "中断" if cancelled else "完成"
+    logger.info(f"批量生成{status} (并发数: {workers}, 耗时: {total_time:.1f}s)")
+    logger.info(f"  新建: {stats['success']}, 补充detail: {stats['detail_added']}, "
+                f"失败: {stats['fail']}, 跳过: {stats['skip']}, 共: {total}")
 
 
 def main():
@@ -426,13 +608,51 @@ def main():
     parser.add_argument("--output", "-o", help="输出文件路径（默认自动命名到 config/ 目录）")
     parser.add_argument("--detail", action="store_true", help="同时生成详情页配置")
     parser.add_argument("--detail-url", help="单独为指定详情页 URL 生成 detail 配置")
+    parser.add_argument("--workers", "-w", type=int, default=1, help="批量模式并发数（默认 1，建议 3-5）")
     parser.add_argument("--verbose", "-v", action="store_true", help="显示详细日志（DEBUG 级别）")
     args = parser.parse_args()
 
     log_level = logging.DEBUG if args.verbose else logging.INFO
+
+    # 任务标识过滤器 —— 挂在每个 handler 上，所有模块的日志都会自动带上 task_tag
+    tag_filter = _TaskTagFilter()
+
+    # 控制台日志
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(log_level)
+    console_handler.setFormatter(logging.Formatter("  %(task_tag)s%(message)s"))
+    console_handler.addFilter(tag_filter)
+
+    # 文件日志（批量模式下自动开启）
+    handlers: list[logging.Handler] = [console_handler]
+    if args.batch:
+        from datetime import datetime
+        log_dir = Path(__file__).parent / "logs"
+        batch_ts = datetime.now().strftime('%Y%m%d_%H%M%S')
+        log_dir.mkdir(exist_ok=True)
+        # 汇总日志
+        log_file = log_dir / f"batch_{batch_ts}.log"
+        file_handler = logging.FileHandler(log_file, encoding="utf-8")
+        file_handler.setLevel(logging.DEBUG)
+        file_handler.setFormatter(logging.Formatter(
+            "%(asctime)s [%(levelname)s] %(task_tag)s%(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+        ))
+        file_handler.addFilter(tag_filter)
+        handlers.append(file_handler)
+        # 每个任务独立日志文件的路由 handler
+        per_task_handler = _PerTaskFileHandler()
+        per_task_handler.setLevel(logging.DEBUG)
+        per_task_handler.addFilter(tag_filter)
+        handlers.append(per_task_handler)
+        # 每个任务的日志子目录
+        task_log_dir = log_dir / f"batch_{batch_ts}"
+        task_log_dir.mkdir(exist_ok=True)
+        print(f"汇总日志: {log_file}")
+        print(f"任务日志目录: {task_log_dir}")
+
     logging.basicConfig(
-        level=log_level,
-        format="  %(message)s",
+        level=logging.DEBUG,  # root 用 DEBUG，靠 handler 各自过滤
+        handlers=handlers,
     )
 
     if args.detail_url:
@@ -459,7 +679,11 @@ def main():
             print("文件中没有有效的 URL")
             sys.exit(1)
         print(f"读取到 {len(urls)} 个 URL")
-        asyncio.run(batch_generate_configs(urls, headed=args.headed))
+        try:
+            asyncio.run(batch_generate_configs(urls, headed=args.headed, with_detail=args.detail, workers=args.workers, task_log_dir=task_log_dir))
+        except KeyboardInterrupt:
+            print("\n已中断")
+            sys.exit(1)
     elif args.url:
         asyncio.run(auto_generate_config(args.url, headed=args.headed, output=args.output, with_detail=args.detail))
     else:

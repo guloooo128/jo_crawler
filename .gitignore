@@ -4,6 +4,7 @@ output/*.json
 output/*.csv
 .env
 *.log
+logs/
 .DS_Store
 src/parsers/generated/*.js
 src/parsers/generated/*.js.map
